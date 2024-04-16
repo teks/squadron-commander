@@ -402,15 +402,16 @@ class CmdUserInterface(trek.UserInterface):
 
             # set the display string for each cell in the row
             for x in range(lower_left.x, upper_right.x + 1):
-                cell_contents = obj_layer.get(trek.point(x, y), [])
+                p = trek.point(x, y)
+                cell_contents = obj_layer[p]
                 if len(cell_contents) == 1:
                     row += cell_contents[0]._ui_label
                 elif len(cell_contents) > 1:
                     group_label = next(group_label_iter)
-                    groups.append((group_label, cell_contents))
+                    groups.append((group_label, p, cell_contents))
                     row += ':' + group_label
                 else:
-                    hud_contents = hud_layer.get(trek.point(x, y), [])
+                    hud_contents = hud_layer[p]
                     if MOVEMENT_MARKER_CHAR in hud_contents:  # so far the only HUD item
                         row += MOVEMENT_MARKER_CHAR + ' '
                     else:
@@ -423,8 +424,8 @@ class CmdUserInterface(trek.UserInterface):
                                for c in range(lower_left.x + 1, upper_right.x + 1, 2)])
 
         # group display after the map
-        for label, contents in groups:
-            s += (f'\n  Multiple contacts in cell {label}: '
+        for label, p, contents in groups:
+            s += (f'\n  [:{label}] Multiple contacts near {p.x / scale, p.y / scale}: '
                   + ', '.join(o._ui_label for o in contents))
         return s
 
