@@ -112,3 +112,14 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
         [x] write some tests
 [v] `show <unit>...` to show system damage etc
     see `doc/object-detail-view.md`
+
+### i12 - remaining game engine work
+[v] ship repairs - see doc/design.md Ship Engineering & Repair
+    [v] basic repair: each ship gets a repair rate & repairs a bit each tick
+    [v] no progress on a combat tick
+    [v] x1.0 FTL
+    [v] x1.5 waiting alone
+    [v] x2.0 waiting with a friendly (n friendlies together means x2.0 for each of them)
+    [v] pause simulation when a friendly ship's repairs are complete
+    [v] show estimated time to fix
+
