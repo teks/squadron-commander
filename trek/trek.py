@@ -161,33 +161,34 @@ class Ship(SpaceborneObject):
         # TODO add in morale and possibly other factors
         return self._combat_value
 
-    def missing_shields_fraction(self):
-        """Ships's shields as a ratio; 0.2 = 20% of the shields are gone."""
-        return 1 - self.current_shields / self.max_shields
+    def shields_status(self):
+        """Ships's shields as a ratio; 0.8 = shields are at 80%."""
+        # some vessels may not have shields so catch div-by-zero case:
+        return 0.0 if self.max_shields == 0.0 else self.current_shields / self.max_shields
 
-    def hull_damage_fraction(self):
-        """Hull damage as a ratio; 0.3 = 30% of the hull is gone."""
-        return 1 - self.current_hull / self.max_hull
+    def hull_status(self):
+        """as shields_status but for hull"""
+        return self.current_hull / self.max_hull
 
     def retreat_chance(self, side_cv_ratio):
         """What is the chance of the ship choosing to retreat?"""
-        # TODO if self is badly damaged, should indeed retreat even if self's side has the upper hand:
-        if side_cv_ratio <= 1: # self never retreats if it has the upper hand
-            return 0.0
-        '''
-        ratio P(retreat)
-          1     0.0
-          2     0.35 <-- TODO seems low
-          3     0.7
-        '''
-        m, b = 0.35, -0.35
-        p = m * side_cv_ratio + b
+        p = 0.0 # start with no chance of retreat
+        if side_cv_ratio > 1: # if the other side has the upper hand,
+            # ratio P(retreat)
+            #   1     0.0
+            #   2     0.35 <-- TODO seems low
+            #   3     0.7
+            m, b = 0.35, -0.35
+            p = m * side_cv_ratio + b
+
         # TODO:
-        # if self is a formidable ship, reduced chance of retreat:
-        #   ie greater self.combat_value() --> reduced chance of retreat
         # worse off the ship is, more likely to retreat
         # p += msf_factor * self.missing_shields_fraction()
         # p += hdf_factor * self.hull_damage_fraction()
+        # worse morale -> greater chance of retreat
+        # p += morale_factor * self.morale
+        # if self is a formidable ship, reduced chance of retreat:
+        #   ie greater self.combat_value() --> reduced chance of retreat
         return p
 
     # I don't want to open the mocking can of worms, just being lazy:
@@ -273,10 +274,10 @@ class CombatSide:
         rcv = self.RETREAT_MODIFIER * sum(s.combat_value() for s in self.retreaters)
         return cv + rcv
 
-    def retreats_from(self, cv_ratio):
+    def retreat_check(self, cv_ratio):
         """Does this side choose to retreat?"""
         for m in self.members:
-            retreats = m.retreats_from(self, cv_ratio)
+            retreats = m.retreats_from(cv_ratio)
             if retreats:
                 self.retreaters.add(m)
 
@@ -341,18 +342,20 @@ class Simulation:
         self.objects[k] = obj
         self.message(SpawnMessage(obj))
 
-    def combat(self, *participants):
-        # split participants into sides
-        for p in participants:
+    def combat(self, participants):
+        # TODO should this method be a class method in CombatSide()?
+        participant_list = list(participants) # might be an iterator so save its contents
+        for p in participant_list:
             p.combat() # notify that they're participating in combat
-        friendly_side, enemy_side = CombatSide.sort_into_sides(*participants)
+        # split participants into sides
+        friendly_side, enemy_side = CombatSide.sort_into_sides(*participant_list)
         CombatSide.assign_cv_modifiers(friendly_side, enemy_side)
 
         # have to compute cv ratio ahead of time because retreat checking may alter ships' CV
         cv_ratio = enemy_side.combat_value() / friendly_side.combat_value()
 
-        friendly_side.retreats_from(cv_ratio)
-        enemy_side.retreats_from(1 / cv_ratio)
+        friendly_side.retreat_check(cv_ratio)
+        enemy_side.retreat_check(1 / cv_ratio)
 
         # recompute combat values after retreat checks since retreating units do less damage
         friendly_side.receive_damage(enemy_side.combat_value())

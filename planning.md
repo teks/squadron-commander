@@ -71,7 +71,7 @@ combat engine MVP; no encounters yet just mechanics + tests
 [v] retreat check
 [v] track retreated ships
 [v] Apply damage to shields then hull
-[ ] test & revise
+[v] test & revise
 ```
 
 ## Future Iterations:

@@ -123,37 +123,39 @@ def setup_sides():
 
 def test_CombatSide_retreat_chance__even_fight():
     """should not retreat when odds are even"""
-    fs, es = setup_sides()
-    assert 0.0 == fs.retreat_chance(es)
+    s = trek.FriendlyShip('name-here', trek.point(1, 1))
+    assert 0.0 == s.retreat_chance(1.0)
 
 def test_CombatSide_retreat_chance__1v2():
-    """should not retreat when odds are even"""
-    fs, es = setup_sides()
-    for s in fs.members:
-        s._combat_value = 1.0
-    for s in es.members:
-        s._combat_value = 2.0
-    assert 0.35 == fs.retreat_chance(es)
+    """Sometimes retreat when it's 1 to 2."""
+    s = trek.FriendlyShip('name-here', trek.point(1, 1))
+    assert 0.35 == s.retreat_chance(2.0)
 
 def test_CombatSide_retreat_chance__2v1():
-    """should not retreat when odds are even"""
-    fs, es = setup_sides()
-    for s in fs.members:
-        s._combat_value = 2.0
-    for s in es.members:
-        s._combat_value = 1.0
-    assert 0.0 == fs.retreat_chance(es)
+    """Never retreat when it's 2 to 1"""
+    s = trek.FriendlyShip('name-here', trek.point(1, 1))
+    assert 0.0 == s.retreat_chance(0.5)
 
 def test_CombatSide_retreats_from__even_fight():
     """Shouldn't retreat if the fight is even."""
     fs, es = setup_sides()
-    retreated = fs.retreats_from(es, 0.0)
-    assert not retreated and len(fs.retreaters) == 0
+    ratio = es.combat_value() / fs.combat_value()
+    retreated = fs.retreat_check(ratio)
+    assert len(fs.retreaters) == 0
 
 def test_CombatSide_retreats_from__hopeless_case():
     """Should always retreat when the fight is hopeless."""
     fs, es = setup_sides()
     for s in es.members:
         s._combat_value = 9001
-    retreated = fs.retreats_from(es, 0.999)
-    assert retreated and len(fs.retreaters) == 3
+    ratio = es.combat_value() / fs.combat_value()
+    fs.retreat_check(ratio)
+    assert len(fs.retreaters) == 3
+
+def test_Simulation_combat():
+    """Run through the method once."""
+    fsq, esq = friendly_squadron(), enemy_squadron()
+    sim = trek.Simulation(fsq + esq)
+    sim.combat(sim.get_objects())
+    assert all(0.0 <= o.shields_status() < 1.0 for o in fsq + esq
+               ), "No ship should escape unscathed."
