@@ -1,3 +1,4 @@
+import math
 import cmd
 import pprint
 import collections
@@ -57,9 +58,15 @@ class CLI(cmd.Cmd):
             map_str = self._cmd_ui.short_range_map(parsed_line.centerpoint, parsed_line.radius)
             print(map_str)
 
-    def do_aomap(self, arg):
-        map_str = self._cmd_ui.long_range_map()
+    def do_smap(self, _):
+        """Show the strategic map, ie, half resolution (1 cell = 2 simulation cells)."""
+        map_str = self._cmd_ui.short_range_map(trek.point(32, 32), 32, 0.5)
         print(map_str)
+
+    # not needed given smap --^ resurrect later if there's a use for it
+    # def do_aomap(self, arg):
+    #     map_str = self._cmd_ui.long_range_map()
+    #     print(map_str)
 
     move_parser = ComandLineParser(arguments=(
         ('ship_id', dict(type=str)),
@@ -119,21 +126,27 @@ class CmdUserInterface(trek.UserInterface):
         except self.simulation.NotReadyToRun as e:
             print("Not ready to run; do all ships have orders?")
 
-    def short_range_map(self, center_point, radius=8):
+    def short_range_map(self, center_point, radius=8, scale=1.0):
         """Returns the map for a given bounding box."""
         cells = collections.defaultdict(list)
         for o in self.simulation.objects():
             # conveniently, round() returns an integer
-            grid_point = trek.point(round(o.point.x), round(o.point.y))
+            grid_point = trek.point(round(o.point.x * scale), round(o.point.y * scale))
             cells[grid_point].append(o)
-        s = pprint.pformat(cells) + '\n' # debugging output
+        s = ''
+        # debugging output
+        for cell, occupants in cells.items():
+            for obj in occupants:
+                s += f"{cell} : {obj._ui_label} : {obj}\n"
         # set bounding box including bounds-check for attempting to show territory outside the map
-        lower_left = trek.point(max(1, center_point.x - radius), max(1, center_point.y - radius))
-        upper_right = trek.point(min(trek.MAX_X, center_point.x + radius),
-                                 min(trek.MAX_Y, center_point.y + radius))
+        scaled_ceil = lambda v: math.ceil(scale * v)
+        lower_left = trek.point(max(1, scaled_ceil(center_point.x - radius)),
+                                max(1, scaled_ceil(center_point.y - radius)))
+        upper_right = trek.point(min(trek.MAX_X, scaled_ceil(center_point.x + radius)),
+                                 min(trek.MAX_Y, scaled_ceil(center_point.y + radius)))
         rows = []
         for y in range(lower_left.y, upper_right.y + 1):
-            row = f'{y:2} ' # row label
+            row = f'{round(y / scale):2} ' if y % 2 == 0 else '   ' # label every other row
             for x in range(lower_left.x, upper_right.x + 1):
                 current_point = trek.point(x, y)
                 if current_point in cells:
@@ -143,7 +156,8 @@ class CmdUserInterface(trek.UserInterface):
             rows.append(row)
         s += '\n'.join(reversed(rows))
         # column labels in bottom row, but need to be spaced out
-        s += '\n  ' + ''.join([f'  {c:2}' for c in range(lower_left.x + 1, upper_right.x + 1, 2)])
+        s += '\n  ' + ''.join([f'  {round(c / scale):2}'
+                               for c in range(lower_left.x + 1, upper_right.x + 1, 2)])
         return s
 
     def long_range_map(self):

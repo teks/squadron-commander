@@ -47,8 +47,7 @@ fix random stuff, look for TODOs and cleanup:
 going to do another random fixup iteration
 ```
 [v] various TODOs
-[ ]
-[ ]
+[v] cure map viewing pain with `smap`, half-scale map cmd
 ```
 
 ## Future Iterations:
