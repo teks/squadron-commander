@@ -130,7 +130,7 @@ class Ship(SpaceborneObject):
     def reset_order(self):
         self.current_order = None
 
-    def move(self, destination):
+    def move(self, simulation, destination):
         """Perform 1 tick of movement."""
         # print(f"{self} is MOVIN to {destination}")
         distance_to_dest = self.point.distance(destination)
@@ -144,14 +144,15 @@ class Ship(SpaceborneObject):
 
         if distance_to_dest - travel_distance <= 0.0:
             self.reset_order()
-            self.simulation.message(ArriveMessage(self))
+            simulation.message(ArriveMessage(self))
             return
 
-    def act(self):
+    def act(self, simulation):
+        """Perform one tick of simulation."""
         order, params = self.current_order
         match order:
             case self.Order.MOVE:
-                self.move(params['destination'])
+                self.move(simulation, params['destination'])
             case _:
                 raise ValueError(f"Invalid order {self.current_order}")
 
@@ -182,10 +183,6 @@ class Simulation:
     user_interface: UserInterface = None
     clock: int = 0 # game clock; starts at 0. User will be shown stardate
     # player's ships:
-
-    def __post_init__(self):
-        for o in self.squadron:
-            o.simulation = self
 
     def objects(self):
         """Generator for all the objects in the simulation."""
@@ -223,9 +220,7 @@ class Simulation:
         while self.clock < stop_time:
             self.clock += 1
             for s in self.squadron:
-                # TODO receive messages here instead of SpaceborneObject.simulation?
-                #   can self.simulation be removed?
-                s.act()
+                s.act(self)
             if self.should_pause():
                 break
 

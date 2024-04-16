@@ -46,9 +46,7 @@ fix random stuff, look for TODOs and cleanup:
 ## Iteration 5
 going to do another random fixup iteration
 ```
-[v] fix uncaught exception in do_move
-[v] clean up validation of Points
-[ ]
+[v] various TODOs
 [ ]
 [ ]
 ```
