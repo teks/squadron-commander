@@ -112,6 +112,7 @@ class PointAction(argparse.Action):
 SHIP_ID_ARG = ('ship_id', dict(type=str))
 OBJECT_ID_ARG = ('object_id', dict(type=str))
 MULTI_OBJECT_ID_ARG = ('object_id_list', dict(type=str, nargs='*'))
+AT_LEAST_ONE_OBJECT_ID_ARG = ('object_id_list', dict(type=str, nargs='+'))
 
 class CommandLineParser(argparse.ArgumentParser):
     """Needed because they let a bug into a release:
@@ -186,7 +187,7 @@ class CLI(cmd.Cmd):
             self._cmd_ui.object_detail_display(*parsed_line.object_id_list)
 
     move_parser = CommandLineParser(arguments=(
-        SHIP_ID_ARG,
+        AT_LEAST_ONE_OBJECT_ID_ARG,
         ('destination', dict(nargs=2, type=float, action=PointAction)),
         # TODO add speed setting to move & attack cmd?
         # ('speed', dict(nargs='?', type=int, default=None)),
@@ -196,10 +197,10 @@ class CLI(cmd.Cmd):
         parsed_line = self.move_parser.parse_line(arg)
         if parsed_line is not None:
             # TODO hypervelocity goes in (also call it 'warpspeed'?)
-            self._cmd_ui.move_ship(parsed_line.ship_id, parsed_line.destination)
+            self._cmd_ui.move_ship(parsed_line.destination, *parsed_line.object_id_list)
 
     visit_parser = CommandLineParser(arguments=(
-        SHIP_ID_ARG,
+        AT_LEAST_ONE_OBJECT_ID_ARG,
         OBJECT_ID_ARG,
     ))
 
@@ -209,28 +210,27 @@ class CLI(cmd.Cmd):
         if parsed_line is not None:
             target = self._cmd_ui.get_object(parsed_line.object_id)
             if target is not None:
-                self._cmd_ui.move_ship(parsed_line.ship_id, target.point)
+                self._cmd_ui.move_ship(target.point, *parsed_line.object_id_list)
 
     attack_parser = CommandLineParser(arguments=(
-        SHIP_ID_ARG,
+        AT_LEAST_ONE_OBJECT_ID_ARG,
         ('target_id', dict(type=str)),
     ))
 
     def do_attack(self, arg):
         parsed_line = self.attack_parser.parse_line(arg)
         if parsed_line is not None:
-            self._cmd_ui.attack(
-                parsed_line.ship_id, parsed_line.target_id)
+            self._cmd_ui.attack(parsed_line.target_id, *parsed_line.object_id_list)
 
     wait_parser = CommandLineParser(arguments=(
-        SHIP_ID_ARG,
+        MULTI_OBJECT_ID_ARG,
         # TODO support timeouts in Order.IDLE params: ('duration', dict(type=int)),
     ))
 
     def do_wait(self, arg):
         parsed_line = self.wait_parser.parse_line(arg)
         if parsed_line is not None:
-            self._cmd_ui.wait(parsed_line.ship_id)
+            self._cmd_ui.wait(*parsed_line.object_id_list)
 
     def set_prompt(self):
         self.prompt = f'{self._cmd_ui.simulation.clock}h> '
@@ -519,24 +519,32 @@ class CmdUserInterface(trek.UserInterface):
             print(f"Object '{identifying_string}' not found.")
             return None
 
-    def move_ship(self, ship_id, destination):
-        ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
-        if ship is not None:
-            ship.order(trek.Order.MOVE, destination=destination)
-            self.check_orders()
+    def move_ship(self, destination, *ship_id_pile):
+        for ship_id in ship_id_pile:
+            ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
+            if ship is not None:
+                ship.order(trek.Order.MOVE, destination=destination)
+        self.check_orders()
 
-    def attack(self, ship_id: str, target_id: str):
-        ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
+    def attack(self, target_id: str, *ship_id_pile: tuple[str]):
         target = self.get_object(target_id, side=trek.Side.ENEMY)
-        if None not in (ship, target):
-            ship.order(trek.Order.ATTACK, target=target)
-            self.check_orders()
+        if target is None:
+            return
+        for ship_id in ship_id_pile:
+            ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
+            if ship is not None:
+                ship.order(trek.Order.ATTACK, target=target)
+        self.check_orders()
 
-    def wait(self, ship_id: str):
-        ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
-        if ship is not None:
-            ship.order(trek.Order.IDLE)
-            self.check_orders()
+    def wait(self, *ship_id_pile: tuple[str]):
+        if len(ship_id_pile) == 0:
+            ships = self.simulation.objects_without_orders(controller=trek.Controller.PLAYER)
+        else:
+            ships = (self.get_object(sid, controller=trek.Controller.PLAYER) for sid in ship_id_pile)
+        for ship in ships:
+            if ship is not None:
+                ship.order(trek.Order.IDLE)
+        self.check_orders()
 
     def check_orders(self):
         """Confirm player-controlled vessels have orders."""

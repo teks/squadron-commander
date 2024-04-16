@@ -981,9 +981,10 @@ class Simulation:
             raise self.NotReadyToRun(owo)
         return not owo
 
-    def objects_without_orders(self, side=None):
-        """Returns a set of idle friendly vessels."""
-        return set(s for s in self.get_objects(side) if not s.has_orders())
+    def objects_without_orders(self, side=None, controller=None):
+        """Returns a set of idle vessels, optionally filtered per get_objects."""
+        return set(s for s in self.get_objects(side=side, controller=controller)
+                   if not s.has_orders())
 
     class NotReadyToRun(Exception):
         pass
