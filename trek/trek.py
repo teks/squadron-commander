@@ -2,12 +2,20 @@
 
 """
 
+import math
 import typing
 import dataclasses
 import abc
 
+# min x & y are both 1, not 0, for both spaces and zones
 MAX_X = 64
 MAX_Y = 64
+# size of a zone (a sort of grid laid over the individual spaces).
+# Zones are represented as Point instances.
+ZONE_SIZE_X = 8
+ZONE_SIZE_Y = 8
+MAX_ZONE_X = math.ceil(MAX_X / ZONE_SIZE_X)
+MAX_ZONE_Y = math.ceil(MAX_Y / ZONE_SIZE_Y)
 
 
 class Point(typing.NamedTuple):
@@ -28,11 +36,17 @@ class Point(typing.NamedTuple):
         if not (0 < self.x <= MAX_X) or not (0 < self.y <= MAX_Y):
             raise AttributeError(f"{self} is outside the map bounds")
 
+    def zone(self):
+        """Determine which zone the current point is in."""
+        return self.__class__(x=1 + (self.x - 1) // ZONE_SIZE_X,
+                              y=1 + (self.y - 1) // ZONE_SIZE_Y)
+
 
 def point(*args, **kwargs):
     """Factory for Points.
 
-    Because NamedTuple doesn't let you override the constructor.
+    Needed for validating at instantiation time,
+    but NamedTuple doesn't let you override the constructor.
     """
     p = Point(*args, **kwargs)
     p.validate()
@@ -92,6 +106,7 @@ def default_scenario():
         Ship('baker', point(35, 30)),
         Ship('charlie', point(60, 60)),
         Ship('doug', point(4, 58)),
+        Ship('alice', point(7, 7)),
     }
     map = Map(contents=ships)
     sim = Simulation(map)
