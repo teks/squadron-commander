@@ -142,8 +142,12 @@ class CLI(cmd.Cmd):
         if parsed_line is not None:
             self._cmd_ui.wait(parsed_line.ship_id)
 
+    def set_prompt(self):
+        self.prompt = f'{self._cmd_ui.simulation.clock}h> '
+
     def do_run(self, arg):
         self._cmd_ui.run()
+        self.set_prompt()
 
     # set short commands (python 3 is just <3)
     do_ls = do_list
@@ -177,6 +181,7 @@ class CmdUserInterface(trek.UserInterface):
         simulation.user_interface = self
         self.cli = CLI()
         self.cli._cmd_ui = self
+        self.cli.set_prompt()
         # keep track of iteration of spaceborne object label usage
         self.label_iterators = self.LabelIterators()
         # set labels for the objects in the simulation
@@ -377,16 +382,17 @@ class CmdUserInterface(trek.UserInterface):
                 print(s)
 
     def message(self, message):
+        m = f"{message.tick}h "
         match message:
             # not a real instantiation; the match syntax is gross:
             case trek.ArriveMessage():
                 s = message.ship
-                m = f"ARRIVAL: {s._ui_label} {s.designation} has arrived at {s.point}."
+                m += f"ARRIVAL: {s._ui_label} {s.designation} has arrived at {s.point}."
             case trek.SpawnMessage():
-                m = (f"Object spawned: {message.obj}; "
+                m += (f"Object spawned: {message.obj}; "
                      f"assigned label {self.set_ui_label(message.obj)}")
             case trek.CombatReport():
-                m = combat_report_string(message)
+                m += combat_report_string(message)
             case _:
-                m = f"Received message: {message}"
+                m += f"Received message: {message}"
         print(m)

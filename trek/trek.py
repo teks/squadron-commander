@@ -548,10 +548,11 @@ class CombatSide:
 
 class Message:
     """Used for sending and receiving signals resulting from game events."""
+    tick = None
 
 @dataclasses.dataclass
 class PausedSimulation(Message):
-    tick: int
+    pass
 
 @dataclasses.dataclass
 class ArriveMessage(Message):
@@ -682,6 +683,7 @@ class Simulation:
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""
+        message.tick = self.clock
         if self.user_interface is not None:
             self.user_interface.message(message)
 
@@ -737,7 +739,7 @@ class Simulation:
                 s.post_action()
 
             if self.should_pause():
-                self.message(PausedSimulation(self.clock))
+                self.message(PausedSimulation())
                 break
 
 
