@@ -64,8 +64,9 @@ add new SBO type: enemy
 ## iteration 7
 combat engine MVP; no encounters yet just mechanics + tests
 ```
-[ ] entry point for 1 tick of combat is simulation.combat(units)
-[ ] Step 1: assign base_combat_value to each ship
+[v] prep Ship for combat (hull, shields, shield recharge
+[v] entry point for 1 tick of combat is simulation.combat(units)
+[v] Step 1: assign base_combat_value to each ship
 [ ] Step 2:
     * Compute side CV
     * choose superior & inferior side; find CV_ratio
@@ -80,7 +81,6 @@ combat engine MVP; no encounters yet just mechanics + tests
 ## Future Iterations:
 ```
 [ ] combat
-    [ ] shield recharge; see stash
     [ ] Step 2: individual ship retreat
     [ ] system damage
         [ ] add systems to ships

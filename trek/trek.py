@@ -105,12 +105,18 @@ class SpaceborneObject(abc.ABC):
 
 class Ship(SpaceborneObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
+    max_hull = 1
+    max_shields = 0
+    combat_value = 1
+
     def __init__(self, designation: str, point: Point, cruising_speed: float=1.0):
         """Cruising speed is in light year per hour."""
         super().__init__(designation, point)
         self.cruising_speed = cruising_speed
         self.speed = self.cruising_speed
         self.current_order = None # start out with no orders
+        self.fought_last_tick = False
+        self.current_shields = self.max_shields
 
     class Order(enum.Enum):
         MOVE = 'move'
@@ -143,8 +149,19 @@ class Ship(SpaceborneObject):
             simulation.message(ArriveMessage(self))
             return
 
+    def recharge_shields(self):
+        if self.fought_last_tick:
+            self.fought_last_tick = False
+        else:
+            self.current_shields = self.max_shields
+
+    def combat(self):
+        """Notify the ship that it has fought this tick."""
+        self.fought_last_tick = True
+
     def act(self, simulation):
         """Perform one tick of simulation."""
+        self.recharge_shields()
         order, params = self.current_order
         match order:
             case self.Order.MOVE:
@@ -205,6 +222,10 @@ class Simulation:
             raise ValueError(f"Object with key {k} already found: {self.objects[k]}")
         self.objects[k] = obj
         self.message(SpawnMessage(obj))
+
+    def combat(self, *participants):
+        for p in participants:
+            p.combat()
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""
