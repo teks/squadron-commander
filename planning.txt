@@ -4,7 +4,7 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
     24h> mv ^0 28 56
     1 units need orders:
     <trek.trek.FriendlyShip alice Point(x=29.740456597169644, y=10.44552372684389)>
-[ ] combat enrichment
+[v] combat enrichment
     [v] morale:
         [v] set initial value: self.morale = 0.0 # neutral
         [v] depletion & restoration
@@ -12,7 +12,7 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
         [v] write some tests
         [v] do playtest; fallout:
             [v] in `ls`, CV can have too many digits: CV=0.9875
-    [ ] system damage
+    [v] system damage
         [v] when there's hull damage, apply systems damage
             [v] Each system is subjected to a separate roll:
                 * Chance of damage grows with hull damage fraction.
@@ -23,19 +23,21 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
             [v] Shields: Damage reduces maximum
             [v] Warp Drive: Reduced speed
             [v] Tactical Systems: Reduced combat value
-        [ ] write some tests
-        [ ] do playtests
+        [v] do playtests
+        [v] ship's velocity can't be shown; no way to check on drive damage
+        [x] write some tests
 [v] `show <unit>...` to show system damage etc
     see `doc/object-detail-view.md`
-[ ] `show <unit>` to show *effects* of system damage
 
 
 Roadmap
 =======
 Complete Beta
 (ux improvements as-needed, and):
-[ ] system damage, see i11
-[ ] ship repairs
+[ ] remaining game engine work
+    [ ] retreat should alter behavior of retreating enemies;
+        they should actually change their destination for a bit
+    [ ] ship repairs
 [ ] make some ship classes and experiment with combat outcomes
     for now symmetrically:
     [ ] go over numerical balance of ship values; see number-mull
@@ -51,8 +53,28 @@ Complete Beta
     [ ] when there's a `:N` showing on a map, display its contents someplace
         every time there's a combat those `:N` displays show up, and
         the player needs good info on what `:N`; means
-[ ] retreat should alter behavior of retreating enemies;
-    they should actually change their destination for a bit
+    [ ] fix this display error when 10 or more units are in the same ux cell:
+           . . . . . . . . . . . . . . . . .
+        32 . . . . . . . . :10. . . . . . . .
+           . . . . . . . . . . . . . . . . .
+    [ ] in the COMBAT REPORT, displayed hull damage can sometimes exceed remaining
+        hull, it'd surprise the user --vvv
+        LOST     !1 lowragh     1.0    1.3
+        LOST     !2 ukliss      1.0    1.3
+    [ ] COMBAT REPORT and `ls` don't show lists of ships in the same order, they should
+    [ ] mild typing issue: SpaceColonies have no shield generators, but
+        ArtificialObject mandates they have one. This can result in fictional
+        damage to a nonexistent system:
+        @0 Harmony    (32.00, 32.00) CV=0.99 [## ]
+            Morale: -0.0
+            shields: 83%
+    [ ] `show <unit>` should describe effects of system damage explicitly:
+        !2 ukliss     (32.00, 32.00) W=1.00 CV=0.84 [###]     ATTACKING @1 New Ceylon (32.00, 32.00)
+            Morale:         -0.3
+            Combat Value:    0.84   Tactical systems damaged, efficiency 90%.
+            Shields:         0.00   Shields operating normally.
+            Max Safe Speed:  1.00   FTL Drive operating normally.
+
 
 Backlog
 =======

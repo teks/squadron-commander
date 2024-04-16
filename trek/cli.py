@@ -90,9 +90,9 @@ def percent_str(v: float):
 
 def combat_report_row_gen(side):
     for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in side.outcomes.items():
-        outcome = ('LOST'    if destroyed else
-                   'HUL-DMG' if hull_dmg > 0 else
-                   'SHL-HIT' if shield_dmg > 0 else '???')
+        outcome = ('LOST' if destroyed else
+                   'HULL-DMG' if hull_dmg > 0 else
+                   'SHLD-HIT' if shield_dmg > 0 else '???')
         unit = getattr(u, '_ui_label', '??') + f' {u.designation}'
         notes = []
         if u in side.retreaters:
@@ -168,7 +168,6 @@ class CLI(cmd.Cmd):
 
     def do_list(self, _):
         self._cmd_ui.object_catalog()
-
 
     status_parser = CommandLineParser(arguments=(
         SHIP_ID_ARG,
@@ -288,7 +287,7 @@ class CmdUserInterface(trek.UserInterface):
         line = f"{obj._ui_label} {obj.designation:10} {self.point_str(obj.point)}"
         if not isinstance(obj, trek.ArtificialObject):
             return line
-        line += f" CV={obj.combat_value():.2f} {self.hull_and_shield_icon(obj)}"
+        line += f" W={obj.speed:.2f} CV={obj.combat_value():.2f} {self.hull_and_shield_icon(obj)}"
         order = obj.current_order
         if order == trek.Order.ATTACK:
             t = obj.current_order_params['target']
