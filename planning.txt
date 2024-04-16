@@ -18,7 +18,8 @@ Iterations
     [x] change HOWTOPLAY.md (no changes needed)
     [v] search for remaining textual uses of 'trek'
 [v] second-to-lastly go over docstrings to Cmd do_foo methods one more time
-[ ] lastly, add a license & push to github (or gitlab? who's less-bad about model-training?)
+[v] lastly, add a license
+[ ] also lastly, push to github
 
 
 Roadmap
