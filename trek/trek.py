@@ -77,7 +77,6 @@ class Point(typing.NamedTuple):
         is 360 degrees / `direction_count` wide. So if
         direction_count == 8, East is -22.5deg to +22.5deg.
         """
-        print(f"CDT: {self}, {other}, {direction_count}")
         angle = self.bearing_to(other)
         width = 2 * math.pi / direction_count
         offset = -0.5 * width
@@ -776,8 +775,10 @@ class Simulation:
                 s.move()
 
             # combat step
+            post_combat_pause = False
             for place, participants in self.colocate_objects().items():
                 report = self.combat(p for p in participants if not p.is_destroyed())
+                post_combat_pause = post_combat_pause or report is not None
 
             for s in self.get_objects():
                 s.post_action()
@@ -785,7 +786,7 @@ class Simulation:
             for o in self.get_objects():
                 o.plan_move()
 
-            if self.should_pause():
+            if post_combat_pause or self.should_pause():
                 self.message(PausedSimulation())
                 break
 
