@@ -5,6 +5,7 @@ import pprint
 import collections
 import string
 import argparse
+import itertools
 
 import trek
 
@@ -364,7 +365,6 @@ class CmdUserInterface(trek.UserInterface):
         for o in self.simulation.get_objects():
             obj_layer[o.point.grid_cell(scale)].append(o)
             self.add_movement_markers(hud_layer, o, scale)
-        s = ''
         # set bounding box including bounds-check for attempting to show territory outside the map
         scaled_ceil = lambda v: math.ceil(scale * v)
         lower_left = trek.point(max(1, scaled_ceil(center_point.x - radius)),
@@ -372,16 +372,37 @@ class CmdUserInterface(trek.UserInterface):
         upper_right = trek.point(min(trek.MAX_X, scaled_ceil(center_point.x + radius)),
                                  min(trek.MAX_Y, scaled_ceil(center_point.y + radius)))
         rows = []
+        group_label_iter = itertools.chain(iter(string.ascii_uppercase), itertools.repeat('?'))
+        groups = [] # list of (label string, contents)
         for y in range(lower_left.y, upper_right.y + 1):
             row = f'{round(y / scale):2} ' if y % 2 == 0 else '   ' # label every other row
+
+            # set the display string for each cell in the row
             for x in range(lower_left.x, upper_right.x + 1):
-                current_point = trek.point(x, y)
-                row += self.cell_string(current_point, obj_layer, hud_layer)
+                cell_contents = obj_layer.get(trek.point(x, y), [])
+                if len(cell_contents) == 1:
+                    row += cell_contents[0]._ui_label
+                elif len(cell_contents) > 1:
+                    group_label = next(group_label_iter)
+                    groups.append((group_label, cell_contents))
+                    row += ':' + group_label
+                else:
+                    hud_contents = hud_layer.get(trek.point(x, y), [])
+                    if MOVEMENT_MARKER_CHAR in hud_contents:  # so far the only HUD item
+                        row += MOVEMENT_MARKER_CHAR + ' '
+                    else:
+                        row += '. '  # empty cells get a dot as a kind of spatial grid marker
             rows.append(row)
-        s += '\n'.join(reversed(rows))
+
+        s = '\n'.join(reversed(rows))
         # column labels in bottom row, but need to be spaced out
         s += '\n  ' + ''.join([f'  {round(c / scale):2}'
                                for c in range(lower_left.x + 1, upper_right.x + 1, 2)])
+
+        # group display after the map
+        for label, contents in groups:
+            s += (f'\n  Multiple contacts in cell {label}: '
+                  + ', '.join(o._ui_label for o in contents))
         return s
 
     def long_range_map(self):
@@ -444,20 +465,6 @@ class CmdUserInterface(trek.UserInterface):
             raise ValueError(f"Couldn't assign UI label to {obj}")
 
         return obj._ui_label
-
-    def cell_string(self, point, obj_layer, hud_layer):
-        """Emits a string for a single grid cell in the short range map."""
-        # TODO Natural phenomena (ie a star) aren't included in the count.
-        #   so if only one artificial object is present, its shown as eg ^T.
-        #   perhaps ';' for multiple contacts which includes natural phenomena eg: ;7
-        if contents := obj_layer.get(point, None):
-            if (object_cnt := len(contents)) > 1: # :7  multiple contacts; in this case 7 contacts
-                return f':{object_cnt}'
-            return contents[0]._ui_label
-        elif contents := hud_layer.get(point, None):
-            if MOVEMENT_MARKER_CHAR in contents: # so far the only official HUD item
-                return MOVEMENT_MARKER_CHAR + ' '
-        return '. ' # empty cells get a dot as a kind of spatial grid marker
 
     def get_object(self, identifying_string, side=None, controller=None):
         """Returns the object with the given UI label or else the object's designator."""

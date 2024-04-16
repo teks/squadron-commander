@@ -9,11 +9,11 @@
             pass
         MapCommand(CLI,...)  # adds do_map and help_map
         ListCommand(Cli,...) # adds do_list and help_list
-[ ] map's ':N' issues:
-    [ ] when there's a `:N` showing on a map, display its contents someplace
+[v] map's ':N' issues:
+    [v] when there's a `:N` showing on a map, display its contents someplace
         every time there's a combat those `:N` displays show up, and
         the player needs good info on what `:N`; means
-    [ ] fix this display error when 10 or more units are in the same ux cell:
+    [v] fix this display error when 10 or more units are in the same ux cell:
            . . . . . . . . . . . . . . . . .
         32 . . . . . . . . :10. . . . . . . .
            . . . . . . . . . . . . . . . . .
