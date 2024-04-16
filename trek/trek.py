@@ -964,6 +964,8 @@ class Simulation:
 
         Best not do this until the user's finished adding objects.
         """
+        for o in self.get_objects():
+            o.initialize(self)
         for o in self.get_objects(controller=Controller.ENEMY_AI):
             o.choose_target()
         for o in self.get_objects():
