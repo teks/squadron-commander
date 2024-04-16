@@ -199,8 +199,38 @@ class CmdUserInterface(trek.UserInterface):
     def object_catalog(self):
         lines = []
         for obj in self.simulation.get_objects():
-            lines.append(f"{obj._ui_label} {obj.designation:10} {self.point_str(obj.point)} {obj}")
+            line = f"{obj._ui_label} {obj.designation:10} {self.point_str(obj.point)}"
+            if isinstance(obj, trek.ArtificialObject):
+                line += f" CV={obj.combat_value()} {self.hull_and_shield_icon(obj)}"
+                order = obj.current_order
+                op = obj.current_order_params
+                if order == trek.Order.ATTACK:
+                    t = op['target']
+                    line += f" ATTACKING {t._ui_label} {t.designation} {self.point_str(t.point)}"
+                elif order == trek.Order.MOVE:
+                    line += " MOVING to " + self.point_str(op['destination'])
+                elif order == trek.Order.IDLE:
+                    line += '' if isinstance(obj, trek.SpaceColony) else " WAITING"
+                elif order is None:
+                    line += ' NO ORDERS'
+            lines.append(line)
         print('\n'.join(sorted(lines)))
+
+    def hull_and_shield_icon(self, obj):
+        if obj.is_destroyed():
+            return "DESTROYED"
+        # bin the hull status & shield status:
+        hs = obj.hull_status()
+        hull_str = ('   ' if hs < 0.25 else
+                    '#  ' if hs < 0.5  else
+                    '## ' if hs < 0.75 else '###')
+
+        ss = obj.shields_status()
+        shield_str = ('   ' if ss < 0.25 else
+                      ')  ' if ss < 0.5  else
+                      ')) ' if ss < 0.75 else ')))')
+
+        return f"[{hull_str}]{shield_str} "
 
     def short_range_map(self, center_point, radius=8, scale=1.0):
         """Returns the map for a given bounding box."""

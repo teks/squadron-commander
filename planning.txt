@@ -7,8 +7,10 @@
 [v] playtesting
 
 ## iteration 10
-[ ] why are enemies off the map?
-	This is induced after running simulation for awhile; need better UX to observe problem
+[v] why are enemies off the map?
+[v] `status` command: by default show status of all units
+[ ] pause simulation after each combat
+[ ] revise combat report; it's hard to read
 
 Future Iterations
 =================
