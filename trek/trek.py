@@ -1,7 +1,8 @@
 """Probably the whole dang game engine is gonna go in here.
 
 """
-
+import collections
+import itertools
 import sys
 import math
 import typing
@@ -53,7 +54,11 @@ class Point(typing.NamedTuple):
 
     def isclose(self, other):
         """math.isclose for points"""
-        return math.isclose(self.x, other.x) and math.isclose(self.y, other.y)
+        # math.isclose defaults a relative tolerance, so the tolerance varies
+        # around the map as x & y values grow and shrink.  Set it to an
+        # effectively fixed tolerance for consistency.
+        kw = dict(rel_tol=1e-100, abs_tol=1e-9)
+        return math.isclose(self.x, other.x, **kw) and math.isclose(self.y, other.y, **kw)
 
     def delta_to(self, other):
         """Return the relative position of other wrt self.
@@ -475,6 +480,27 @@ class Simulation:
             raise ValueError(f"Object with key {k} already found: {self.objects[k]}")
         self.objects[k] = obj
         self.message(SpawnMessage(obj))
+
+    @staticmethod
+    def validate_colocations(group):
+        # transitive property of spatial colocation should be preserved.
+        # but it may not be, so this check will at least make sure I know
+        for o, p in itertools.combinations(group, 2):
+            if not o.point.isclose(p.point):
+                raise ValueError(f"Objects are not colocated: {o}, {p}")
+
+    def colocate_objects(self, validate=True):
+        groups = collections.defaultdict(set) # keyed by position
+        for o in self.get_objects():
+            generator = (p for p in groups.keys() if o.point.isclose(p)) # <3 python <3
+            p = next(generator, o.point)
+            groups[p].add(o)
+
+        if validate:
+            for group in groups.values():
+                self.validate_colocations(group)
+
+        return groups
 
     def combat(self, participants):
         """Compute and apply 1 tick of combat effects."""

@@ -1,3 +1,5 @@
+import string
+
 import pytest
 import random
 import math
@@ -198,7 +200,7 @@ def test_Simulation_combat__damage(mocker, retreat, advantage, fs, fh, es, eh):
     [(19.0, 20.0), 1.0, False, 29, (40.0, 40.0)], # chase case
     [(19.0, 20.0), 1.5, True,   2, (21.414213562, 21.414213562)], # chase + fast interceptor case
 ])
-def test_Simulation_intercept_point(i_coord, i_speed, e_early, e_time, e_coord):
+def test_Ship_intercept_point(i_coord, i_speed, e_early, e_time, e_coord):
     """Go through various scenarios and confirm interception works"""
     target = trek.Ship('target', trek.point(20.0, 20.0))
     target.order(trek.Ship.Order.MOVE, destination=trek.point(40.0, 40.0))
@@ -208,3 +210,36 @@ def test_Simulation_intercept_point(i_coord, i_speed, e_early, e_time, e_coord):
     early, point, time = interceptor.intercept_point(target)
 
     assert (e_early, e_time) == (early, time) and trek.point(*e_coord).isclose(point)
+
+@pytest.mark.parametrize('group', [
+    # for now one obvious test is enough
+    [(10, 10), (10, 10)],
+])
+def test_Simulation_validate_colocations(group):
+    trek.Simulation.validate_colocations(
+        set(trek.Ship(str(p), trek.point(*p)) for p in group))
+
+@pytest.mark.parametrize('group', [
+    # for now one obvious test is enough
+    [(10, 10), (5, 5)],
+])
+def test_Simulation_validate_colocations_raises(group):
+    with pytest.raises(ValueError):
+        trek.Simulation.validate_colocations(
+            set(trek.Ship(str(p), trek.point(*p)) for p in group))
+
+@pytest.mark.parametrize(
+    'indiv_positions, group_count', [
+        [ # simple case, two clearly separated objects => two groups
+            [(10, 10), (11, 11)], 2
+        ],
+        [ # nearby objects
+            [(10 - 1e-15, 10), (10 + 1e-15, 10)], 1
+        ],
+    ])
+def test_Simulation_colocate_objects(indiv_positions, group_count):
+    abc_iter = iter(string.ascii_lowercase)
+    sim = trek.Simulation(trek.Ship(next(abc_iter), trek.point(*p))
+                          for p in indiv_positions)
+    groups = sim.colocate_objects()
+    assert group_count == len(groups)
