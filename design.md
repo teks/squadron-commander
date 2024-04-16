@@ -32,7 +32,7 @@ Reasons to do it:
 * Has "planetary cool" instead of "interstellar cool"
 
 Reasons not to do it:
-* Not as many locations: 
+* Not as many locations:
   * Interstellar case: 64 zones -> 50 to 60 star systems and other points of interest
   * Planetary case: 8 planets + an inner asteroid belt + an outer comet belt +
     several La Grange points -> 8 + 3 + 5 + 10 = 26 places for colonies/bases
@@ -55,9 +55,56 @@ numbers, lexicographic order is considered to be ascending (ie A, B, C...).
 Zones are mostly used for the large-scale map and its grid of '123' displays
 for each zone.
 
-The high-resolution display shows a 3x3 grid of zones (24 rows x 48 columns). 
+The high-resolution display shows a 3x3 grid of zones (24 rows x 48 columns).
 
 Possibly support `<zone>-<grid>` addressing, eg 'CD-12,15' or similar.
+
+Spatiolocation
+--------------
+A point in space is a pair of floats, `(x, y)`; ordinary two-dimensional
+geometry applies normally, such as the distance formula.
+
+But floating-point math is unreliable. Occasionally there will be two different
+ways of computing the same value, but two slightly different values are
+returned. Generally the difference is small, say 10^-12, but it can still cause
+problems. So, `a.point == b.point` is not sufficient to tell whether
+two objects are "in the same place" because of these tiny variations.
+
+For the case of intentionally travelling to an object instead of a location,
+the code can carefully `traveller.point = object.point`. This way `==` can be
+made to be reliable.
+
+Also observe that in the vastness of space, it's extremely unlikely that two
+vessels would encounter each other by accident.
+
+So for both technical and physical reasons, ideally, special circumstances are
+required for a rendezvous:
+* One successfully intercepts another.
+* Several vessels are travelling together.
+* Two vessels are intentionally seeking each other.
+* Vessels are congregating at a location, such as a planet.
+
+### `math.isclose(a, b)` May Be Close Enough
+
+`math.isclose(a, b)` is `True` when a and b are within a high relative
+tolerance of 1e-09. But sometimes three or more objects must be tested for
+colocation, but `isclose(a, b) and isclose(b, c) and not isclose(a, c)`.
+That's nonsense: Colocation should have the transitive property.
+
+However, if floating point deviations have much smaller magnitudes, only a
+great many of these deviations taken together could reach the scale of
+`isclose`'s default tolerance (imagine a series of objects in a row). So for
+now, use `isclose` to detect colocation, and carefully watch for violations of
+the transitive property.
+
+### `isclose(a, b)` Graphs to Emulate The Transitive Property
+
+One can find _all_ the chains of closeness betwen all the objects on the map,
+and thus assemble a set of graphs. Each represents a set of objects that are
+roughly "in the same place." The maximum distance between any two members of
+such a graph would be `1e-9 * n`, where n is the maximum number of objects a
+graph can have.  It's possible to reach ten such objects, but not a hundred, so
+the worst case would have an effective tolerance smaller than `1e-8`.
 
 Interstellar Navigation
 -----------------------

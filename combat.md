@@ -1,7 +1,8 @@
 Combat
 ======
-A unit is any object that can be damaged by combat; in this file often 'ship' is used
-but starbases, space colonies, and even planetary settlements are treated similarly.
+A unit is any object that can be damaged by combat; in this file often 'ship'
+is used but starbases, space colonies, and even planetary settlements are
+treated similarly.
 
 Units have shields and hull values, which are both treated as hit points;
 damage drains shields first. `hull = 0` indicates the unit is functionally
@@ -42,28 +43,6 @@ All units in the same position automatically take part in combat each tick (the
 two ponts must be exactly equal; the map is in light years). Sort all such
 units into a friendly side and an enemy side.
 
-If floating-point shenanigans prevent exactly-equal positioning, use
-`math.isclose(a, b)`, but need to assemble all the graphs for which
-`math.isclose(a, b)` where a & b are foes.  How to compute this if needed:
-
-```
-ships = {set of all ships on map}
-pairs = set()
-graphs = []
-
-while len(ships) > 0: # first make pairs...
-    s = ships.pop() # lets it go fast
-    near_foes = {t for t in ships if isclose(s, t) and hostile(s, t)}
-    ships -= near_foes # for speed
-    pairs += {{s, t} for t in near_foes}
-
-while len(pairs) > 0: # ...then group them into sets
-    pair = pairs.pop() # again operate destructively to go fast
-    graph = {candidate for candidate in pairs if any(ship in candidate for ship in pair}
-    pairs -= graph # also for speed
-    graph.add(pair)
-    graphs.append(graph)
-```
 
 ### Compute Combat Value
 
