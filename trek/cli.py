@@ -31,8 +31,8 @@ def combat_report_side_string(side):
     s = f'Combat Value multiplier: x{side.cv_modifier:.2f}\n'
     for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in side.outcomes.items():
         s += getattr(u, '_ui_label', '--') + f' {u.designation}\n'
-        s += indent + f'SHIELD DAMAGE = {shield_dmg:.2f}   {u.current_shields:.2f}/{u.max_shields:.2f} remaining\n'
-        s += indent + f'  HULL DAMAGE = {  hull_dmg:.2f}   {u.current_hull:.2f}/{u.max_hull:.2f} remaining\n'
+        s += indent + f'SHIELDS: {shield_dmg:.2f} damage, {u.current_shields:.2f}/{u.max_shields:.2f} remaining\n'
+        s += indent + f'   HULL: {  hull_dmg:.2f} damage, {u.current_hull:.2f}/{u.max_hull:.2f} remaining\n'
         retreated = u in side.retreaters
         if destroyed and retreated:
             s += indent + ('Vessel attempted to retreat, but was lost.\n')

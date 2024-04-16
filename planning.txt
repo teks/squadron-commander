@@ -2,9 +2,8 @@
 continue developing combat
 [v] check for ship destruction and send messages
 [v] add messaging to combat engine
-[ ] bring combat to a basic functional state
-    [ ] each tick, after movement step, run combat step
-    [ ] force movement on retreat
+[v] bring combat to a basic functional state
+    [v] each tick, after movement step, run combat step
 
 
 Future Iterations
@@ -12,7 +11,16 @@ Future Iterations
 [ ] look into non-flat probabilities:
     https://docs.python.org/3/library/random.html#real-valued-distributions
 
+[ ] need a "tell me about the local area" command that
+  lists everything in the area and gives status
+  maybe a 'sitrep' cmd issues to a ship?
+
 ### combat
+[ ] force movement on retreat
+  [ ] retreat moves using EMERGENCY SPEED
+  [ ] Each ship's emergency warp value is used for this.
+  [ ] Ships from a side tend to retreat in the same direction.
+
 [ ] make some ship classes and experiment with combat outcomes
     for now symmetrically:
     [ ] corvette (enemy: crow) <-- enemies are named after birds I guess

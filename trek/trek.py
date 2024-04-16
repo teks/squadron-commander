@@ -117,7 +117,8 @@ class SpaceborneObject(abc.ABC):
 
 class Ship(SpaceborneObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
-    cruising_speed = 1
+    cruising_speed = 1 # warp, not newtonian
+    acceleration = 0.1 # warp, not newtonian
     max_hull = 1
     max_shields = 0
     _combat_value = 1
@@ -512,7 +513,6 @@ class Simulation:
         no co-belligerents among the participants.
         """
         # TODO should this method be a class method in CombatSide()?
-        # import pdb; pdb.set_trace()
         participant_list = list(participants) # might be an iterator so save its contents
         # split participants into sides
         friendly_side, enemy_side = CombatSide.sort_into_sides(*participant_list)
@@ -539,8 +539,6 @@ class Simulation:
         report = CombatReport(next(iter(friendly_side.members)).point, friendly_side, enemy_side)
         self.message(report)
 
-        # TODO here down:
-        #   retreat movement; see combat.md
         return report
 
     def message(self, message):
@@ -586,8 +584,8 @@ class Simulation:
                 s.move()
 
             # combat step
-            for place, participants in self.colocate_objects().items():
-                report = self.combat(participants)
+            reports = [self.combat(participants)
+                       for place, participants in self.colocate_objects().items()]
 
             for s in self.get_objects():
                 s.post_action()

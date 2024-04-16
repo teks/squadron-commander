@@ -14,9 +14,12 @@ value.' At the moment, weapons can't miss and can't be dodged. This is
 intentional as the ships are presumed to maneuver much worse than high-tech
 weapons' ability to hit their targets.
 
-A ship's warp drive has tactical uses, mostly to retreat. Thus ships have an
-emergency warp value representing its warp drive's acceleration and activation
-latency.
+Combat is unaffected by FTL; two vessels at warp can fire on each other
+normally.
+
+A vessel may retreat from combat using its warp drive, but it must do
+so at maximum power. Thus a ship has a warp acceleration value, representing
+both its literal acceleration and also activation latency.
 
 Mechanics
 ---------
@@ -127,9 +130,9 @@ List of systems to damage and the effects of damage:
 
 ### Perform retreat movement
 
-Any surviving ships that are retreating are moved a short direction and
-distance away from the battle, proportional to its emergency warp value.  Ships
-from a side tend to retreat in the same direction.
+Any surviving ships that are retreating are moved a short distance away from
+the battle. Each ship's warp acceleration value is used for this.  Ships from a
+side tend to retreat in the same direction.
 
 This separation should be enough to force pursuing ships to chase for multiple
 ticks _if_ their speeds are very similar. The distance should be short enough,
