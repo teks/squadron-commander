@@ -123,3 +123,32 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
     [v] pause simulation when a friendly ship's repairs are complete
     [v] show estimated time to fix
 
+### i13 round of ux improvements
+[v] can I get argparse doc text to show up in Cmd outputs eg `> ? smap`?
+    yes: `def help_map(self): self.map_parser.print_help()`
+    but it'll need a buncha work to make it nice; may be easier to just
+    keep adding to docstrings:
+    * parser needs some massaging to make its help text look right
+    * class trek.cli.CLI needs machinery to avoid boilerplate, eg:
+        class CLI(cmd.Cmd):
+            pass
+        MapCommand(CLI,...)  # adds do_map and help_map
+        ListCommand(Cli,...) # adds do_list and help_list
+[v] map's ':N' issues:
+    [v] when there's a `:N` showing on a map, display its contents someplace
+        every time there's a combat those `:N` displays show up, and
+        the player needs good info on what `:N`; means
+    [v] fix this display error when 10 or more units are in the same ux cell:
+           . . . . . . . . . . . . . . . . .
+        32 . . . . . . . . :10. . . . . . . .
+           . . . . . . . . . . . . . . . . .
+        probably stop displaying a count of units; instead display a letter,
+        eg :A and then below show below:
+            Point A: Multiple contacts near (13, 17): ^1 ^2 ^3 !1 !4 @0
+[v] `ls a b c d` isn't an error
+[v] `run 3` isn't an error but does NOT wait 3h and pause
+[x] `ls --help` shows the help for the parser, heh
+    I've decided this is a feature
+[v] COMBAT REPORT and `ls` don't show lists of ships in the same order, they should
+
+
