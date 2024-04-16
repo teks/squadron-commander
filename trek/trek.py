@@ -142,20 +142,20 @@ class Ship(SpaceborneObject):
 
     def move(self, destination):
         """Perform 1 tick of movement."""
-        # print(f"{self} is MOVIN to {destination}")
-        distance_to_dest = self.point.distance(destination)
-        travel_distance = min(self.speed, distance_to_dest)
-        assert travel_distance > 0, "Unexpectedly arrived at destination"
-
-        relative_dest = self.point.delta_to(destination)
-        distance_ratio = travel_distance / distance_to_dest
-        self.point += Point(x=(relative_dest.x * distance_ratio),
-                            y=(relative_dest.y * distance_ratio))
-
-        if distance_to_dest - travel_distance <= 0.0:
+        self.point = self.future_position(destination, ticks=1)
+        if self.point == destination:
             self.reset_order()
             self.message(ArriveMessage(self))
-            return
+
+    def future_position(self, destination: Point, ticks):
+        if self.point == destination:
+            return self.point
+        distance_to_dest = self.point.distance(destination)
+        travel_distance = min(ticks * self.speed, distance_to_dest)
+        relative_dest = self.point.delta_to(destination)
+        distance_ratio = travel_distance / distance_to_dest
+        return self.point + Point(x=(relative_dest.x * distance_ratio),
+                                  y=(relative_dest.y * distance_ratio))
 
     def recharge_shields(self):
         if self.fought_last_tick:
