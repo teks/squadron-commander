@@ -28,8 +28,9 @@ class CmdUserInterface(trek.UserInterface):
     def start(self):
         return self.cli.cmdloop()
 
+
 # maybe not here in the long run
 if __name__ == '__main__':
-    simulation = trek.Simulation(trek.Map())
+    simulation = trek.default_scenario()
     ui = CmdUserInterface(simulation)
     ui.start()

@@ -39,8 +39,10 @@ def point(*args, **kwargs):
     return p
 
 
+@dataclasses.dataclass
 class SpaceborneObject(abc.ABC):
     """All vessels, planets, stations, and other objects."""
+    designation: str
     position: Point
 
 
@@ -74,3 +76,15 @@ class Simulation:
     # left None here for bootstrapping porpoises
     user_interface: UserInterface = None
     clock: int = 0 # game clock; starts at 0. User will be shown stardate
+
+
+def default_scenario():
+    ships = [
+        Ship('abel', point(x=5, y=5)),
+        Ship('baker', point(35, 30)),
+        Ship('charlie', point(60, 60)),
+        Ship('doug', point(4, 58)),
+    ]
+    map = Map(contents=ships)
+    sim = Simulation(map)
+    return sim
