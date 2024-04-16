@@ -431,6 +431,7 @@ class ArtificialObject(SpaceborneObject):
                 modifier = 2.0 # waiting with friends
 
         for c in damaged_components.values():
+            # TODO affect by morale?
             c.health += modifier * self.repair_rate / dc_cnt
 
         if not any(c.is_damaged() for c in damaged_components.values()):

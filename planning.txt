@@ -85,6 +85,8 @@ Backlog
 =======
 [ ] `mv ^3 ^2` is a 'follow' cmd? how hard would that be?
 
+[ ] blend at and vs together into `intercept`/`it` since combat is automatic?
+
 ### ux & i9 playtesting feedback
 [ ] refine ship's combat value further? (shields down, sys dmg?)
 [ ] interception points:
