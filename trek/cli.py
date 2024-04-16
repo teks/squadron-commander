@@ -101,20 +101,18 @@ class CmdUserInterface(trek.UserInterface):
         self.cli = CLI()
         self.cli._cmd_ui = self
         self.label_prefixes = {
-            trek.Ship: '^',
-            # TODO enemies
+            trek.FriendlyShip.type: '^',
+            trek.EnemyShip.type: '!',
             # TODO stars
         }
         # keep track of iteration of spaceborne object label usage
         label_chars = string.digits + string.ascii_uppercase
         self.label_iterators = {
-            trek.Ship: iter(label_chars),
-            # TODO add in:
-            # '!': iter(label_chars),
-            # '^': iter(label_chars),
+            trek.FriendlyShip.type: iter(label_chars),
+            trek.EnemyShip.type: iter(label_chars),
         }
         # set labels for the objects in the simulation
-        for o in sorted(simulation.objects(), key=lambda o: o.designation):
+        for o in sorted(simulation.get_objects(), key=lambda o: o.designation):
             self.set_ui_label(o)
 
     def start(self):
@@ -129,7 +127,7 @@ class CmdUserInterface(trek.UserInterface):
     def short_range_map(self, center_point, radius=8, scale=1.0):
         """Returns the map for a given bounding box."""
         cells = collections.defaultdict(list)
-        for o in self.simulation.objects():
+        for o in self.simulation.get_objects():
             # conveniently, round() returns an integer
             grid_point = trek.point(round(o.point.x * scale), round(o.point.y * scale))
             cells[grid_point].append(o)
@@ -137,7 +135,7 @@ class CmdUserInterface(trek.UserInterface):
         # debugging output
         for cell, occupants in cells.items():
             for obj in occupants:
-                s += f"{cell} : {obj._ui_label} : {obj}\n"
+                s += f"{obj._ui_label} : {cell} : {obj}\n"
         # set bounding box including bounds-check for attempting to show territory outside the map
         scaled_ceil = lambda v: math.ceil(scale * v)
         lower_left = trek.point(max(1, scaled_ceil(center_point.x - radius)),
@@ -163,7 +161,7 @@ class CmdUserInterface(trek.UserInterface):
     def long_range_map(self):
         """Return trek-style map of entire simulation."""
         zones = collections.defaultdict(list)
-        for o in self.simulation.objects():
+        for o in self.simulation.get_objects():
             zones[o.point.zone()].append(o)
 
         # generate the triple-digit displays & make grid
@@ -194,8 +192,8 @@ class CmdUserInterface(trek.UserInterface):
         """
         ship_cnt = 0
         for o in contents:
-            match o:
-                case trek.Ship():
+            match o.type:
+                case trek.FriendlyShip.type:
                     ship_cnt += 1
                 case _:
                     raise ValueError(f"Type for {o} isn't supported.")
@@ -204,8 +202,7 @@ class CmdUserInterface(trek.UserInterface):
 
     def set_ui_label(self, obj):
         """Attach a unique UX label [0-9A-Z] to an object, then return that label."""
-        cls = obj.__class__
-        obj._ui_label = self.label_prefixes[cls] + next(self.label_iterators[cls])
+        obj._ui_label = self.label_prefixes[obj.type] + next(self.label_iterators[obj.type])
         return obj._ui_label
 
     def cell_string(self, contents):
@@ -220,11 +217,11 @@ class CmdUserInterface(trek.UserInterface):
 
     def get_object(self, identifying_string):
         """Returns the object with the given UI label or else the object's designator."""
-        for o in self.simulation.objects():
+        for o in self.simulation.get_objects():
             if o._ui_label == identifying_string:
                 return o
         try:
-            return next(o for o in self.simulation.objects() if o.designation == identifying_string)
+            return next(o for o in self.simulation.get_objects() if o.designation == identifying_string)
         except StopIteration:
             print(f"Object '{identifying_string}' not found.")
             return None
@@ -232,7 +229,7 @@ class CmdUserInterface(trek.UserInterface):
     def move_ship(self, ship_id, destination):
         ship = self.get_object(ship_id)
         if ship is not None:
-            ship.order(trek.Ship.Order.MOVE, destination=destination)
+            ship.order(trek.FriendlyShip.Order.MOVE, destination=destination)
             self.idle_ship_check()
 
     def idle_ship_check(self):

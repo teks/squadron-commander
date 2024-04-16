@@ -53,8 +53,7 @@ def test_point_zone(points_and_zones):
 
 def test_simulation_objects():
     simulation = trek.default_scenario()
-    objects = list(simulation.objects())
-    # import pdb; pdb.set_trace()
+    objects = list(simulation.get_objects())
     assert len(objects) == 5
 
 def test_simulation_run_not_ready():
@@ -66,9 +65,9 @@ def test_simulation_run_not_ready():
 @pytest.fixture
 def ready_simulation():
     simulation = trek.default_scenario()
-    for s in simulation.squadron:
+    for s in simulation.get_objects(trek.FriendlyShip.type):
         # everyone meet in the middle
-        s.order(trek.Ship.Order.MOVE, destination=trek.point(32, 32))
+        s.order(trek.FriendlyShip.Order.MOVE, destination=trek.point(32, 32))
     return simulation
 
 # TODO writing the algorithm a second time does not a good test make
@@ -97,5 +96,5 @@ def test_simulation_run(ready_simulation):
         'charlie': one_tick_dest(point(x=60, y=60), dest),
         'doug': one_tick_dest(point(x=4, y=58), dest),
     }
-    actual_positions = {s.designation: s.point for s in ready_simulation.squadron}
+    actual_positions = {s.designation: s.point for s in ready_simulation.get_objects()}
     assert expected_positions == actual_positions

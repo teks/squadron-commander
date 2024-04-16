@@ -50,6 +50,17 @@ going to do another random fixup iteration
 [v] cure map viewing pain with `smap`, half-scale map cmd
 ```
 
+## Iteration 6
+add new SBO type: enemy
+```
+[v] class Enemy(Ship)
+[v] change Simulation to have single searchable collection of objects
+[ ] add enemy to Simulation
+[v] add enemy output to Simulation.objects()
+[ ] add enemy display to short-ranged map
+[ ] poke around for other bits
+```
+
 ## Future Iterations:
 ```
 [ ] enemy ships:

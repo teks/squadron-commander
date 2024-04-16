@@ -89,6 +89,8 @@ def zone(*args, **kwargs):
 
 class SpaceborneObject(abc.ABC):
     """All vessels, planets, stations, and other objects."""
+    type = None # for organizing spaceborne objects by category
+
     def __init__(self, designation: str, point: Point):
         self.designation = designation
         self.point = point
@@ -151,6 +153,14 @@ class Ship(SpaceborneObject):
                 raise ValueError(f"Invalid order {self.current_order}")
 
 
+class FriendlyShip(Ship):
+    type = 'friendly'
+
+
+class EnemyShip(Ship):
+    type = 'enemy'
+
+
 class Message:
     """Used for sending and receiving signals resulting from game events."""
 
@@ -171,29 +181,35 @@ class Simulation:
 
     Also can access most of the semantics too.
     """
-    def __init__(self, squadron, user_interface: UserInterface=None, clock: int=0):
+    def __init__(self, objects, user_interface: UserInterface=None, clock: int=0):
         self.user_interface = user_interface
         self.clock = clock
-        ships = list(squadron)
-        self.squadron = set(ships)
-        if len(squadron) != len(ships):
-            raise ValueError("Ships with duplicate designations detected.")
+        self.objects = {(o.type, o.designation): o for o in objects}
+        if len(objects) != len(self.objects):
+            raise ValueError("Objects with duplicate keys detected.")
 
-    def objects(self):
-        """Generator for all the objects in the simulation."""
-        for o in self.squadron:
-            yield o
+    def get_objects(self, type=None):
+        """Yield objects, optionally by type."""
+        yield from (self.objects.values() if type is None else
+                    (o for (t, _), o in self.objects.items() if t == type))
+
+    def get_object(self, type, designation):
+        return self.objects[(type, designation)]
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""
         self.user_interface.message(message)
 
     def ready_to_run(self):
-        return all(s.has_orders() for s in self.squadron)
+        """Report whether the simulation is ready to run.
+
+        Any idle friendly ships prevent the simulation from running.
+        """
+        return len(self.idle_ships()) == 0
 
     def idle_ships(self):
         """Returns a set of idle friendly vessels."""
-        return set(s for s in self.squadron if not s.has_orders())
+        return set(s for s in self.get_objects(FriendlyShip.type) if not s.has_orders())
 
     def should_pause(self):
         if not self.ready_to_run():
@@ -214,7 +230,7 @@ class Simulation:
         stop_time = self.clock + duration
         while self.clock < stop_time:
             self.clock += 1
-            for s in self.squadron:
+            for s in self.get_objects():
                 s.act(self)
             if self.should_pause():
                 break
@@ -222,11 +238,11 @@ class Simulation:
 
 def default_scenario():
     ships = {
-        Ship('abel', point(x=5, y=5)),
-        Ship('baker', point(35, 30)),
-        Ship('charlie', point(60, 60)),
-        Ship('doug', point(4, 58)),
-        Ship('alice', point(7, 7)),
+        FriendlyShip('abel', point(x=5, y=5)),
+        FriendlyShip('baker', point(35, 30)),
+        FriendlyShip('charlie', point(60, 60)),
+        FriendlyShip('doug', point(4, 58)),
+        FriendlyShip('alice', point(7, 7)),
     }
     sim = Simulation(ships)
     return sim

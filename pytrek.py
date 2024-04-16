@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     simulation = trek.default_scenario()
     # TODO starting moves should be optional
-    for ship in simulation.squadron:
+    for ship in simulation.get_objects(trek.FriendlyShip.type):
         ship.order(ship.Order.MOVE, destination=trek.point(32, 32))
     ui = cli.CmdUserInterface(simulation)
     print(ui.short_range_map(trek.point(60, 60)))
