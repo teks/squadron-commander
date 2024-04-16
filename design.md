@@ -27,6 +27,11 @@ while other events occur. However, ships can intercept each other, resulting in
 fighting at warp. For simplicity, fighting at warp is the same as at sublight
 speeds.
 
+Objects & Hazards
+-----------------
+One way to implement a supernova or black hole: A region around the center
+of the object is impassable or otherwise dangerous
+
 Combat
 ------
 Mostly follow the trappings of Star Trek: Energy shields, beam weapons,

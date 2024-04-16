@@ -20,6 +20,7 @@ class CLI(cmd.Cmd):
 
 class CmdUserInterface(trek.UserInterface):
     """UI for trek based on simple cmd.Cmd CLI."""
+
     def __init__(self, simulation):
         self.simulation = simulation
         self.simulation.user_interface = self
@@ -28,6 +29,28 @@ class CmdUserInterface(trek.UserInterface):
     def start(self):
         return self.cli.cmdloop()
 
+    def long_range_map(self):
+        """Return trek-style map of entire simulation.
+
+        3-digit display per zone:
+            * lead digit is enemy count
+            * center digit is friendly count
+            * right digit is star count
+
+        ... ... ... ...
+        ... ... ... ...
+        ... ... ... ...
+        ... ... ... ...
+        """
+
+
+    def local_map(self, center: trek.Point):
+        """
+        likely spacing is 2x1:
+        . . .
+        . . .
+        . . .
+        """
 
 # maybe not here in the long run
 if __name__ == '__main__':
