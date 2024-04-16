@@ -1,22 +1,19 @@
 import pytest
+import random
+import math
+
 import trek.cli
 import trek
-import random
 
-@pytest.fixture(params=[
+@pytest.mark.parametrize('a, b, expected_distance', [
     ((2, 1), (5, 5), 5),
     ((1, 1), (9, 16), 17),
     ((9, 16), (1, 1), 17),
     ((1, 1), (1, 5), 4),
     ((1, 1), (5, 1), 4),
 ])
-def distances(request):
-    a, b, d = request.param
-    return a, b, d, trek.point(*a).distance(trek.point(*b))
-
-def test_point_distance(distances):
-    _, _, expected_distance, actual_distance = distances
-    assert expected_distance == actual_distance
+def test_point_distance(a, b, expected_distance):
+    assert expected_distance == trek.point(*a).distance(trek.point(*b))
 
 @pytest.fixture(params=[
     [(5, 4), (2, 6), (-3, 2)],
@@ -172,10 +169,23 @@ def test_Simulation_combat__hull_damage():
     assert all(o.shields_status() == 0.0 and o.hull_status() <= 0.0 for o in fsq + esq
                ), "total annihilation case"
 
-def test_t(mocker):
-    mocker.patch('trek.random.random', return_value=0.0) # no retreating
-    mocker.patch('trek.random.choice', return_value=(1.00, 1.00)) # no advtange
+@pytest.mark.parametrize(
+    'retreat, advantage, fs, fh,  es,  eh', [
+    [1.0, (1.00, 1.00), 0.4, 1.0, 0.0, 1/3], # no retreat, no advantage
+    [0.0, (1.00, 1.00), 0.7, 1.0, 1/6, 1.0], # enemy retreats, no advantage
+    [1.0, (1.25, 0.75), 0.55, 1.0, 0.0, 2 - 25 / 12], # no retreat, friendly advantage
+])
+def test_Simulation_combat__damage(mocker, retreat, advantage, fs, fh, es, eh):
+    mocker.patch('trek.random.random', return_value=retreat)
+    mocker.patch('trek.random.choice', return_value=advantage)
     simulation = trek.default_scenario(enemies=True)
     report = simulation.combat(simulation.get_objects())
-    crs = trek.cli.combat_report_string(report)
-    print(crs)
+    # crs = trek.cli.combat_report_string(report)
+    # print(crs)
+    fm = report.friendly_side.members
+    em = report.enemy_side.members
+    assert (all(math.isclose(fs, u.current_shields) for u in fm)
+        and all(math.isclose(fh, u.current_hull   ) for u in fm)
+        and all(math.isclose(es, u.current_shields) for u in em)
+        and all(math.isclose(eh, u.current_hull   ) for u in em)
+    )

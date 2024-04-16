@@ -196,8 +196,7 @@ class Ship(SpaceborneObject):
         #   ie greater self.combat_value() --> reduced chance of retreat
         return p
 
-    # I don't want to open the mocking can of worms, just being lazy:
-    def retreats_from(self, side_cv_ratio, rand_value=None):
+    def retreats_from(self, side_cv_ratio):
         """Randomly determines if a ship retreats from battle.
 
         Examples of probability of retreat:
@@ -208,8 +207,7 @@ class Ship(SpaceborneObject):
             * high: significant hull damage
         """
         # garaunteed: 0.0 <= random.random() < 1.0
-        retreats = self.retreat_chance(side_cv_ratio) > (
-            random.random() if rand_value is None else rand_value)
+        retreats = self.retreat_chance(side_cv_ratio) > random.random()
         return retreats
 
     def receive_damage(self, quantity: float):
@@ -297,7 +295,7 @@ class CombatSide:
         return cv + rcv
 
     def retreat_check(self, cv_ratio):
-        """Does this side choose to retreat?"""
+        """Find out who retreats on this side."""
         for m in self.members:
             retreats = m.retreats_from(cv_ratio)
             if retreats:
