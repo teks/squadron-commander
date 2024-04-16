@@ -92,9 +92,10 @@ class SpaceborneObject(abc.ABC):
     """All vessels, planets, stations, and other objects."""
     type = None # for organizing spaceborne objects by category
 
-    def __init__(self, designation: str, point: Point):
+    def __init__(self, designation: str, point: Point, simulation=None):
         self.designation = designation
         self.point = point
+        self.simulation = simulation
 
     def __hash__(self):
         return hash(self.designation)
@@ -106,14 +107,14 @@ class SpaceborneObject(abc.ABC):
 
 class Ship(SpaceborneObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
+    cruising_speed = 1
     max_hull = 1
     max_shields = 0
     _combat_value = 1
 
-    def __init__(self, designation: str, point: Point, cruising_speed: float=1.0):
+    def __init__(self, designation: str, point: Point, simulation=None):
         """Cruising speed is in light year per hour."""
-        super().__init__(designation, point)
-        self.cruising_speed = cruising_speed
+        super().__init__(designation, point, simulation)
         self.speed = self.cruising_speed
         self.current_order = None # start out with no orders
         self.fought_last_tick = False
@@ -134,7 +135,11 @@ class Ship(SpaceborneObject):
     def reset_order(self):
         self.current_order = None
 
-    def move(self, simulation, destination):
+    def message(self, message):
+        if self.simulation is not None:
+            self.message(message)
+
+    def move(self, destination):
         """Perform 1 tick of movement."""
         # print(f"{self} is MOVIN to {destination}")
         distance_to_dest = self.point.distance(destination)
@@ -148,7 +153,7 @@ class Ship(SpaceborneObject):
 
         if distance_to_dest - travel_distance <= 0.0:
             self.reset_order()
-            simulation.message(ArriveMessage(self))
+            self.message(ArriveMessage(self))
             return
 
     def recharge_shields(self):
@@ -212,6 +217,7 @@ class Ship(SpaceborneObject):
 
         If damage is dealt to the hull, it may result in system damage.
         """
+        assert damage_qty >= 0.0, "Damage value should not be negative"
         self.current_shields -= damage_qty
         if self.current_shields >= 0.0: # is there overflow damage?
             return
@@ -220,7 +226,9 @@ class Ship(SpaceborneObject):
         self.current_shields = 0.0
         self.current_hull -= hull_damage
         # TODO self.system_damage()
-        # TODO check for destruction
+        # TODO check for destruction & send message:
+        # if self.current_hull <= 0.0:
+        #     self.simulation
 
     # TODO
     # def system_damage(self):
@@ -236,7 +244,7 @@ class Ship(SpaceborneObject):
         order, params = self.current_order
         match order:
             case self.Order.MOVE:
-                self.move(simulation, params['destination'])
+                self.move(params['destination'])
             case _:
                 raise ValueError(f"Invalid order {self.current_order}")
 
@@ -323,7 +331,10 @@ class Simulation:
     def __init__(self, objects, user_interface: UserInterface=None, clock: int=0):
         self.user_interface = user_interface
         self.clock = clock
-        self.objects = {(o.type, o.designation): o for o in objects}
+        self.objects = {}
+        for o in objects:
+            o.simulation = self
+            self.objects[(o.type, o.designation)] = o
         if len(objects) != len(self.objects):
             raise ValueError("Objects with duplicate keys detected.")
 
