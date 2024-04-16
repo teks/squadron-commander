@@ -7,12 +7,8 @@ Iterations
 [v] retreat should alter behavior of retreating enemies;
     they should actually retreat towards their origin direction for a bit
     (it's a way of driving enemies away from a base or target)
-[ ] mild typing/UI issue: SpaceColonies have no shield generators, but
-    ArtificialObject mandates they have one. This can result in fictional
-    damage to a nonexistent system:
-    @0 Harmony    (32.00, 32.00) CV=0.99 [## ]
-        Morale: -0.0
-        shields: 83%
+[v] issue: SpaceColonies have 0 max shields but still have a shields Component
+    so rejigger so they have shields (easier than removoing the Component).
 [ ] mull renaming project to 'Squadron Commander' / SQUADCOMM
 [ ] second-to-lastly go over docstrings to Cmd do_foo methods one more time
 [ ] lastly, add a license & push to github
@@ -89,7 +85,7 @@ Backlog
                24  26  26  28  28  30  30  32
 
 ### gameplay features
-
+[ ] support ArtificialObject with no tactical nor shield Components
 [ ] make some ship classes and experiment with combat outcomes; for now symmetrically:
     [ ] go over numerical balance of ship values; see number-mull
     [ ] corvette (enemy: crow) <-- enemies are named after birds I guess

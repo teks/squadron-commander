@@ -207,12 +207,15 @@ class Order(enum.Enum):
 class ArtificialObject(SpaceborneObject):
     """Any vessel, whether mobile like a ship, or not, like a space station.
 
-    Thus it has a hull, a combat value, and optionally, shields.  They may be
+    Thus it has a hull, shields, tactical systems, and thus a combat value. It may be
     manned or automated.  For now, such objects can't be given orders; they
     just sit there and defend themselves if needed.
     """
     max_hull = 1
-    max_shields = 0
+    # TODO the way this is written (see self.components below) an
+    #  ArtificialObject must have both a tactical Component and a shields Component.
+    #  SO there's no way to make an unarmed, unshielded ArtificialObject, which seems odd.
+    max_shields = 1
     _combat_value = 1
     side = Side.NEUTRAL
     controller = None
@@ -273,7 +276,6 @@ class ArtificialObject(SpaceborneObject):
         self.speed = 0
         # start with neutral morale, worst and best is [-1, 1]
         self._morale = 0.0
-        # TODO why does it default to having shields when max_shields == 0?
         self.components = dict(shields=self.Shields(), tactical=self.Component())
 
     def has_orders(self):
@@ -446,8 +448,13 @@ class ArtificialObject(SpaceborneObject):
 
 
 class SpaceColony(ArtificialObject):
-    """Orbital and deep-space habitats."""
+    """Orbital and deep-space habitats.
+
+    Ruggedly built but not well-armed."""
     side = Side.FRIENDLY
+    max_shields = 0.5
+    max_hull = 1
+    _combat_value = 0.5
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
