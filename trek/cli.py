@@ -214,6 +214,7 @@ class CmdUserInterface(trek.UserInterface):
 
     def long_range_map(self):
         """Return trek-style map of entire simulation."""
+        raise NotImplementedError("not sure what long range map is for given smap")
         zones = collections.defaultdict(list)
         for o in self.simulation.get_objects():
             zones[o.point.zone()].append(o)
@@ -284,21 +285,24 @@ class CmdUserInterface(trek.UserInterface):
         ship = self.get_object(ship_id)
         if ship is not None:
             ship.order(trek.FriendlyShip.Order.MOVE, destination=destination)
-            self.idle_ship_check()
+            self.check_orders()
 
     def attack(self, ship_id: str, target_id: str):
         ship = self.get_object(ship_id)
         target = self.get_object(target_id)
         if None not in (ship, target):
             ship.order(trek.FriendlyShip.Order.ATTACK, target=target)
-            self.idle_ship_check()
+            self.check_orders()
 
-    def idle_ship_check(self):
-        idle_ships = self.simulation.idle_ships()
-        if len(idle_ships) == 0:
-            print("All ships have their orders.")
+    def check_orders(self):
+        """Confirm player-controlled vessels have orders."""
+        ships = self.simulation.objects_without_orders(trek.Side.FRIENDLY)
+        if ships:
+            print("All units have their orders.")
         else:
-            print(f"{len(idle_ships)} ships have no orders.")
+            print(f"{len(ships)} units need orders:")
+            for s in ships:
+                print(s)
 
     def message(self, message):
         match message:

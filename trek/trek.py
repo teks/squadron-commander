@@ -118,16 +118,40 @@ class SpaceborneObject(abc.ABC):
             self.simulation.message(message)
 
 
-class ArtificialObject(SpaceborneObject):
-    """Any spaceborne object that is artificially constructed.
+# TODO replace `o.side == FriendlyShip.side` with o.side == Side.FRIENDLY`
+class Side(enum.Enum):
+    """When it comes to fights and other interactions, what side is this object on?"""
+    FRIENDLY = 'friendly'
+    ENEMY = 'enemy'
+    NEUTRAL = 'neutral'
 
-    Thus it has a hull, a combat value, and optionally, shields.
-    For now, such objects can't be given orders; they just sit there
-    and defend themselves if needed.
+
+class Order(enum.Enum):
+    """Controllable objects in the simulation need to be given orders."""
+    MOVE = 'move'
+    ATTACK = 'attack'
+    IDLE = 'idle'
+
+    def is_movement_order(self):
+        # have to delay evaluating eg self.MOVE to give time for Enum magic
+        # to change the strings into Order instances:
+        return self in (self.MOVE, self.ATTACK)
+
+
+class ArtificialObject(SpaceborneObject):
+    """Any vessel, whether mobile like a ship, or not, like a space station.
+
+    Thus it has a hull, a combat value, and optionally, shields.  They may be
+    manned or automated.  For now, such objects can't be given orders; they
+    just sit there and defend themselves if needed.
     """
     max_hull = 1
     max_shields = 0
     _combat_value = 1
+    side = Side.NEUTRAL
+    # TODO move away from Ship.Order.FOO and just reference Order.FOO
+    Order = Order
+    valid_orders = {Order.IDLE}
 
     def __init__(self, designation: str, point: Point, simulation=None):
         """Cruising speed is in light year per hour."""
@@ -136,6 +160,21 @@ class ArtificialObject(SpaceborneObject):
         self.current_shields = self.max_shields
         self.current_hull = self.max_hull
         self.planned_move = None
+        self.current_order = None # start out with no orders
+        self.current_order_params = None
+
+    def has_orders(self):
+        return self.current_order is not None
+
+    def order(self, order: Order, **kwargs):
+        if order not in self.valid_orders:
+            raise ValueError(f"'{order}' is not in the set of valid orders: {self.valid_orders}")
+        self.current_order = order
+        self.current_order_params = kwargs
+
+    def reset_order(self):
+        self.current_order = None
+        self.current_order_params = None
 
     def displacement(self, ticks=1):
         return self.point # ain't goin nowhere
@@ -212,52 +251,27 @@ class ArtificialObject(SpaceborneObject):
         pass
 
     def post_action(self):
-        # TODO any AI ships with no orders should choose an order
-        self.planned_move = None
+        assert self.current_order == Order.IDLE
         self.recharge_shields()
 
 
+# TODO space colonies are friendly for battle purposes but aren't controllable by the player
 class SpaceColony(ArtificialObject):
     """Orbital and deep-space habitats."""
-    side = 'friendly'
+    side = Side.FRIENDLY
 
 
 class Ship(ArtificialObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
     cruising_speed = 1 # warp, not newtonian
     acceleration = 0.1 # warp, not newtonian
-    side = 'neutral'
+    side = Side.NEUTRAL
+    valid_orders = set(Order) # can do anything
 
     def __init__(self, designation: str, point: Point, simulation=None):
         """Cruising speed is in light year per hour."""
         super().__init__(designation, point, simulation)
         self.speed = self.cruising_speed
-        self.current_order = None # start out with no orders
-        self.current_order_params = None
-
-    # not sure python enums are worth it, but here it is:
-    class Order(enum.Enum):
-        MOVE = 'move'
-        ATTACK = 'attack'
-        IDLE = 'idle'
-
-        def is_movement_order(self):
-            # have to delay evaluating eg self.MOVE to give time for Enum magic
-            # to change the strings into Order instances:
-            return self in (self.MOVE, self.ATTACK)
-
-    def has_orders(self):
-        return self.current_order is not None
-
-    def order(self, order: Order, **kwargs):
-        if order not in self.Order:
-            raise ValueError(f"'{order}' is not a valid order")
-        self.current_order = order
-        self.current_order_params = kwargs
-
-    def reset_order(self):
-        self.current_order = None
-        self.current_order_params = None
 
     def displacement(self, destination: Point=None, ticks=1):
         """Where will self be at a future time?
@@ -365,9 +379,8 @@ class Ship(ArtificialObject):
         return retreats
 
     def plan_move(self): # currently simulation param isn't needed
-        if not self.has_orders():
-            self.planned_move = None
-        elif self.current_order == self.Order.MOVE:
+        self.planned_move = None
+        if self.current_order == self.Order.MOVE:
             self.planned_move = self.point + self.displacement()
         elif self.current_order == self.Order.ATTACK:
             (intercepted_before_destination, intercept_point, ticks_to_intercept
@@ -380,7 +393,6 @@ class Ship(ArtificialObject):
             self.point = self.planned_move
 
     def post_action(self):
-        # TODO any AI ships with no orders should choose an order
         self.planned_move = None
         self.recharge_shields()
         match self.current_order:
@@ -393,23 +405,23 @@ class Ship(ArtificialObject):
                 if t.is_destroyed():
                     self.reset_order()
                     self.message(TargetDestroyed(self, t))
-            case None | self.Order.IDLE:
+            case self.Order.IDLE:
+                pass
+            case None:
                 pass
             case _:
                 raise ValueError(f"Invalid order {self.current_order}")
 
 
 class FriendlyShip(Ship):
-    side = 'friendly'
+    side = Side.FRIENDLY
     max_shields = 1
 
 
 class EnemyShip(Ship):
-    side = 'enemy'
+    side = Side.ENEMY
     max_shields = 1
 
-    def act(self, simulation):
-        pass # stub for now
 
 @dataclasses.dataclass
 class CombatSide:
@@ -543,6 +555,7 @@ class Simulation:
                 raise ValueError(f"Objects are not colocated: {o}, {p}")
 
     def colocate_objects(self, validate=True):
+        """Determine which objects are presently 'in the same place'."""
         groups = collections.defaultdict(set) # keyed by position
         for o in self.get_objects():
             generator = (p for p in groups.keys() if o.point.isclose(p)) # <3 python <3
@@ -600,11 +613,11 @@ class Simulation:
 
         Any idle friendly ships prevent the simulation from running.
         """
-        return len(self.idle_ships()) == 0
+        return len(self.objects_without_orders()) == 0
 
-    def idle_ships(self):
+    def objects_without_orders(self, side=None):
         """Returns a set of idle friendly vessels."""
-        return set(s for s in self.get_objects(FriendlyShip.side) if not s.has_orders())
+        return set(s for s in self.get_objects(side) if not s.has_orders())
 
     def should_pause(self):
         if not self.ready_to_run():

@@ -1,5 +1,5 @@
 ## iteration 9
-[ ] space stations: starbases and space colonies; free-floating for now, not in orbit
+[v] space stations: starbases and space colonies; free-floating for now, not in orbit
 [ ] simplest AI for raiders: they attack nearest settlement
     AI action selection is last in the tick so the user can be aware of headings
 [ ] damage system for space stations; crib from Ship
