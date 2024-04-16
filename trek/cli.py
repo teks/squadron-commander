@@ -254,28 +254,35 @@ class CmdUserInterface(trek.UserInterface):
         try:
             self.simulation.run(duration)
         except self.simulation.NotReadyToRun as e:
-            print("Not ready to run; vessels needing orders:")
-            [print(o._ui_label, o.designation, self.point_str(o.point)) for o in e.args[0]]
+            print(f"Not ready to run; {len(e.args[0])} unit(s) need orders:")
+            print('\n'.join(self.single_line_object_display(o) for o in e.args[0]))
 
     def object_catalog(self):
         lines = []
         for obj in self.simulation.get_objects():
-            line = f"{obj._ui_label} {obj.designation:10} {self.point_str(obj.point)}"
-            if isinstance(obj, trek.ArtificialObject):
-                line += f" CV={obj.combat_value()} {self.hull_and_shield_icon(obj)}"
-                order = obj.current_order
-                op = obj.current_order_params
-                if order == trek.Order.ATTACK:
-                    t = op['target']
-                    line += f" ATTACKING {t._ui_label} {t.designation} {self.point_str(t.point)}"
-                elif order == trek.Order.MOVE:
-                    line += " MOVING to " + self.point_str(op['destination'])
-                elif order == trek.Order.IDLE:
-                    line += '' if isinstance(obj, trek.SpaceColony) else " WAITING"
-                elif order is None:
-                    line += ' NO ORDERS'
+            line = self.single_line_object_display(obj)
             lines.append(line)
         print('\n'.join(sorted(lines)))
+
+    def single_line_object_display(self, obj):
+        # TODO rewrite in terms of SimpleTable?
+        line = f"{obj._ui_label} {obj.designation:10} {self.point_str(obj.point)}"
+        if not isinstance(obj, trek.ArtificialObject):
+            return line
+        line += f" CV={obj.combat_value()} {self.hull_and_shield_icon(obj)}"
+        order = obj.current_order
+        if order == trek.Order.ATTACK:
+            t = obj.current_order_params['target']
+            line += f" ATTACKING {t._ui_label} {t.designation} {self.point_str(t.point)}"
+        elif order == trek.Order.MOVE:
+            line += " MOVING to " + self.point_str(obj.current_order_params['destination'])
+        elif order == trek.Order.IDLE:
+            line += '' if isinstance(obj, trek.SpaceColony) else " WAITING"
+        elif order is None:
+            line += ' NO ORDERS'
+        else:
+            raise ValueError(f"Unexpected order {order}")
+        return line
 
     def hull_and_shield_icon(self, obj):
         if obj.is_destroyed():
@@ -446,13 +453,13 @@ class CmdUserInterface(trek.UserInterface):
 
     def check_orders(self):
         """Confirm player-controlled vessels have orders."""
-        ships = self.simulation.objects_without_orders(trek.Side.FRIENDLY)
-        if len(ships) == 0:
-            print("All units have their orders.")
+        units = self.simulation.objects_without_orders(trek.Side.FRIENDLY)
+        if len(units) == 0:
+            print("All units have orders.")
         else:
-            print(f"{len(ships)} units need orders:")
-            for s in ships:
-                print(s)
+            print(f"{len(units)} unit(s) need orders:")
+            for u in units:
+                print(self.single_line_object_display(u))
 
     def message(self, message):
         m = f"{message.tick}h "

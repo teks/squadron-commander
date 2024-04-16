@@ -67,3 +67,17 @@ continue developing combat
 [v] bring combat to a basic functional state
     [v] each tick, after movement step, run combat step
 
+## iteration 9
+[v] space stations: starbases and space colonies; free-floating for now, not in orbit
+[v] simplest AI for raiders: they attack nearest settlement
+    AI action selection is last in the tick so the user can be aware of headings
+[v] damage system for space stations; crib from Ship
+[v] automated testing of i9 diff
+[v] playtesting
+
+## iteration 10
+[v] why are enemies off the map?
+[v] `status` command: by default show status of all units
+[v] add movement prediction markers to short range map
+[v] pause simulation after each combat
+[v] revise combat report; it's hard to read

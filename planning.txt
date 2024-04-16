@@ -1,25 +1,36 @@
-## iteration 9
-[v] space stations: starbases and space colonies; free-floating for now, not in orbit
-[v] simplest AI for raiders: they attack nearest settlement
-    AI action selection is last in the tick so the user can be aware of headings
-[v] damage system for space stations; crib from Ship
-[v] automated testing of i9 diff
-[v] playtesting
+### i11
+[v] use `ls` to show a ship when it needs orders:
+    24h> mv ^0 28 56
+    1 units need orders:
+    <trek.trek.FriendlyShip alice Point(x=29.740456597169644, y=10.44552372684389)>
+[ ] combat enrichment
+    [ ] morale:
+        [ ] set initial value: self.morale = 0.0 # neutral
+        [ ] depletion & restoration
+        [ ] effect on combat
+    [ ] system damage
+        [ ] when there's hull damage, apply systems damage
+        [ ] add systems to ships
+    [ ] refine ship's combat value further? (shields down, sys dmg?)
+[ ] `status <unit>...` to show system damage etc
+    see `doc/object-detail-view.md`
+[ ] additional ux as issues reveal themselves
 
-## iteration 10
-[v] why are enemies off the map?
-[v] `status` command: by default show status of all units
-[v] add movement prediction markers to short range map
-[v] pause simulation after each combat
-[v] revise combat report; it's hard to read
 
-Future Iterations
-=================
+Roadmap
+=======
+UX
+[ ] how much more time am I going to spend on a console game before switching to pygame or something?
+
+
+Backlog
+=======
 
 ### ux & i9 playtesting feedback
-[ ] show interception point in `ls` when ATTACK
-[ ] `status <unit>...` to show status of chosen units
-    see `doc/object-detail-view.md`
+[ ] interception points:
+    [ ] show interception point in `ls` when ATTACK
+    [ ]? need a "show me the interception point" cmd
+    [ ] show interception point when attack cmd is issued
 [ ] add `<duration>` arg to `run` cmd
 [ ] Message for interception
 [ ] message for tick passage, maybe every 5 or 10? make it configurable
@@ -28,40 +39,31 @@ Future Iterations
     [ ] show tick in prompt? eg `(+14h) ` or maybe `[0300] ` for 3 AM
     [ ] most messages should be prefixed with tick (in hours or walltime) eg:
         +13h ARRIVAL: ^2 baker has arrived at Point(x=32.0, y=32.0).
+[ ] when units are stacked up eg `:3`, need a way to quickly list contents
 [ ] need a "tell me about the local area" command that
     lists everything in the area and gives status
     maybe a 'sitrep' cmd issues to a ship?
 
 ### combat (descending priority):
-
 [ ] force movement on retreat
   [ ] retreat moves using EMERGENCY SPEED
   [ ] Each ship's emergency warp value is used for this.
   [ ] Ships from a side tend to retreat in the same direction.
-[ ] system damage
-    [ ] on hull damage, apply systems damage
-    [ ] add systems to ships
-[ ] morale: depletion, restoration, and effect on combat
-    set initial value: self.morale = 0.0 # neutral
-[ ] refine ship's combat value (shields down, morale, etc)
-
 [ ] make some ship classes and experiment with combat outcomes
     for now symmetrically:
+    [ ] go over numerical balance of ship values; see number-mull
     [ ] corvette (enemy: crow) <-- enemies are named after birds I guess
     [ ] cruiser (enemy: vulture)
-[ ] mull a 'maneuverability' value for ships
 [ ] order that toggles `ship.evasive` & retreat_check checks it
-[ ] go over numerical balance of ship values; see number-mull
 
 ### misc
 [ ] help facility?
 [ ] `wait <unit> <duration>`  <-- add duration?
 
 ### low priority
-
+[ ] mull a 'maneuverability' value for ships
 [ ] look into non-flat probabilities:
     https://docs.python.org/3/library/random.html#real-valued-distributions
-
 [ ] raiders sometimes carry off hostages when they raid settlements?
     have to send ships to get them back? that implies boarding ops
 [ ] attempt to use dataclasses for SpaceborneObject & children
