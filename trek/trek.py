@@ -225,6 +225,9 @@ class ArtificialObject(SpaceborneObject):
         def health(self, new_value: float):
             self._health = 1.0 if new_value > 1.0 else (0.0 if new_value < 0.0 else new_value)
 
+        def is_damaged(self):
+            return self.health < 1.0
+
         def damage_check(self, hull_damage: float, hull_fraction: float, vessel) -> float | None:
             """Check for damage to the given component if there has been hull damage.
 
@@ -258,6 +261,7 @@ class ArtificialObject(SpaceborneObject):
         self.speed = 0
         # start with neutral morale, worst and best is [-1, 1]
         self._morale = 0.0
+        # TODO why does it default to having shields when max_shields == 0?
         self.components = dict(shields=self.Shields(), tactical=self.Component())
 
     def has_orders(self):
@@ -396,9 +400,14 @@ class ArtificialObject(SpaceborneObject):
         pass
 
     def repair(self):
-        if self.fought_this_tick:
+        """Repair damaged components."""
+        damaged_components = {n: c for (n, c) in self.components.items()
+                              if c.is_damaged()}
+        dc_cnt = len(damaged_components)
+        if self.fought_this_tick or dc_cnt == 0:
             return
-        self.repair_rate
+        for c in damaged_components.values():
+            c.health += self.repair_rate / dc_cnt
 
     def post_action(self):
         self.recharge_shields()

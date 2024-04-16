@@ -262,16 +262,39 @@ def test_Ship_morale_cv_effect():
     low_cv = s.combat_value()
     assert (0.75, 1.25) == (low_cv, high_cv)
 
-@pytest.mark.parametrize('hull_fraction, random_vals, expected_dmg', [
-    [0.7, [0.36], None],  # no damage case
-    [0.7, [0.34, 0.60], 0.18],  # damage damage case
-])
-def test_ArtificialObject_Component_damage_check(hull_fraction, random_vals, expected_dmg):
-    fake_random = lambda: random_vals.pop(0)
-    c = trek.ArtificialObject.Component(random=fake_random)
-    a = trek.ArtificialObject('no name', trek.Point(1, 1))
-    actual_dmg = c.damage_check(0.1, hull_fraction, a)
-    assert {expected_dmg, actual_dmg} == {None} or math.isclose(expected_dmg, actual_dmg)
+
+class TestArtificialObject:
+    @pytest.mark.parametrize('hull_fraction, random_vals, expected_dmg', [
+        [0.7, [0.36], None],  # no damage case
+        [0.7, [0.34, 0.60], 0.18],  # damage damage case
+    ])
+    def test_Component_damage_check(self, hull_fraction, random_vals, expected_dmg):
+        fake_random = lambda: random_vals.pop(0)
+        c = trek.ArtificialObject.Component(random=fake_random)
+        a = trek.ArtificialObject('no name', trek.Point(1, 1))
+        actual_dmg = c.damage_check(0.1, hull_fraction, a)
+        assert {expected_dmg, actual_dmg} == {None} or math.isclose(expected_dmg, actual_dmg)
+
+    def test_repair__base_case(self):
+        o = trek.ArtificialObject('no name', trek.Point(1, 1))
+        o.repair_rate = 0.1
+        o.components['tactical'].health = 0.73
+        o.components['shields'].health = 0.95
+        o.repair()
+        assert (0.78, 1.0 # <-- small loss of repair capacity is intended outcome
+                ) == (o.components['tactical'].health, o.components['shields'].health)
+
+    def test_repair__combat_tick(self):
+        """No repairs possible during combat."""
+        o = trek.ArtificialObject('no name', trek.Point(1, 1))
+        o.repair_rate = 0.1
+        o.components['tactical'].health = 0.73
+        o.components['shields'].health = 0.95
+        o.fought_this_tick = True
+        o.repair()
+        assert (0.73, 0.95
+                ) == (o.components['tactical'].health, o.components['shields'].health)
+
 
 @pytest.mark.parametrize('group', [
     # for now one obvious test is enough
