@@ -296,8 +296,9 @@ class CmdUserInterface(trek.UserInterface):
     def object_catalog(self, *object_id_pile):
         lines = []
         for obj in self.object_generator(*object_id_pile):
-            line = self.single_line_object_display(obj)
-            lines.append(line)
+            if obj is not None:
+                line = self.single_line_object_display(obj)
+                lines.append(line)
         print('\n'.join(lines))
 
     def single_line_object_display(self, obj):
