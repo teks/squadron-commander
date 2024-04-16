@@ -65,8 +65,8 @@ class Point(typing.NamedTuple):
 
     def zone(self):
         """Determine which zone the current point is in."""
-        return self.__class__(x=1 + (self.x - 1) // ZONE_SIZE_X,
-                              y=1 + (self.y - 1) // ZONE_SIZE_Y)
+        return self.__class__(x=1 + (self.x - 0.5) // ZONE_SIZE_X,
+                              y=1 + (self.y - 0.5) // ZONE_SIZE_Y)
 
 
 def point(*args, **kwargs):

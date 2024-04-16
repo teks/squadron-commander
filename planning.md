@@ -42,8 +42,6 @@ fix random stuff, look for TODOs and cleanup:
 ## Future Iterations:
 
 ```
-[v] abstract base ux class
-
 [ ] concrete CLI ux class
     [v] cmd
     [ ] displays for various entities & the map

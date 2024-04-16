@@ -37,6 +37,20 @@ def test_point_validate_high():
     with pytest.raises(AttributeError):
         trek.point(65, 5)
 
+@pytest.fixture(params=[
+    [( 3.5, 5.5), (1, 1)],
+    [( 8.7, 4.0), (2, 1)],
+    [(15.8, 16.3), (2, 2)],
+])
+def points_and_zones(request):
+    return request.param
+
+def test_point_zone(points_and_zones):
+    """Confirm Point.zone() correctly assigns a zone to a Point."""
+    raw_p, expected_z = points_and_zones
+    p = trek.Point(*raw_p)
+    assert expected_z == p.zone()
+
 def test_simulation_objects():
     simulation = trek.default_scenario()
     objects = list(simulation.objects())
