@@ -8,8 +8,9 @@
         [v] set initial value: self.morale = 0.0 # neutral
         [v] depletion & restoration
         [v] effect on combat
-        [ ] write some tests
-        [ ] do playtest
+        [v] write some tests
+        [v] do playtest; fallout:
+            [v] in `ls`, CV can have too many digits: CV=0.9875
     [ ] system damage
         [ ] when there's hull damage, apply systems damage
         [ ] add systems to ships
@@ -18,7 +19,6 @@
     [ ] refine ship's combat value further? (shields down, sys dmg?)
 [ ] `status <unit>...` to show system damage etc
     see `doc/object-detail-view.md`
-[ ] additional ux as issues reveal themselves
 
 
 Roadmap
@@ -40,6 +40,13 @@ Complete Beta
 [ ] playable scenario:
     [ ] enemies appear to the left, retreat to the left?
     [ ] new ones spawn periodically
+[ ] additional ux as issues reveal themselves
+    [ ] `ls a b c d` isn't an error
+    [ ] `run 3` isn't an error but does NOT wait 3h and pause
+    [ ] `show` defaulting to showing all units might be nice
+    [ ] when there's a `:N` showing on a map, display its contents someplace
+        every time there's a combat those `:N` displays show up, and
+        the player needs good info on what `:N`; means
 
 
 Backlog
