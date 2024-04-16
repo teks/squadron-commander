@@ -207,6 +207,7 @@ class ArtificialObject(SpaceborneObject):
     # TODO move away from Ship.Order.FOO and just reference Order.FOO
     Order = Order
     valid_orders = {Order.IDLE}
+    repair_rate = 0.0 # no capacity for fixing itself
 
     # TODO ArtificialObject does not yet exist so can't use it as a type
     #   annotation in Component, and can't use typing.Self because that refers to the wrong class
@@ -248,7 +249,7 @@ class ArtificialObject(SpaceborneObject):
 
     def __init__(self, designation: str, point: Point, simulation=None):
         super().__init__(designation, point, simulation)
-        self.fought_last_tick = False
+        self.fought_this_tick = False
         self.current_shields = self.max_shields
         self.current_hull = self.max_hull
         self.planned_move = None
@@ -279,8 +280,8 @@ class ArtificialObject(SpaceborneObject):
         return self.point # still ain't goin nowhere
 
     def recharge_shields(self):
-        if self.fought_last_tick:
-            self.fought_last_tick = False
+        if self.fought_this_tick:
+            return
         else:
             self.current_shields = self.max_shields
             self.components['shields'].apply_to(self)
@@ -379,9 +380,9 @@ class ArtificialObject(SpaceborneObject):
             damage_report[name] = component.damage_check(hull_dmg, hull_fraction, self)
         return damage_report
 
-    def combat(self, report):
+    def combat_notification(self, report):
         """Notify the ship that it has fought this tick."""
-        self.fought_last_tick = True
+        self.fought_this_tick = True
         self.combat_participation_morale_change(report)
 
     # TODO it's odd to have boilerplate like this
@@ -394,8 +395,17 @@ class ArtificialObject(SpaceborneObject):
     def move(self):
         pass
 
+    def repair(self):
+        if self.fought_this_tick:
+            return
+        self.repair_rate
+
     def post_action(self):
         self.recharge_shields()
+        self.repair()
+
+    def finish_tick(self):
+        self.fought_this_tick = False
 
 
 class SpaceColony(ArtificialObject):
@@ -561,8 +571,8 @@ class Ship(ArtificialObject):
             self.point = self.planned_move
 
     def post_action(self):
+        super().post_action()
         self.planned_move = None
-        self.recharge_shields()
         match self.current_order:
             case self.Order.MOVE:
                 if self.point == self.destination():
@@ -819,7 +829,7 @@ class Simulation:
         self.message(report)
 
         for p in participant_list:
-            p.combat(report) # notify that they were in a fight
+            p.combat_notification(report)  # notify that they were in a fight
 
         return report
 
@@ -892,6 +902,9 @@ class Simulation:
                 s.post_action()
             for o in self.get_objects():
                 o.plan_move()
+
+            for o in self.get_objects():
+                o.finish_tick()
 
             if post_combat_pause or self.should_pause():
                 self.message(PausedSimulation())
