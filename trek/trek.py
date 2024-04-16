@@ -840,12 +840,12 @@ class Simulation:
     """
     def __init__(self, objects=None, scenario: Scenario=None):
         self.user_interface = None
+        self.need_to_pause = False
         self.clock = 0
         self.objects = {}
         self.destroyed_objects = {}
         if objects is not None:
-            for o in objects:
-                self.add_object(o)
+            self.populate(*objects)
         self.scenario = EndlessScenario(self) if scenario is None else scenario
         self.scenario.simulation = self
 
@@ -869,7 +869,10 @@ class Simulation:
         self.objects[k] = obj
 
     def add_object(self, obj: SpaceborneObject):
-        """Add the given object to the simulation and initialize it."""
+        """Add the given object to the simulation and initialize it.
+
+        This is intended to be used while the simulation is running.
+        """
         self.add_object_helper(obj)
         obj.initialize(self)
         self.message(SpawnMessage(obj))
@@ -955,6 +958,8 @@ class Simulation:
         match message:
             case DestroyedObjectMessage():
                 self.destroy_object(message.obj)
+            case SpawnMessage():
+                self.need_to_pause = True
         for o in self.get_objects():
             o.receive_message(message)
         if self.user_interface is not None:
@@ -972,6 +977,7 @@ class Simulation:
         for o in self.get_objects():
             o.plan_move()
 
+    # TODO this method isn't really needed; pull out the inner owo call
     def ready_to_run(self, raise_exception=False):
         """Report whether the simulation is ready to run.
 
@@ -992,6 +998,7 @@ class Simulation:
 
     def run(self, duration=24):
         self.ready_to_run(raise_exception=True)
+        self.need_to_pause = False # keep going unless something causes a stop
         stop_time = self.clock + duration
         while self.clock < stop_time:
             self.clock += 1
@@ -1017,7 +1024,8 @@ class Simulation:
 
             scenario_finished = self.scenario.finish_tick()
 
-            if scenario_finished or post_combat_pause or not self.ready_to_run():
+            # TODO can this be simplified? tracking three different booleans that do the same thing
+            if self.need_to_pause or scenario_finished or post_combat_pause or not self.ready_to_run():
                 self.message(PausedSimulation())
                 break
 

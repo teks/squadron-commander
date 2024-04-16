@@ -132,7 +132,9 @@ def enemy_squadron():
     return [trek.EnemyShip(d, trek.point(1, 1)) for d in ('x', 'y', 'z')]
 
 def simple_simulation():
-    return trek.Simulation(friendly_squadron() + enemy_squadron())
+    s = trek.Simulation(friendly_squadron() + enemy_squadron())
+    s.initialize()
+    return s
 
 def combat_sides():
     fs = friendly_squadron()
