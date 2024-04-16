@@ -122,7 +122,7 @@ strategic one.
 
 Warp travel isn't instantaneous. Friendly and enemy ships may be in motion
 while other events occur. However, ships can intercept each other, resulting in
-fighting at warp; see `combat.md`.
+fighting at warp; see `interception.md` and `combat.md`.
 
 Scale & Distance
 ----------------
@@ -198,5 +198,16 @@ generate a pause:
 If needed, maybe implement user-configured pausing, regular pausing to
 emulate turns, or maybe timeouts, ie, 'run for 1 day.'
 
-The game won't resume running until all idle friendly ships are given orders,
-unless the user overrides.
+The game won't resume running until all ships controlled by the player have
+orders, unless the user overrides.
+
+### Processing 1 Tick of Time
+
+Each tick has several internal steps:
+1. Plan movement: Each unit plans picks its destination point for the tick.
+2. Movement: Each unit is moved to its new position.
+3. Combat: Any colocated hostile units engage in combat.
+4. Post-action:
+    * AI-controlled units are given new orders if needed.
+    * If a unit did not fight this turn, its shields recharge.
+    * Other cleanup or post-combat activity is performed.
