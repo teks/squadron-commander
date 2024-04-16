@@ -18,16 +18,16 @@ management commands:
 * `help`, also spelt `?`, gives in-line help.
 * `quit`, also triggered with an EOF character, quits the program.
 * `debug` drops into a pdb debug session.
-* `r N` runs the simulation for N ticks, defaulting to 24. Not Turn-Based below.
+* `r N` runs the simulation for N ticks, defaulting to 24. See Not Turn-Based below.
 
 Other commands are for gameplay itself. For these, ships and other vessels are
 identified by a short unique label, which are used in information displays and
 in the commands you enter. Each label is a two-character code such as `e5`:
 
 * The first character is the unit type:
-  * `s` for a ship in you squadron of defenders.
-  * `e` for an enemy ship.
-  * `c` for a stationary colony.
+  * `s` for a ship in your squadron that you control
+  * `e` for an enemy ship
+  * `c` for a stationary colony
   * `:` signifies a grid point with more than one unit; a footnote lists its contents.
 * The second character is a unique number or letter assigned by the UI.
 
@@ -57,7 +57,7 @@ Not Turn-Based, Not Real-Time, but Event-Based
 
 The simulation starts out paused. Any time the simulation is paused, you can
 use the command line to examine the strategic situation, and issue orders to
-your ships, including repeatedly revising or replacing existing orders.
+your ships, including repeatedly replacing existing orders with new ones.
 
 Once all your ships have orders, you can start the simulation running with `r`.
 It will simulate 24 hours of in-game time then pause again. Use eg `r 16` to
@@ -66,7 +66,7 @@ but it will decide to pause on its own if anything important happens, such as:
 
 * Combat has occurred.
 * A ship has no orders, most likely because it completed its current orders. (If
-  you need a ship to remain stationary, order it to `wait`.)
+  you need a ship to remain stationary, order it to wait with `wt`.)
 * The scenario's victory or defeat conditions have been met. You are returned
   to the command line so you can examine the final simulation state.
 
@@ -75,16 +75,14 @@ instantly, but you'll be free to make unhurried command decisions when needed.
 
 This timing system, which I call 'event-based,' was needed to avoid painful
 design compromises. Mostly games are implemented monotonically. In turn-based
-games, for instance, each turn is the same in-game length of time. But in naval
+games, for instance, each turn represents an equal time interval. But in naval
 warfare, upon which starship combat is generally based, long periods of time
 pass without any meaningful strategic decisions. So a conventional design would
-result in significant 'dead' play time, and preventing that would result in
-other problems.
+result in significant 'dead' play time.
 
-Event-based timing hopefully compromises less by letting players run large or
-small blocks of simulation time as they wish, say `r 5` or `r 25` as needed.
-Hopefully, they'll be safe from unpleasant surprises thanks to the game's
-event-based pausing.
+Event-based timing instead lets players run large or small blocks of simulation
+time as they wish, say `r 5` or `r 25` as needed, yet be safe from unpleasant
+surprises thanks to the game's event-based pausing.
 
 Simulation Fundamentals
 -----------------------
@@ -98,19 +96,16 @@ internal steps. In simplified form:
     * Non-player-controlled units are given new orders if needed.
     * If a vessel didn't fight this tick, shields recharge and repairs are performed.
 
-The author decided to model space in two dimensions, which is a sin, but in the
-sinful tradition of space games generally. Objects' positions in space are
-given by a pair of floating point values, (X, Y), oriented as in algebra class.
-
-Distances are in light years. At this scale, vessels can't encounter each
-other, as allies nor enemies, unless their coordinates are very nearly equal.
-Likewise, due to scale, sublight movement is neglected. Per cinematic
-convention, superluminal travel is in straight lines, with instantaneous
-acceleration.
+Objects' positions in space are given by a pair of floating point values, (X,
+Y), oriented as in algebra class. Distances are in light years. At the scale of
+light years, vessels can't encounter each other, as allies nor enemies, unless
+their coordinates are very nearly equal. Likewise sublight travel is irrelevant
+at this scale, so it is not implemented. Per cinematic convention, superluminal
+travel is in straight lines, with instantaneous acceleration.
 
 To view the entire strategic map use `sm`. Use `map` to zoom in on smaller
 areas. To view the coordinates of an object, rounded off to hundredths of a
-light year, use `ls` or `sh`. All this output is highly approximate, useful for
+light year, use `ls` or `sh`. Such output is highly approximate, useful for
 reasoning spatially but not precisely. Two vessels could appear to have equal
 positions but still be separated by billions of miles. "Space is big," and
 light years are enormous.
@@ -122,8 +117,8 @@ eyeballed from a map, due to the approximations discussed above.
 Vessels
 -------
 Vessels include both friendly ships, enemy ships, and stationary facilities
-like space colonies. A comprehensive display of any vessel is given by `sh`;
-`ls s0` lists the first line alone for brevity:
+such as space colonies. A comprehensive display of any vessel is given by `sh`;
+`ls` lists the first line alone for brevity:
 
 ```
 0h> sh s0
@@ -137,7 +132,7 @@ s0 Defender-1 (22.00, 60.00) W=1.00 CV=1.00 [###])))  MOVING to (25.00, 32.00)
 
 * `s1` is the vessel's label, shown on maps and used on the command-line.
 * `Defender-1` is the vessel's in-game name, what the crew would call it.
-* `(22.00, 60.00)` is the unit's position; note the rounding.
+* `(22.00, 60.00)` is the unit's position rounded to two decimale places.
 * `W=1.00` is warp speed in light years per hour (1 hour = 1 simulation tick).
 * `CV=1.00` is the unit's combat value; higher is better. See Combat below.
 * `[###])))` is the unit's damage display:
@@ -162,11 +157,11 @@ vessel's combat value by up to 25%, scaling with the morale value linearly. A
 vessel is more likely to retreat from combat if morale is low. Events in the
 simulation alter morale:
 
-* Participating in combat reduces morale each tick.
+* Participating in combat reduces morale.
 * When an enemy retreats, it improves the morale of their opponents.
 * When a ship suffers hull damage, this reduces its morale.
-* Friendly vessel loss hurts all ships' morale.
-* Enemy vessel loss improves all ships' morale.
+* Friendly vessel loss hurts all your ships' morale.
+* Enemy vessel loss improves all your ships' morale.
 
 Combat
 ------
@@ -178,9 +173,9 @@ motion engage each other without slowing down; this is often seen when using
 
 Each ship has a combat value, an abstract measurement of its weapons and other
 tactical capabilities, as modified by damage to these systems and the crew's
-morale; it is given in `ls` and `sh` output by `CV=` followed by a number. The
-sum of all the combat values on a side is the total damage inflicted, divided
-evenly among the other side's vessels.
+morale. This is shown as eg `CV=0.93` in `ls` and `sh` output. The sum of all
+the combat values on a side is the total damage inflicted, divided evenly among
+the other side's vessels.
 
 The damage inflicted is modified by two randomized factors:
 
@@ -188,8 +183,8 @@ The damage inflicted is modified by two randomized factors:
   got lucky or used better tactics. The advantaged side deals 25% more damage
   and receives 25% less damage.
 * Each ship involved in combat may randomly decide to avoid the fight by
-  retreating. A ship that retreats both deals and receives half damage
-  (this supersedes advantage).
+  retreating; this is more likely if its Morale is low. A ship that retreats
+  both deals and receives half damage (this supersedes advantage).
 
 Damage & Repair
 ---------------
