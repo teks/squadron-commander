@@ -1,4 +1,5 @@
 import pytest
+import trek.cli
 import trek
 import random
 
@@ -175,3 +176,6 @@ def test_t(mocker):
     mocker.patch('trek.random.random', return_value=0.0) # no retreating
     mocker.patch('trek.random.choice', return_value=(1.00, 1.00)) # no advtange
     simulation = trek.default_scenario(enemies=True)
+    report = simulation.combat(simulation.get_objects())
+    crs = trek.cli.combat_report_string(report)
+    print(crs)

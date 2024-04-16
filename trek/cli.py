@@ -7,6 +7,41 @@ import argparse
 
 import trek
 
+def cli_header(blazon_count, text, blazon='=', newline=True):
+    """eg "===[ Combat Report ]===\n" """
+    blazons = blazon * blazon_count
+    return blazons + '[ ' + text + ' ]' + blazons + '\n' if newline else ''
+
+def combat_report_string(combat_report):
+    # TODO python table formatting somehow?
+    fs, es = combat_report.friendly_side, combat_report.enemy_side
+    # no way to specify f-string here than interpolate later
+
+    # TODO limit width of floats to xx.xx
+    # TODO add in location & UX designators
+    # TODO add in system damage
+    # TODO who retreated and who didn't?
+    s = cli_header(5, 'COMBAT REPORT')
+    s += 'FRIENDLY FORCES\n'
+    indent = '  '
+    for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in fs.outcomes.items():
+        s += getattr(u, '_ui_label', '--') + f' {u.designation}\n'
+        s += indent + f'SHIELD DAMAGE = {shield_dmg};\t{u.current_shields}/{u.max_shields} remaining\n'
+        s += indent + f'  HULL DAMAGE = {hull_dmg};\t{u.current_hull}/{u.max_hull} remaining\n'
+        retreated = u in fs.retreaters
+        if destroyed and retreated:
+            s += indent + ('Vessel attempted to retreat, but was lost.\n')
+        elif destroyed:
+            s += indent + "Vessel was lost.\n"
+        elif retreated:
+            s += indent + 'Vessel retreated.\n'
+
+    s += 'ENEMY FORCES\n'
+    s += '(TODO)'
+    # for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in es.outcomes.items():
+    #     s += unit_format_str.format(u, shield_dmg, hull_dmg, "Vessel was lost." if destroyed else '')
+    return s
+
 
 class PointAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):

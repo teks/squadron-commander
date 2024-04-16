@@ -404,10 +404,12 @@ class Simulation:
         enemy_side.receive_damage(friendly_side.combat_value())
 
         # report outcomes for this tick of combat:
-        self.message(CombatReport(friendly_side, enemy_side))
+        report = CombatReport(friendly_side, enemy_side)
+        self.message(report)
 
         # TODO here down:
         #   retreat movement; see combat.md
+        return report
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""
