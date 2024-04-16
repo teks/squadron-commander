@@ -7,6 +7,7 @@ import typing
 import dataclasses
 import abc
 import enum
+import operator
 
 # min x & y are both 1, not 0, for both spaces and zones
 MAX_X = 64
@@ -19,6 +20,8 @@ MAX_ZONE_X = math.ceil(MAX_X / ZONE_SIZE_X)
 MAX_ZONE_Y = math.ceil(MAX_Y / ZONE_SIZE_Y)
 
 
+# TODO point validation vs. the map is not appropriate in all cases:
+#   what if it's a relative point ie (+7, -5)?
 class Point(typing.NamedTuple):
     """Bounds are from (1, 1) to (MAX_X, MAX_Y), inclusive."""
     x: int
@@ -31,6 +34,25 @@ class Point(typing.NamedTuple):
         bx, by = other
         d = ((ax - bx)**2 + (ay - by)**2)**0.5
         return d
+
+    def binary_operator(self, other, operator):
+        """Implement generic binary operator for Points."""
+        return self.__class__(
+            *(operator(a, b) for (a, b) in zip(self, other))
+        )
+
+    def __add__(self, other):
+        return self.binary_operator(other, operator.add)
+
+    def __sub__(self, other):
+        return self.binary_operator(other, operator.sub)
+
+    def delta_to(self, other):
+        """Return the relative position of other wrt self.
+
+        eg Point(1, 3).delta_to(Point(4, 5)) == Point(3, 2)
+        """
+        return other - self
 
     # TODO use this  ----vvvvvvvvv
     def validate(self, is_zone=False):
@@ -85,7 +107,8 @@ class SpaceborneObject(abc.ABC):
         return f"<{fq_name} {self.designation} {self.point}>"
 
 
-# TODO are Ships friendly or is this the superclass for friendly and enemy ships?
+# TODO this is acting like a friendly ship class as it responds to Orders;
+#   enemy vessels need a separate class, and this class needs to be renamed
 class Ship(SpaceborneObject):
     def __init__(self, designation: str, point: Point, ftl_max_velocity: int=1):
         super().__init__(designation, point)

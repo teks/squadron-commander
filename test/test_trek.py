@@ -16,6 +16,19 @@ def test_point_distance(distances):
     _, _, expected_distance, actual_distance = distances
     assert expected_distance == actual_distance
 
+@pytest.fixture(params=[
+    [(5, 4), (2, 6), (-3, 2)],
+    [(3, 7), (5, 6), (2, -1)],
+    [(10, 10), (10, 10), (0, 0)],
+])
+def point_deltas(request):
+    a, b, d_expected = request.param
+    return a, b, d_expected, trek.point(*a).delta_to(trek.point(*b))
+
+def test_point_delta_to(point_deltas):
+    a, b, d_expected, d_actual = point_deltas
+    assert d_expected == d_actual
+
 def test_point_validate_low():
     with pytest.raises(AttributeError):
         trek.point(0, 5)
