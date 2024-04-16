@@ -207,8 +207,8 @@ def test_Simulation_combat__hull_damage():
     [1.0, (1.25, 0.75), 0.55, 1.0, 0.0, 2 - 25 / 12], # no retreat, friendly advantage
 ])
 def test_Simulation_combat__damage(mocker, retreat, advantage, fs, fh, es, eh):
-    mocker.patch('trek.random.random', return_value=retreat)
-    mocker.patch('trek.random.choice', return_value=advantage)
+    mocker.patch('trek.trek.random.random', return_value=retreat)
+    mocker.patch('trek.trek.random.choice', return_value=advantage)
     simulation = trek.default_scenario(enemies=True)
     report = simulation.combat(simulation.get_objects())
     # crs = trek.cli.combat_report_string(report)

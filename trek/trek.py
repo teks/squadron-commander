@@ -772,17 +772,55 @@ class UserInterface:
     pass
 
 
+@dataclasses.dataclass
+class Scenario(abc.ABC):
+    """Define a custom scenario to play."""
+    simulation: 'Simulation' = None
+
+    def __post_init__(self):
+        if self.simulation is None:
+            # this kind of double-linking feels awkward
+            self.simulation = Simulation()
+        self.simulation.scenario = self
+
+    def setup(self, initialize_simulation=True):
+        """Called once to add content to self.simulation.
+
+        It should populate self.simulation with units then conditionally
+        call self.simulation.initialize().
+        """
+        raise NotImplementedError()
+
+    def finish_tick(self) -> bool:
+        """Called once a tick by its Simulation.
+
+        Concrete implementations should do two things:
+        1) Mutate self.simulation as needed, eg, spawning reinforcements, and
+        2) return True if the scenario has reached an end state, False otherwise.
+        """
+        raise NotImplementedError()
+
+
+class EndlessScenario(Scenario):
+    """A scenario that doesn't end; useful for development."""
+    def finish_tick(self) -> bool:
+        return False
+
+
 class Simulation:
     """Holds all the information necessary for the simulation.
 
     Also can access most of the semantics too.
     """
-    def __init__(self, objects, user_interface: UserInterface=None, clock: int=0):
-        self.user_interface = user_interface
-        self.clock = clock
+    def __init__(self, objects=None, scenario: Scenario=None):
+        self.user_interface = None
+        self.clock = 0
         self.objects = {}
-        for o in objects:
-            self.add_object(o)
+        if objects is not None:
+            for o in objects:
+                self.add_object(o)
+        self.scenario = EndlessScenario(self) if scenario is None else scenario
+        self.scenario.simulation = self
 
     def get_objects(self, side=None, controller=None):
         """Yield objects, with optional filtering."""
@@ -898,16 +936,6 @@ class Simulation:
         """Returns a set of idle friendly vessels."""
         return set(s for s in self.get_objects(side) if not s.has_orders())
 
-    def should_pause(self):
-        if not self.ready_to_run():
-            return True
-
-        # there will be more checks here for other events
-        # (likely these events will be detected by message()
-        # and saved, and should be cleared here)
-
-        return False
-
     class NotReadyToRun(Exception):
         pass
 
@@ -936,28 +964,15 @@ class Simulation:
             for o in self.get_objects():
                 o.finish_tick()
 
-            if post_combat_pause or self.should_pause():
+            scenario_finished = self.scenario.finish_tick()
+
+            if scenario_finished or post_combat_pause or not self.ready_to_run():
                 self.message(PausedSimulation())
                 break
 
 
 def default_scenario(enemies=False, space_colonies=False):
-    ships = {
-        FriendlyShip('abel', point(x=5, y=5)),
-        FriendlyShip('baker', point(35, 30)),
-        FriendlyShip('charlie', point(60, 60)),
-        FriendlyShip('doug', point(4, 58)),
-        FriendlyShip('alice', point(7, 7)),
-    }
-    s = Simulation(ships)
-    if enemies:
-        for (d, p) in (('ukliss', point(20, 23)),
-                       ('klaybeq', point(32, 32)),
-                       ('lowragh', point(60, 53))):
-            s.add_object(EnemyShip(d, p))
-    if space_colonies:
-        for (d, p) in (('New Ceylon', point(40, 12)),
-                       ('Harmony',    point(28, 56))):
-            s.add_object(SpaceColony(d, p))
-    s.initialize()
-    return s
+    from . import scenarios
+    scenario = scenarios.DefaultScenario(include_enemies=enemies, include_colonies=space_colonies)
+    scenario.setup()
+    return scenario.simulation

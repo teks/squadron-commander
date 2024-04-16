@@ -1,5 +1,5 @@
 ### i14 playable scenario
-[ ] class Scenario; check it for victory conditions each tick
+[v] class Scenario; check it for victory conditions each tick
 [ ] enemies appear to the left, retreat to the left?
 [ ] new ones spawn periodically
 [ ] retreat should alter behavior of retreating enemies;
