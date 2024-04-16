@@ -55,6 +55,10 @@ going to do another random fixup iteration
 
 ## Future Iterations:
 ```
+[ ] enemy ships:
+    AI-driven enemy vessels' class should be child of Ship;
+    enemies assign orders to themselves over time
+[ ] attempt to use dataclasses for SpaceborneObject & children
 [ ] concrete CLI ux class
     [v] cmd
     [ ] displays for various entities & the map

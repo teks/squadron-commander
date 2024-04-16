@@ -107,12 +107,10 @@ class SpaceborneObject(abc.ABC):
         return f"<{fq_name} {self.designation} {self.point}>"
 
 
-# TODO this is acting like a friendly ship class as it responds to Orders;
-#   enemy vessels need a separate class, and this class needs to be renamed
 class Ship(SpaceborneObject):
+    """Mobile spaceborne object. Issue orders to have it move and take other actions."""
     def __init__(self, designation: str, point: Point, cruising_speed: float=1.0):
         """Cruising speed is in light year per hour."""
-        # TODO did I discover that a dataclass doesn't inherit right?
         super().__init__(designation, point)
         self.cruising_speed = cruising_speed
         self.speed = self.cruising_speed
