@@ -308,6 +308,8 @@ class CmdUserInterface(trek.UserInterface):
             case trek.SpawnMessage:
                 m = (f"Object spawned: {message.obj}; "
                      f"assigned label {self.set_ui_label(message.obj)}")
+            case trek.CombatReport:
+                m = combat_report_string(message)
             case _:
                 m = f"Received message: {message}"
         print(m)

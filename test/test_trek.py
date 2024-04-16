@@ -88,7 +88,7 @@ def one_tick_dest(start, dest, speed=1):
 def test_simulation_run(ready_simulation):
     """Confirm ships fly around as they should and time is kept."""
     ready_simulation.run(1)
-    from trek import point
+    point = trek.point
     dest = point(32, 32)
     expected_positions = {
         'abel': one_tick_dest(point(x=5, y=5), dest),

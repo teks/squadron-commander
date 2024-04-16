@@ -378,6 +378,9 @@ class CombatSide:
              EnemyShip.type: enemy_side.members}[p.type].add(p)
         return friendly_side, enemy_side
 
+    def __len__(self):
+        return len(self.members)
+
     RETREAT_MODIFIER = 0.5
 
     def combat_value(self):
@@ -503,13 +506,22 @@ class Simulation:
         return groups
 
     def combat(self, participants):
-        """Compute and apply 1 tick of combat effects."""
+        """Compute and apply 1 tick of combat effects.
+
+        Returns a CombatReport, or else None if there was no battle due to
+        no co-belligerents among the participants.
+        """
         # TODO should this method be a class method in CombatSide()?
+        # import pdb; pdb.set_trace()
         participant_list = list(participants) # might be an iterator so save its contents
-        for p in participant_list:
-            p.combat() # notify that they're participating in combat
         # split participants into sides
         friendly_side, enemy_side = CombatSide.sort_into_sides(*participant_list)
+        # if either side is empty, just give up
+        if any(len(s) == 0 for s in (friendly_side, enemy_side)):
+            return
+
+        for p in participant_list:
+            p.combat() # notify that they're participating in combat
         CombatSide.assign_cv_modifiers(friendly_side, enemy_side)
 
         # have to compute cv ratio ahead of time because retreat checking may alter ships' CV
@@ -573,8 +585,9 @@ class Simulation:
             for s in self.get_objects():
                 s.move()
 
-            # TODO combat step here
-                # t = self.current_order_params['target']
+            # combat step
+            for place, participants in self.colocate_objects().items():
+                report = self.combat(participants)
 
             for s in self.get_objects():
                 s.post_action()
