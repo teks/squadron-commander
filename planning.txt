@@ -25,6 +25,7 @@ Future Iterations
     set initial value: self.morale = 0.0 # neutral
 [ ] refine ship's combat value (shields down, morale, etc)
 [ ] order that toggles `ship.evasive` & retreat_check checks it
+[ ] go over numerical balance of ship values; see number-mull
 
 ### misc
 [ ] enemy ships:

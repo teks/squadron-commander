@@ -450,7 +450,7 @@ class Simulation:
                 break
 
 
-def default_scenario():
+def default_scenario(enemies=False):
     ships = {
         FriendlyShip('abel', point(x=5, y=5)),
         FriendlyShip('baker', point(35, 30)),
@@ -458,5 +458,10 @@ def default_scenario():
         FriendlyShip('doug', point(4, 58)),
         FriendlyShip('alice', point(7, 7)),
     }
-    sim = Simulation(ships)
-    return sim
+    s = Simulation(ships)
+    if enemies:
+        for (d, p) in (('ukliss', point(20, 23)),
+                       ('klaybeq', point(32, 32)),
+                       ('lowragh', point(60, 53))):
+            s.add_object(EnemyShip(d, p))
+    return s

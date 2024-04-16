@@ -1,5 +1,6 @@
 import pytest
 import trek
+import random
 
 @pytest.fixture(params=[
     ((2, 1), (5, 5), 5),
@@ -136,14 +137,14 @@ def test_CombatSide_retreat_chance__2v1():
     s = trek.FriendlyShip('name-here', trek.point(1, 1))
     assert 0.0 == s.retreat_chance(0.5)
 
-def test_CombatSide_retreats_from__even_fight():
+def test_CombatSide_retreat_check__even_fight():
     """Shouldn't retreat if the fight is even."""
     fs, es = setup_sides()
     ratio = es.combat_value() / fs.combat_value()
     retreated = fs.retreat_check(ratio)
     assert len(fs.retreaters) == 0
 
-def test_CombatSide_retreats_from__hopeless_case():
+def test_CombatSide_retreat_check__hopeless_case():
     """Should always retreat when the fight is hopeless."""
     fs, es = setup_sides()
     for s in es.members:
@@ -159,3 +160,18 @@ def test_Simulation_combat():
     sim.combat(sim.get_objects())
     assert all(0.0 <= o.shields_status() < 1.0 for o in fsq + esq
                ), "No ship should escape unscathed."
+
+def test_Simulation_combat__hull_damage():
+    """Confirm hull damage is present when damage is high."""
+    fsq, esq = friendly_squadron(), enemy_squadron()
+    for s in fsq + esq:
+        s._combat_value = 10
+    sim = trek.Simulation(fsq + esq)
+    sim.combat(sim.get_objects())
+    assert all(o.shields_status() == 0.0 and o.hull_status() <= 0.0 for o in fsq + esq
+               ), "total annihilation case"
+
+def test_t(mocker):
+    mocker.patch('trek.random.random', return_value=0.0) # no retreating
+    mocker.patch('trek.random.choice', return_value=(1.00, 1.00)) # no advtange
+    simulation = trek.default_scenario(enemies=True)
