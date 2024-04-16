@@ -333,7 +333,8 @@ class CmdUserInterface(trek.UserInterface):
             text = '\n'.join([
                 self.single_line_object_display(o),
                 #     Morale: <in-universe statement from the captain here> (n)
-                f"    Morale: {o.morale:.1f}",
+                f"    Morale: {o.morale:.2f}",
+                f"    Repair: {percent_str(o.repair_rate)} / hour",
                 *(f"    {name}: " + percent_str(component.health)
                     for name, component in o.components.items())
             ])

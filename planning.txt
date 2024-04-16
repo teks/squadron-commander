@@ -1,13 +1,12 @@
 ### i12 - remaining game engine work
-[ ] ship repairs - see doc/design.md Ship Engineering & Repair
+[v] ship repairs - see doc/design.md Ship Engineering & Repair
     [v] basic repair: each ship gets a repair rate & repairs a bit each tick
     [v] no progress on a combat tick
     [v] x1.0 FTL
     [v] x1.5 waiting alone
     [v] x2.0 waiting with a friendly (n friendlies together means x2.0 for each of them)
     [v] pause simulation when a friendly ship's repairs are complete
-    [ ] show estimated time to fix
-    [ ] morale should affect repair rate
+    [v] show estimated time to fix
 [ ] retreat should alter behavior of retreating enemies;
     they should actually change their destination for a bit
 
@@ -91,6 +90,7 @@ Backlog
 [ ] `wait <unit> <duration>`  <-- add duration?
 
 ### low priority
+[ ] morale should affect repair rate
 [ ] auto-retreat button: order that toggles `ship.evasive` & retreat_check checks it
 [ ] ships should be able to exceed cruising speed at risk of drive damage
     [ ] maximum speed is . . . ?
