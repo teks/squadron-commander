@@ -540,10 +540,14 @@ class Simulation:
             o.simulation = self
             self.objects[k] = o
 
-    def get_objects(self, side=None):
-        """Yield objects, optionally by side."""
-        yield from (self.objects.values() if side is None else
-                    (o for (s, _), o in self.objects.items() if s == side))
+    def get_objects(self, side=None, controller=None):
+        """Yield objects, with optional filtering."""
+        i = self.objects.values()
+        if side is not None:
+            i = (o for o in i if o.side == side)
+        if controller is not None:
+            i = (o for o in i if o.side == controller)
+        yield from i
 
     def get_object(self, side, designation):
         return self.objects[(side, designation)]

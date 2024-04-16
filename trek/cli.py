@@ -280,26 +280,29 @@ class CmdUserInterface(trek.UserInterface):
             return f':{object_cnt}'
         return contents[0]._ui_label
 
-    def get_object(self, identifying_string):
+    def get_object(self, identifying_string, side=None, controller=None):
         """Returns the object with the given UI label or else the object's designator."""
-        for o in self.simulation.get_objects():
+        # there's a small chance of a name collision between ui labels and designation,
+        # so the least surprising thing is to always look in UI labels first.
+        f = lambda: self.simulation.get_objects(side, controller)
+        for o in f():
             if o._ui_label == identifying_string:
                 return o
         try:
-            return next(o for o in self.simulation.get_objects() if o.designation == identifying_string)
+            return next(o for o in f() if o.designation == identifying_string)
         except StopIteration:
             print(f"Object '{identifying_string}' not found.")
             return None
 
     def move_ship(self, ship_id, destination):
-        ship = self.get_object(ship_id)
+        ship = self.get_object(ship_id, trek.Controller.PLAYER)
         if ship is not None:
-            ship.order(trek.FriendlyShip.Order.MOVE, destination=destination)
+            ship.order(trek.Order.MOVE, destination=destination)
             self.check_orders()
 
     def attack(self, ship_id: str, target_id: str):
-        ship = self.get_object(ship_id)
-        target = self.get_object(target_id)
+        ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
+        target = self.get_object(target_id, side=trek.Side.ENEMY)
         if None not in (ship, target):
             ship.order(trek.FriendlyShip.Order.ATTACK, target=target)
             self.check_orders()
