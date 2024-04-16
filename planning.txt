@@ -28,6 +28,8 @@ for now symmetrically:
 [ ] cruiser (enemy: vulture)
 ## bugs:
 ## ux stuff:
+[ ] show light year numbers on top & right of map not just left & bottom
+[ ] distance computing command, `d s1 e0`, dunno what `d s0 s1 e0` would output
 [ ] why do these messages arrive out of order?
     200h Received message: ChosenNewTarget(obj=<trek.trek.EnemyShip Raider-F...
     200h Object spawned: !5 Raider-F   ( 1.00, 60.00) W=1.00 CV=1.00 [###])))...
