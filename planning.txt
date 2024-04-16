@@ -1,16 +1,12 @@
-## iteration 8
-continue developing combat
-[v] check for ship destruction and send messages
-[v] add messaging to combat engine
-[v] bring combat to a basic functional state
-    [v] each tick, after movement step, run combat step
+## iteration 9
+[ ] space stations: starbases and space colonies; free-floating for now, not in orbit
+[ ] simplest AI for raiders: they attack nearest settlement
+    AI action selection is last in the tick so the user can be aware of headings
+[ ] damage system for space stations; crib from Ship
 
 
 Future Iterations
 =================
-[ ] look into non-flat probabilities:
-    https://docs.python.org/3/library/random.html#real-valued-distributions
-
 [ ] need a "tell me about the local area" command that
   lists everything in the area and gives status
   maybe a 'sitrep' cmd issues to a ship?
@@ -43,3 +39,9 @@ Future Iterations
 [ ] concrete CLI ux class
     [ ] displays for various entities & the map
     [ ] help facility?
+
+[ ] look into non-flat probabilities:
+    https://docs.python.org/3/library/random.html#real-valued-distributions
+
+[ ] raiders sometimes carry off hostages when they raid settlements?
+    have to send ships to get them back? that implies boarding ops

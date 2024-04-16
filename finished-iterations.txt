@@ -60,3 +60,10 @@ combat engine MVP; no encounters yet just mechanics + tests
 [v] Apply damage to shields then hull
 [v] test & revise
 
+## iteration 8
+continue developing combat
+[v] check for ship destruction and send messages
+[v] add messaging to combat engine
+[v] bring combat to a basic functional state
+    [v] each tick, after movement step, run combat step
+

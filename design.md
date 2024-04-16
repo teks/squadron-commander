@@ -137,8 +137,26 @@ Info on real object density & distance:
 
 Objects & Hazards
 -----------------
-One way to implement a supernova or black hole: A region around the center
-of the object is impassable or otherwise dangerous
+Star Systems are the primary locations for settlements (planetary or orbital
+colonies) and starbases.
+
+Perhaps the contents of a star system, whatever is nearby a raider target,
+affect battles that happen there:
+* planets & moons: can hide behind planet to help retreat
+* gas giant: risk of encountering atmosphere, especially if damaged
+
+Other objects may be developed later, such as black holes and supernovae. If it
+makes sense for these to be dangerous, the danger would be expressed as a
+radius from their position, or a function of the radius for declining danger
+further out.
+
+As the game is science fiction, objects and dangers can of course be invented
+for gameplay purposes. Maybe leviathans or behemoths, giant creatures that
+prowl the void.
+
+Nebulae are too large to fit on the map. One use of changing the game's scale
+to a single star system is all the interesting locations such as asteroid belts
+can be added.
 
 Combat
 ------
