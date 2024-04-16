@@ -4,9 +4,9 @@ Game Design
 ===========
 There's already a 'trek' in python 3 in github.
 
-So let's make it interesting: You are in command of a squadron of starships;
-say 5 to 8. Each turn you issue commands to each ship to do stuff. If you
-skip a ship, it has automatic simple behaviors.
+So, to make this game unique: The player commands a squadron of starships;
+say 5 to 8. As the 'SQC' or 'squadcom,' they issue commands to each ship, but
+they don't have fine-grained control of the ship's internal processes.
 
 Should I rescale to one solar system?
 -------------------------------------
@@ -79,6 +79,17 @@ while other events occur. However, ships can intercept each other, resulting in
 fighting at warp. For simplicity, fighting at warp is the same as at sublight
 speeds.
 
+Scale & Distance
+----------------
+Light years for all distances; 1 ly/cell.
+
+In the default scenario, density of natural phenomena and bases is ~1.2
+per zone, for a total of about 65-100 immobile objects.
+
+Info on real object density & distance:
+* https://en.wikipedia.org/wiki/List_of_nearest_stars_and_brown_dwarfs
+* https://en.wikipedia.org/wiki/Stellar_density
+
 Objects & Hazards
 -----------------
 One way to implement a supernova or black hole: A region around the center
@@ -89,8 +100,43 @@ Combat
 Mostly follow the trappings of Star Trek: Energy shields, beam weapons,
 torpedoes. Each vessel has systems that can be damaged.
 
-Combat between two starships should take "awhile;" it should not feel
-instantaneous unless the odds are skewed.
+Combat is resolved automatically as the player has no direct control over a
+ship's moment-to-moment operations.  Combat is fast enough that it rarely
+requires a full day, and often resolves in an hour.
+
+The squadron commander can issue these combat orders to a ship:
+* Attack an enemy (this will cause interception as needed).
+* Attempt escape from combat (this will likely cause pursuit).
+
+Combat is implemented in two steps each tick.
+
+First, similarly to an old-school combat results table, an outcome is
+computed from these possibilities:
+
+* victory, foes retreat
+* draw, both sides retreat
+* defeat, friendlies retreat
+* battle continues for an additional tick
+
+I may change this to a per-ship retreat check.
+
+The check or roll is influenced by:
+* The ratio of the two sides' combat values
+* Whether shields are up or down
+* Stakes, ie, whether a ship is protecting something
+
+Each ship has a base combat value, reflecting its firepower and other
+strengths. This value is modified by damage and morale.
+
+Second, damage is computed; each participant fires upon a foe, and if it
+penetrates the sields, its systems are damaged. This in turn degrades the
+combat value used to roll on the combat results table.
+
+Following Star Trek's model, ships generally can't evade fire. Instead, high
+sublight acceleration is used to increase the chances of successful retreat.
+Also slower ships tend to draw fire away from faster ships, as the faster
+ones can dance out of range more effectively if other ships are threatening
+their pursuers.
 
 Enemy Behavior & Goals
 ----------------------
@@ -113,22 +159,20 @@ possibly showing a vector and status (ie vessel type and any known damage).
 
 Time & Timing
 -------------
+The simulation runs at 1 tick = 1 hour. This means combat is sometimes
+resolved in a single tick.
+
 It's simple event-based timing, and runs until it needs to pause. These events
 generate a pause:
 
+* A new unit spawns (say an enemy in the spawn zone of the map)
+    * semi-related: if the squadron loses a ship, should it be replaced?
 * A unit arrives somewhere (friendly or enemy)
 * A ship's orders expire: It destroys its target, finishes repairs, etc.
 * Others as-needed
 
-If needed, maybe implement user-configured pausing or regular pausing.
+If needed, maybe implement user-configured pausing, regular pausing to
+emulate turns, or maybe timeouts, ie, 'run for 1 day.'
 
 The game won't resume running until all idle friendly ships are given orders,
 unless the user overrides.
-
-Software Design
-===============
-```
-Game/Simulation: instance to manage everything
-    Map: 64 x 64 grid
-        contents: dict of (Point -> object)
-```
