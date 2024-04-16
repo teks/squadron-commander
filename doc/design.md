@@ -211,3 +211,44 @@ Each tick has several internal steps:
     * AI-controlled units are given new orders if needed.
     * If a unit did not fight this turn, its shields recharge.
     * Other cleanup or post-combat activity is performed.
+
+Ship Engineering & Repair
+-------------------------
+CF `doc/combat.md` under Apply Damage and Ship System Damage.
+
+### Repair
+
+Similar to EGA Trek, each ship has a repair rate (small nonnegative float),
+representing progress made each tick. Progress is random based on this value.
+Circumstances affect progress made; from worst to best:
+* no progress on a combat tick; engineering staff is busy :P
+* x1.0 FTL in open space (but progress on the FTL drive is perhaps 0.5x)
+* x1.5 waiting alone
+* x1.5 waiting with a friendly:
+    * all local friendlies pool their repair rate for use among damaged vessels
+    * so an undamaged vessel donates its repair crews to a nearby damaged ally
+* best is dedicated facilities like shipyards; multiplier TBD
+
+Simple version for the beta: Progress is deterministic and equal to the
+vessel's repair rate, divided evenly among the damaged components (this
+sometimes results in losses). Progress modifiers:
+* no progress on a combat tick
+* x1.0 FTL
+* x1.5 waiting alone
+* x2.0 waiting with a friendly (n friendlies together means x2.0 for each of them)
+
+### Wear and Tear and Maintenance
+
+Starships are advanced superluminal vessels, and are optimized for performance,
+not low maintenance.  During travel and most other operations, a ship gradually
+accumulates wear and tear. Eventually system damage results.  To avoid these
+breakdowns, a ship must regularly return to a starbase or similar facility for
+maintenance.
+
+Activities sorted by lowest accumulation to highest:
+1. No wear while docked at a starbase
+2. Idle in space or performing low-intensity ops (in orbit, investigating a nebula)
+3. At warp, cruising speed or less
+4. High warp
+5. In combat
+6. Maximum warp

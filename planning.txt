@@ -1,6 +1,8 @@
 ### i12 - remaining game engine work
-[ ] ship repairs - see doc/ega-trek-design-notes.md
-    [ ] pause simulation when repairs are complete
+[ ] ship repairs - see doc/design.md Ship Engineering & Repair
+    [ ] pause simulation when a ship is waiting and repairs are complete
+        Order.REPAIR?
+    [ ] show estimated time to fix
 [ ] retreat should alter behavior of retreating enemies;
     they should actually change their destination for a bit
 

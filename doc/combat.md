@@ -128,22 +128,6 @@ List of systems to damage and the effects of damage:
 * Warp Drive: Reduced speed and energy efficiency
 * Tactical Systems: Reduced combat value
 
-#### Wear and Tear and Maintenance
-
-Starships are advanced superluminal vessels, and are optimized for performance,
-not low maintenance.  During travel and most other operations, a ship gradually
-accumulates wear and tear. Eventually system damage results.  To avoid these
-breakdowns, a ship must regularly return to a starbase or similar facility for
-maintenance.
-
-Activities sorted by lowest accumulation to highest:
-1. No wear while docked at a starbase
-2. Idle in space or performing low-intensity ops (in orbit, investigating a nebula)
-3. At warp, cruising speed or less
-4. High warp
-5. In combat
-6. Maximum warp
-
 ### Perform retreat movement
 
 Any surviving ships that are retreating are moved a short distance away from
