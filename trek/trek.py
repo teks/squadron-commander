@@ -292,8 +292,11 @@ class Ship(SpaceborneObject):
 
         sys_dmg = self.system_damage(hull_dmg)
 
-        # TODO do ships need a 'destroyed' flag or do they get replaced by a Hulk instance?
-        return (self.current_hull <= 0.0, shield_dmg, hull_dmg, sys_dmg)
+        return (self.is_destroyed(), shield_dmg, hull_dmg, sys_dmg)
+
+    # TODO Hulk instance for trashed ships?
+    def is_destroyed(self):
+        return self.current_hull <= 0.0
 
     def system_damage(self, hull_dmg):
         if hull_dmg <= 0.0:
@@ -306,20 +309,37 @@ class Ship(SpaceborneObject):
         """Notify the ship that it has fought this tick."""
         self.fought_last_tick = True
 
-    def act(self, simulation):
-        """Perform one tick of simulation."""
+    def plan_move(self): # currently simulation param isn't needed
+        if not self.has_orders():
+            self.planned_move = None
+        elif self.current_order == self.Order.MOVE:
+            self.planned_move = self.point + self.displacement()
+        elif self.current_order == self.Order.ATTACK:
+            (intercepted_before_destination, intercept_point, ticks_to_intercept
+                )= self.intercept_point(self.current_order_params['target'])
+            self.planned_move = self.point + self.displacement(intercept_point)
+
+    def move(self):
+        """Perform one tick of movement."""
+        if self.planned_move is not None:
+            self.point = self.planned_move
+
+    def post_action(self):
+        # TODO any AI ships with no orders should choose an order
+        self.planned_move = None
         self.recharge_shields()
-        # TODO set this up so there's no need to add to it with every new order
         match self.current_order:
-            case None | self.Order.IDLE:
-                pass
             case self.Order.MOVE:
-                self.point += self.displacement()
                 if self.point == self.destination():
                     self.reset_order()
                     self.message(ArriveMessage(self))
             case self.Order.ATTACK:
-                self.attack(**self.current_order_params)
+                t = self.current_order_params['target']
+                if t.is_destroyed():
+                    self.reset_order()
+                    self.message(TargetDestroyed(self, t))
+            case None | self.Order.IDLE:
+                pass
             case _:
                 raise ValueError(f"Invalid order {self.current_order}")
 
@@ -399,6 +419,11 @@ class ArriveMessage(Message):
 @dataclasses.dataclass
 class SpawnMessage(Message):
     obj: SpaceborneObject
+
+@dataclasses.dataclass
+class TargetDestroyed(Message):
+    attacker: Ship
+    defender: SpaceborneObject
 
 @dataclasses.dataclass
 class CombatReport(Message):
@@ -514,8 +539,19 @@ class Simulation:
         stop_time = self.clock + duration
         while self.clock < stop_time:
             self.clock += 1
+            # because there's no initiative, keep events effectively simultaneous
             for s in self.get_objects():
-                s.act(self)
+                s.plan_move()
+
+            for s in self.get_objects():
+                s.move()
+
+            # TODO combat step here
+                # t = self.current_order_params['target']
+
+            for s in self.get_objects():
+                s.post_action()
+
             if self.should_pause():
                 break
 

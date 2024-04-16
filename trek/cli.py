@@ -134,7 +134,7 @@ class CLI(cmd.Cmd):
     do_mv = do_move
     do_at = do_attack
     do_sm = do_smap
-    do_rn = do_run
+    do_r = do_run
 
     def do_EOF(self, _):
         print()
