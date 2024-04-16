@@ -169,7 +169,29 @@ class Ship(SpaceborneObject):
         """Hull damage as a ratio; 0.3 = 30% of the hull is gone."""
         return 1 - self.current_hull / self.max_hull
 
-    def retreats_from(self, own_side, other_side):
+    def retreat_chance(self, side_cv_ratio):
+        """What is the chance of the ship choosing to retreat?"""
+        # TODO if self is badly damaged, should indeed retreat even if self's side has the upper hand:
+        if side_cv_ratio <= 1: # self never retreats if it has the upper hand
+            return 0.0
+        '''
+        ratio P(retreat)
+          1     0.0
+          2     0.35 <-- TODO seems low
+          3     0.7
+        '''
+        m, b = 0.35, -0.35
+        p = m * side_cv_ratio + b
+        # TODO:
+        # if self is a formidable ship, reduced chance of retreat:
+        #   ie greater self.combat_value() --> reduced chance of retreat
+        # worse off the ship is, more likely to retreat
+        # p += msf_factor * self.missing_shields_fraction()
+        # p += hdf_factor * self.hull_damage_fraction()
+        return p
+
+    # I don't want to open the mocking can of worms, just being lazy:
+    def retreats_from(self, side_cv_ratio, rand_value=None):
         """Randomly determines if a ship retreats from battle.
 
         Examples of probability of retreat:
@@ -179,21 +201,9 @@ class Ship(SpaceborneObject):
             * high: shields down
             * high: significant hull damage
         """
-        # TODO:
-        # p = 0.0 # 0% chance of retreating as a base
-        #
-        # # if ratio == 2, then enemy is twice as scary as us
-        # battle_cv_ratio = other_side.combat_value() / own_side.combat_value()
-        # p += somehow(battle_cv_ratio)
-        #
-        # # worse off the ship is, more likely to retreat
-        # p += msf_factor * self.missing_shields_fraction()
-        # p += hdf_factor * self.hull_damage_fraction()
-        # retreats = p < random.random()
-
-        retreats = False # MAMA DIDN RAISE NO QUITTER
-        if retreats:
-            own_side.retreaters += self
+        # garaunteed: 0.0 <= random.random() < 1.0
+        retreats = self.retreat_chance(side_cv_ratio) > (
+            random.random() if rand_value is None else rand_value)
         return retreats
 
     def receive_damage(self, damage_qty: float):
@@ -263,26 +273,12 @@ class CombatSide:
         rcv = self.RETREAT_MODIFIER * sum(s.combat_value() for s in self.retreaters)
         return cv + rcv
 
-    def retreat_chance(self, other_side):
-        """What is the chance of this side retreating?"""
-        ratio = other_side.combat_value() / self.combat_value()
-        if ratio <= 1: # self never retreats if it has the upper hand
-            return 0.0
-        # set up so P(retreat) = 0 if ratio == 1, and P(retreat) = 0.7 if ratio == 3
-        # TODO if ratio == 2 then P(retreat) = 0.35 which feels a bit low
-        m, b = 0.35, -0.35
-        return m * ratio + b
-
-    # I don't want to open the mocking can of worms, just being lazy:
-    #                                   vvvvvvvvvvvvvvv
-    def retreats_from(self, other_side, rand_value=None):
+    def retreats_from(self, cv_ratio):
         """Does this side choose to retreat?"""
-        # garaunteed: 0.0 <= random.random() < 1.0
-        retreats = self.retreat_chance(other_side) > (
-            random.random() if rand_value is None else rand_value)
-        if retreats:
-            self.retreaters |= self.members
-        return retreats
+        for m in self.members:
+            retreats = m.retreats_from(self, cv_ratio)
+            if retreats:
+                self.retreaters.add(m)
 
     def receive_damage(self, damage):
         damage_per_unit = damage / len(self.members)
@@ -352,11 +348,13 @@ class Simulation:
         friendly_side, enemy_side = CombatSide.sort_into_sides(*participants)
         CombatSide.assign_cv_modifiers(friendly_side, enemy_side)
 
-        friendly_side.retreats_from(enemy_side)
-        enemy_side.retreats_from(friendly_side)
+        # have to compute cv ratio ahead of time because retreat checking may alter ships' CV
+        cv_ratio = enemy_side.combat_value() / friendly_side.combat_value()
 
-        # TODO check each ship for retreat
+        friendly_side.retreats_from(cv_ratio)
+        enemy_side.retreats_from(1 / cv_ratio)
 
+        # recompute combat values after retreat checks since retreating units do less damage
         friendly_side.receive_damage(enemy_side.combat_value())
         enemy_side.receive_damage(friendly_side.combat_value())
 
