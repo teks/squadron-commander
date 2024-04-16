@@ -9,6 +9,7 @@
     [v] show estimated time to fix
 [ ] retreat should alter behavior of retreating enemies;
     they should actually change their destination for a bit
+    (it's a way of driving enemies away from a base or target)
 
 Roadmap
 =======
