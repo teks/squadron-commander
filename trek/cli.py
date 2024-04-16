@@ -149,13 +149,17 @@ class CLI(cmd.Cmd):
     map_parser = CommandLineParser(arguments=(
         ['centerpoint', dict(nargs=2, type=int, action=PointAction)],
         ['radius', dict(nargs='?', type=int, default=8)],
+        ['scale', dict(nargs='?', type=float, default=1.0)],
     ))
 
     # TODO commands are looking boilerplate-y, consider a callback or similar
     def do_map(self, arg):
+        """map centerpoint_x centerpoint_y radius=8 scale=1.0"""
+        # TODO scale > 1 does strange things eg map 32 32 10 2
         parsed_line = self.map_parser.parse_line(arg)
         if parsed_line is not None:
-            map_str = self._cmd_ui.short_range_map(parsed_line.centerpoint, parsed_line.radius)
+            map_str = self._cmd_ui.short_range_map(parsed_line.centerpoint,
+                                                   parsed_line.radius, parsed_line.scale)
             print(map_str)
 
     def do_smap(self, _):
