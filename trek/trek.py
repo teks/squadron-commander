@@ -160,6 +160,9 @@ class FriendlyShip(Ship):
 class EnemyShip(Ship):
     type = 'enemy'
 
+    def act(self, simulation):
+        pass # stub for now
+
 
 class Message:
     """Used for sending and receiving signals resulting from game events."""
@@ -195,6 +198,13 @@ class Simulation:
 
     def get_object(self, type, designation):
         return self.objects[(type, designation)]
+
+    def add_object(self, obj):
+        k = (obj.type, obj.designation)
+        if k in self.objects:
+            raise ValueError(f"Object with key {k} already found: {self.objects[k]}")
+        self.objects[k] = obj
+        self.message(SpawnMessage(obj))
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""
