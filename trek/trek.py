@@ -3,6 +3,7 @@
 """
 
 import typing
+import dataclasses
 
 MAX_X = 64
 MAX_Y = 64
@@ -24,7 +25,7 @@ class Point(typing.NamedTuple):
     def validate(self):
         """Perform safety checks on self."""
         if not (0 < self.x <= MAX_X) or not (0 < self.y <= MAX_Y):
-            raise AttributeError("{} is outside the map bounds".format(self))
+            raise AttributeError(f"{self} is outside the map bounds")
 
 
 def point(*args, **kwargs):
@@ -36,10 +37,28 @@ def point(*args, **kwargs):
     p.validate()
     return p
 
+
 class Map:
-    """Area of operations for a playthrough.
+    """Area of operations for a specific playthrough.
 
     Spaceborne objects may stack, because it's space.
     """
-    def __init__(self):
-        self.contents = dict() # tuple location -> spaceborne object
+    def __init__(self, contents=None):
+        if contents is None:
+            contents = dict()
+        self.contents = contents # tuple location -> spaceborne object
+
+
+class UserInterface:
+    pass
+
+
+@dataclasses.dataclass
+class Simulation:
+    """Holds all the information necessary for the simulation.
+
+    Also can access most of the semantics too.
+    """
+    user_interface: UserInterface
+    map: Map
+    clock: int = 0 # game clock; starts at 0. User will be shown stardate

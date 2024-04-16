@@ -10,18 +10,22 @@ skip a ship, it has automatic simple behaviors.
 
 Interstellar Navigation
 -----------------------
-Keep basic scale of 64 x 64 grid of space locations. Permit stacking. The 64x64
-area is a 'sector.' There are no quadrants. Space is 'smooth'; movement is
-always calculated as movement between coordinates. Warp travel is *always*
-required to move 1+ spaces.
+Keep basic scale of 64 x 64 grid of space locations. Permit stacking of all
+spaceborne objects, except if some exceptional phenomena is encountered (black
+hole?).
 
-Combat is between adjacent or stacked opponents. There's no tactical grid;
-just the strategic one.
+The 64x64 area is a 'sector.' There are no quadrants. Space is 'smooth';
+movement is always calculated as movement between coordinates. Warp travel is
+*always* required to move 1+ spaces; impulse drive is used to improve combat
+maneuvering and is necessary for orbiting and de-orbiting.
+
+Combat is between adjacent or stacked opponents. There's no tactical grid; just
+the strategic one.
 
 Warp travel isn't instantaneous. Friendly and enemy ships may be in motion
-while other events occur. However, ships can intercept each other, resulting
-in fighting at warp. For simplicity, fighting at warp is the same as at
-sublight speeds.
+while other events occur. However, ships can intercept each other, resulting in
+fighting at warp. For simplicity, fighting at warp is the same as at sublight
+speeds.
 
 Combat
 ------
