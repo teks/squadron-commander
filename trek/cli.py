@@ -166,13 +166,20 @@ class CmdUserInterface(trek.UserInterface):
         return o._cui_designator
 
     def get_object(self, object_desig):
-        """Returns the object with the given designator."""
+        """Returns the object with the given designator.
+
+        Designator is first sought in UI assignment eg '^3', then falls back to
+        the object's inherent designation eg 'Enterprise'.
+        """
         if object_desig is None: # avoid fetching a random thing by accident
             raise ValueError("'None' is an invalid object designator")
         for o in self.simulation.objects():
             if getattr(o, '_cui_designator', None) == object_desig:
                 return o
-        raise ValueError(f"Object designated '{object_desig}' not found.")
+        try:
+            return next(o for o in self.simulation.objects() if o.designation == object_desig)
+        except StopIteration:
+            raise ValueError(f"Object designated '{object_desig}' not found.")
 
     def move_ship(self, ship_desig, destination):
         ship = self.get_object(ship_desig)
