@@ -212,26 +212,37 @@ class Ship(SpaceborneObject):
             random.random() if rand_value is None else rand_value)
         return retreats
 
-    def receive_damage(self, damage_qty: float):
+    def receive_damage(self, quantity: float):
         """Damage shields the given amount, applying overflow to hull.
 
         If damage is dealt to the hull, it may result in system damage.
-        """
-        assert damage_qty >= 0.0, "Damage value should not be negative"
-        self.current_shields -= damage_qty
-        if self.current_shields >= 0.0: # is there overflow damage?
-            return
-        hull_damage = -1 * self.current_shields
-        self.current_shields = 0.0
-        self.current_hull -= hull_damage
-        # TODO self.system_damage()
-        # check for destruction & send message:
-        if self.current_hull <= 0.0:
-            self.message(ShipDestruction(self))
 
-    # TODO
-    # def system_damage(self):
-    #     hdf = self.hull_damage_fraction()
+        Returns a tuple:
+        (destroyed: bool, shield damage, hull damage, system damage)
+        """
+        assert quantity >= 0.0, "Damage value should not be negative"
+        if self.current_shields >= quantity:
+            shield_dmg = quantity
+            hull_dmg = 0.0
+        else: # overflow damage to hull
+            shield_dmg = self.current_shields
+            hull_dmg = quantity - shield_dmg
+
+        self.current_shields -= shield_dmg
+        # intentionally let it go negative, for how busted up the hulk is I guess
+        self.current_hull -= hull_dmg
+
+        sys_dmg = self.system_damage(hull_dmg)
+
+        # TODO do ships need a 'destroyed' flag or do they get replaced by a Hulk instance?
+        return (self.current_hull <= 0.0, shield_dmg, hull_dmg, sys_dmg)
+
+    def system_damage(self, hull_dmg):
+        if hull_dmg <= 0.0:
+            return None
+        # TODO system damage; I got some ideas written down somewhere I think
+        # hdf = self.hull_damage_fraction()
+        return None
 
     def combat(self):
         """Notify the ship that it has fought this tick."""
@@ -264,6 +275,8 @@ class CombatSide:
     def __init__(self, *members):
         self.members = set(*members)
         self.retreaters = set()
+        # compiled data on what happened to each ship; keyed by ship
+        self.outcomes = {}
 
     @classmethod
     def sort_into_sides(cls, *participants):
@@ -289,11 +302,13 @@ class CombatSide:
                 self.retreaters.add(m)
 
     def receive_damage(self, damage):
-        damage_per_unit = damage / len(self.members)
+        self.damage_received = damage
+        unit_damage = damage / len(self.members)
+        retreater_damage = self.RETREAT_MODIFIER * unit_damage
         for s in self.retreaters:
-            s.receive_damage(damage_per_unit * self.RETREAT_MODIFIER)
+            self.outcomes[s] = s.receive_damage(retreater_damage)
         for s in self.members - self.retreaters:
-            s.receive_damage(damage_per_unit)
+            self.outcomes[s] = s.receive_damage(unit_damage)
 
     CV_MODIFIERS = (
         (1.25, 0.75),
