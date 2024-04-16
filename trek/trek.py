@@ -103,6 +103,19 @@ class Ship(SpaceborneObject):
             raise ValueError(f"'{order}' is not a valid order")
         self.current_order = order, kwargs
 
+    def move(self, destination, ticks=1):
+        """Relocate the ship towards the given destination."""
+        print(f"{self} is MOVIN")
+        # TODO MATH
+
+    def act(self):
+        order, params = self.current_order
+        match order:
+            case self.Order.MOVE:
+                self.move(params['destination'])
+            case _:
+                raise ValueError(f"Invalid order {self.current_order}")
+
 
 class UserInterface:
     pass
