@@ -151,4 +151,23 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
     I've decided this is a feature
 [v] COMBAT REPORT and `ls` don't show lists of ships in the same order, they should
 
+### i14 playable scenario
+[v] class Scenario; check it for victory conditions each tick
+[v] enemies appear to the left, retreat to the left?
+[v] new ones spawn periodically
+[v] vessels keep moving after they're destroyed if they were destroyed while moving
+[v] smap has difficulty with units that have x=1:
+    16 . . . .
+       + . . . <-- the '+' is the heading indicator for !1 at (1, 14)
+    12 . . . .
+         4   8
+[v] complete a few playthroughs, notes here:
+    [v] need `mv ^3 @1`
+    [v] hahaha fuck! newly spawned enemies jam the simulation:
+        Not ready to run; 3 unit(s) need orders:
+        !4 Raider-E   ( 1.00, 26.00) W=1.00 CV=1.00 [###])))  NO ORDERS
+    [v] complete waves-of-enemies scenario; confirm it finishes successfully
+    [v] new enemy spawns don't seem to stop the clock:
+        100h Object spawned: !4 Raider-E...
+        102h>
 

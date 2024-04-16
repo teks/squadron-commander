@@ -1,60 +1,30 @@
-### i14 playable scenario
-[v] class Scenario; check it for victory conditions each tick
-[v] enemies appear to the left, retreat to the left?
-[v] new ones spawn periodically
-[v] vessels keep moving after they're destroyed if they were destroyed while moving
-[v] smap has difficulty with units that have x=1:
-    16 . . . .
-       + . . . <-- the '+' is the heading indicator for !1 at (1, 14)
-    12 . . . .
-         4   8
-[v] complete a few playthroughs, notes here:
-    [v] need `mv ^3 @1`
-    [v] hahaha fuck! newly spawned enemies jam the simulation:
-        Not ready to run; 3 unit(s) need orders:
-        !4 Raider-E   ( 1.00, 26.00) W=1.00 CV=1.00 [###])))  NO ORDERS
-    [ ] complete waves-of-enemies scenario; confirm it finishes successfully
-    [ ] new enemy spawns don't seem to stop the clock:
-        100h Object spawned: !4 Raider-E...
-        102h>
+### i15 fix bugs
 [ ] retreat should alter behavior of retreating enemies;
     they should actually retreat towards their origin direction for a bit
     (it's a way of driving enemies away from a base or target)
+[ ] long delay after last wave is defeated, see stash
+[ ] turn off `map` command for beta instead of fixing its bugs
 
-### i15 make some ship classes and experiment with combat outcomes
+
+### i16 make some ship classes and experiment with combat outcomes
 for now symmetrically:
 [ ] go over numerical balance of ship values; see number-mull
 [ ] corvette (enemy: crow) <-- enemies are named after birds I guess
 [ ] cruiser (enemy: vulture)
-## bugs:
+
 ## ux stuff:
 [ ] show light year numbers on top & right of map not just left & bottom
 [ ] distance computing command, `d s1 e0`, dunno what `d s0 s1 e0` would output
 [ ] why do these messages arrive out of order?
     200h Received message: ChosenNewTarget(obj=<trek.trek.EnemyShip Raider-F...
     200h Object spawned: !5 Raider-F   ( 1.00, 60.00) W=1.00 CV=1.00 [###])))...
-[ ] this command raises due to exceeding map bounds: map 37 16 5 10
-    (need zoomable map command for getting a better look at crowded space)
-[ ] often defenders will need to do something, then wait, but it gets tedious if there are several:
-    vs ^0 @2
-    vs ^1 @2
-    vs ^2 @2
-    vs ^3 @2
-    r
-    wt ^0 # game halts and won't restart due to NO ORDERS
-    r
-    wt ^1
-    r
-    wt ^2
-    r
-    wt ^3
-    r
-    what's the fix?
-        maybe a 'r --wait-all' command that WAITs all current NO-ORDERS ships?
-        'r --wait-as-needed' command? assigns WAIT to NO-ORDERs ships then resumes simulation?
-        orders queue for ships? programmable ships? "Go to (x, y) then WAIT?"
-        lots of commands could use varargs eg 'wt ^0 ^1 ^2' but that wouldn't help in this case
-        'wait *' or 'wait --all' to wait all NO-ORDERS ships (but that wouldn't help here)
+[ ] often defenders will need to do something, then wait, but it gets tedious if there are several
+    options; pick one or both:
+        [ ] wt with no arguments should wait all NO ORDERS ships?
+        [ ] rw run-with-wait; waits-all then starts simulation
+[ ] squadron grouping?
+    [ ] gadd NAME MEMBER...
+    [ ] gdel NAME MEMBER...
 
 Roadmap
 =======
@@ -85,7 +55,7 @@ Complete Beta: That which isn't embarrassing to show other people
 
 Backlog
 =======
-[ ] `mv ^3 ^2` is a 'follow' cmd? how hard would that be?
+[ ] `follow ^3 ^2` is a 'follow' cmd? how hard would that be?
 
 [ ] blend at and vs together into `intercept`/`it` since combat is automatic?
 
@@ -109,6 +79,14 @@ Backlog
     this can provide info when units are stacked up eg `:3`
 [ ] how much more time am I going to spend on a console game before switching
     to pygame or something?
+
+[ ] `map` bugs
+    [ ] this command raises due to exceeding map bounds: map 37 16 5 10
+        (need zoomable map command for getting a better look at crowded space)
+    [ ] map captions/scale could be better; here for `map 32 32 8 2`:
+              . . . . . . . . . . . . . . . . .
+           24 . . . . . . . . . . . . . . . . .
+               24  26  26  28  28  30  30  32
 
 
 ### ops: repair & docking
