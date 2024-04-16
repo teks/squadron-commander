@@ -4,10 +4,6 @@ Character codes for the short-ranged map; these are also used in input eg `scan 
 One unambiguous two-letter code for each object. The second char appears to the
 right in the blank space, eg `*A` for star A.
 
-Letters are case-insensitive for input but shown as a capital letter (they're
-more clear). So, can't use small letters. Also 'Z' used in displays is used to
-mean that the designation can't fit in a single character.
-
 When a star and one other object share a cell, the object takes precedence.
 
 TODO: occupied system vs. unoccupied system? 
@@ -22,14 +18,16 @@ Most important, needed right now
 *A  star A
 !C  enemy C
 ^3  Squadron member 3
+%7  starbase 7
+@3  space colony 3
 
 Implement/clarify later:
 
 ?G  Unknown object G
 
 settlements:
-    %7 starbases & spaceborne colonies
     #5 planetary settlement (looks like a farm) :]
+        o5 alternate perhaps; looks like a planet
 
 first character can be a letter too:
     x5  squadron member 5
@@ -37,11 +35,19 @@ first character can be a letter too:
     various letters can be used for classes of enemies perhaps
         maybe use letters for ALL vessels, bases, and settlements?
 
+Black hole?  I dunno what it would do mechanically anyway so forget it for now, but:
+    O   don't think I need O for anything (not showing individual planets)
+    ()  multiple chars gives nice impression of unusual size
+
+how do I feel about unicode?
+
 unused chars
-    basic symbols:  - ~ | / \ ; : 
-    paired symbols: ( ) [ ] { } < >
-    lots of letters
-    @ a big object, say, a black hole?
-    ; don't use, too much like :
+    basic symbols:  - ~ | / \ ; :
+    paired symbols: ( ) [ ] { } < > ^ v
+        save ( ) [ ] { } for targetting brackets?
+    lots of letters:
+        a-z A-Z
+
+unusable chars
     don't use these chars, too visually indstinct: ` ' " , _
 ```

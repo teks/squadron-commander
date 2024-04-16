@@ -147,6 +147,12 @@ class CLI(cmd.Cmd):
 
 class CmdUserInterface(trek.UserInterface):
     """UI for trek based on simple cmd.Cmd CLI."""
+    class LabelIterators:
+        def __init__(self):
+            label_chars = string.digits + string.ascii_uppercase
+            self.squadron = iter(label_chars)
+            self.raiders = iter(label_chars)
+            self.colonies = iter(label_chars)
 
     def __init__(self, simulation):
         # not sure I like this constant double-referencing, not sure how to avoid it
@@ -154,17 +160,8 @@ class CmdUserInterface(trek.UserInterface):
         simulation.user_interface = self
         self.cli = CLI()
         self.cli._cmd_ui = self
-        self.label_prefixes = {
-            trek.FriendlyShip.side: '^',
-            trek.EnemyShip.side: '!',
-            # TODO stars
-        }
         # keep track of iteration of spaceborne object label usage
-        label_chars = string.digits + string.ascii_uppercase
-        self.label_iterators = {
-            trek.FriendlyShip.side: iter(label_chars),
-            trek.EnemyShip.side: iter(label_chars),
-        }
+        self.label_iterators = self.LabelIterators()
         # set labels for the objects in the simulation
         for o in sorted(simulation.get_objects(), key=lambda o: o.designation):
             self.set_ui_label(o)
@@ -257,7 +254,20 @@ class CmdUserInterface(trek.UserInterface):
 
     def set_ui_label(self, obj):
         """Attach a unique UX label [0-9A-Z] to an object, then return that label."""
-        obj._ui_label = self.label_prefixes[obj.side] + next(self.label_iterators[obj.side])
+        if isinstance(obj, trek.Ship):
+            match (obj.side, obj.controller):
+                case (trek.Side.FRIENDLY, trek.Controller.PLAYER):
+                    obj._ui_label = '^' + next(self.label_iterators.squadron)
+                case (trek.Side.ENEMY, _):
+                    obj._ui_label = '!' + next(self.label_iterators.raiders)
+                case _:
+                    raise ValueError(
+                        f"{obj} has unexpected (side, controller) of {obj.side, obj.controller}")
+        elif isinstance(obj, trek.SpaceColony) and obj.side == trek.Side.FRIENDLY:
+            obj._ui_label = '@' + next(self.label_iterators.colonies)
+        else:
+            raise ValueError(f"Couldn't assign UI label to {obj}")
+
         return obj._ui_label
 
     def cell_string(self, contents):

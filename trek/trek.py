@@ -126,6 +126,12 @@ class Side(enum.Enum):
     NEUTRAL = 'neutral'
 
 
+class Controller(enum.Enum):
+    """When it comes to fights and other interactions, what side is this object on?"""
+    PLAYER = 'player'
+    ENEMY_AI = 'enemy_ai'
+
+
 class Order(enum.Enum):
     """Controllable objects in the simulation need to be given orders."""
     MOVE = 'move'
@@ -149,6 +155,7 @@ class ArtificialObject(SpaceborneObject):
     max_shields = 0
     _combat_value = 1
     side = Side.NEUTRAL
+    controller = None
     # TODO move away from Ship.Order.FOO and just reference Order.FOO
     Order = Order
     valid_orders = {Order.IDLE}
@@ -415,11 +422,13 @@ class Ship(ArtificialObject):
 
 class FriendlyShip(Ship):
     side = Side.FRIENDLY
+    controller = Controller.PLAYER
     max_shields = 1
 
 
 class EnemyShip(Ship):
     side = Side.ENEMY
+    controller = Controller.ENEMY_AI
     max_shields = 1
 
 
