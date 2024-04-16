@@ -150,7 +150,11 @@ class Simulation:
         self.user_interface.message(type, text, **details)
 
     def ready_to_run(self):
-        return all(s.has_orders() for s in self.squadron)
+        return any(not s.has_orders() for s in self.squadron)
+
+    def idle_ships(self):
+        """Returns a set of idle friendly vessels."""
+        return set(s for s in self.squadron if not s.has_orders())
 
     def should_pause(self):
         if not self.ready_to_run():

@@ -159,6 +159,14 @@ class CmdUserInterface(trek.UserInterface):
     def move_ship(self, ship_desig, destination):
         ship = self.get_object(ship_desig)
         ship.order(trek.Ship.Order.MOVE, destination=destination)
+        self.idle_ship_check()
+
+    def idle_ship_check(self):
+        idle_ships = self.simulation.idle_ships()
+        if len(idle_ships) == 0:
+            print("All ships have their orders.")
+        else:
+            print(f"{len(idle_ships)} ships have no orders.")
 
     def message(self, type, text, **details):
         print(f"{type}: {text}; details: {details}")
