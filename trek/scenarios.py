@@ -33,6 +33,20 @@ class DefaultScenario(trek.EndlessScenario):
         return self.simulation
 
 
+class WesternRaider(trek.EnemyShip):
+    def retreats_from(self, side_cv_ratio):
+        """Randomly determines if a ship retreats from battle.
+
+        On retreat, warps away West
+        """
+        retreats = super().retreats_from(side_cv_ratio)
+        if retreats:
+            dest = self.point + trek.Point(-1, 0) # run one ly West
+            self.order(trek.Order.MOVE, destination=dest)
+            self.retreat_text = f"RETREATING TO ({dest.x:.2f}, {dest.y:.2f})"
+        return retreats
+
+
 @dataclasses.dataclass
 class WavesOfRaiders(trek.Scenario):
     """Waves of raiders appear on the left, attacking the local colonies.
@@ -48,7 +62,6 @@ class WavesOfRaiders(trek.Scenario):
         for enemy in enemies:
             self.simulation.add_object(enemy)
             self.enemies.append(enemy)
-
 
     def setup(self, initialize_simulation=True):
         # TODO that we're double-tracking objects here and in simulation suggests
@@ -72,7 +85,7 @@ class WavesOfRaiders(trek.Scenario):
         self.enemy_waves = []
         raider_desig_iter = (f'Raider-{x}' for x in string.ascii_uppercase)
         for cnt in (2, 3, 4, 5): # four waves of increasing numbers of foes
-            wave = [trek.EnemyShip(next(raider_desig_iter), trek.random_point((1, 1)))
+            wave = [WesternRaider(next(raider_desig_iter), trek.random_point((1, 1)))
                     for _ in range(cnt)]
             self.enemy_waves.append(wave)
 

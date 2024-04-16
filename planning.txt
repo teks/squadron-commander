@@ -4,7 +4,7 @@ Iterations
 ### i15 AT LAST THE MOTHERFUCKING BETA WOOOOOOOO
 [v] long delay after last wave is defeated, see stash
 [v] turn off `map` command for beta instead of fixing its bugs
-[ ] retreat should alter behavior of retreating enemies;
+[v] retreat should alter behavior of retreating enemies;
     they should actually retreat towards their origin direction for a bit
     (it's a way of driving enemies away from a base or target)
 [ ] mild typing/UI issue: SpaceColonies have no shield generators, but

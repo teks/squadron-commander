@@ -186,6 +186,13 @@ The damage inflicted is modified by two randomized factors:
   retreating; this is more likely if its Morale is low. A ship that retreats
   both deals and receives half damage (this supersedes advantage).
 
+Retreat results in no movement on the map by default; it's assumed that
+retreating ships are using sublight thrust whose displacement at this scale is
+negligible. But in the waves-of-raiders scenario, the raiders engage FTL while
+retreating, so they run a short way West (-X) back where they came from. After
+that, however, they'll resume raiding. This means they can be driven away from
+their raiding target.
+
 Damage & Repair
 ---------------
 As with similar games, damage to a vessel is first applied to shields, then any

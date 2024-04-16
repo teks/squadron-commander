@@ -110,7 +110,7 @@ def combat_report_row_gen(side):
         unit = getattr(u, '_ui_label', '??') + f' {u.designation}'
         notes = []
         if u in side.retreaters:
-            notes.append('RETREATED')
+            notes.append(u.retreat_text)
         sys_dmg_str = ', '.join(f'{n}: {percent_str(-f)}' for n, f in sys_dmg.items() if f is not None)
         if sys_dmg_str:
             notes.append(f'SYS-DMG: {sys_dmg_str}')

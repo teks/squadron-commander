@@ -353,7 +353,7 @@ class ArtificialObject(SpaceborneObject):
         return self.current_hull / self.max_hull
 
     def retreats_from(self, side_cv_ratio):
-        return False # mama didn raise no quitter
+        return False # only mobile objects can retreat
 
     def receive_damage(self, quantity: float):
         """Damage shields the given amount, applying overflow to hull.
@@ -456,12 +456,12 @@ class SpaceColony(ArtificialObject):
 
 class Ship(ArtificialObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
-    # Cruising speed is in light year per hour.
-    # TODO there's no capacity to accelerate
-    cruising_speed = 1 # warp, not newtonian
-    acceleration = 0.1 # warp, not newtonian
+    cruising_speed = 1 # warp, not newtonian, in ly/hour
     side = Side.NEUTRAL
     valid_orders = set(Order) # can do anything
+    # this is a gross violation of separation of concerns (mixing UX with engine)
+    # but it was the easiest way:
+    retreat_text = 'RETREATED'
 
     class Drive(ArtificialObject.Component):
         def apply_to(self, vessel):
@@ -572,7 +572,7 @@ class Ship(ArtificialObject):
     def retreats_from(self, side_cv_ratio):
         """Randomly determines if a ship retreats from battle.
 
-        Examples of probability of retreat:
+        Examples of probability of retreat (most of this isn't implemented):
             * medium: badly outnumbered
             * medium: shields low
             * high: both --^
