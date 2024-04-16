@@ -431,6 +431,40 @@ class EnemyShip(Ship):
     controller = Controller.ENEMY_AI
     max_shields = 1
 
+    def choose_closest(self, targets):
+        min_distance = MAX_X + MAX_Y
+        candidates = set()
+        for o in targets:
+            d = self.point.distance(o)
+            if d == min_distance:
+                candidates.add(o)
+            elif d < min_distance:
+                min_distance, candidates = d, {o}
+        return random.choice(candidates)
+
+    def choose_target(self):
+        """Chooses a target to attack."""
+        priority_targets, targets = set(), set()
+        for o in self.simulation.get_objects(Side.FRIENDLY):
+            (priority_targets if isinstance(o, SpaceColony) else targets).add(o)
+        if priority_targets:
+            return self.choose_closest(priority_targets)
+        if targets:
+            return self.choose_closest(targets)
+        return None
+
+
+    def post_action(self):
+        super().post_action()
+        # Not clear if AI action assignment should happen here or in its own tick step.
+        # Prioritize targets:
+        #   1) vulnerable targets: SpaceColony, settlements
+        #   2) any friendly
+        if self.current_order is None:
+            self.order(Order.IDLE)
+            target = self.choose_target()
+            if target:
+                self.order(Order.ATTACK, target=target)
 
 @dataclasses.dataclass
 class CombatSide:
