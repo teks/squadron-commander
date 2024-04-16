@@ -101,17 +101,6 @@ class Ship(SpaceborneObject):
         self.current_order = order, kwargs
 
 
-class Map:
-    """Area of operations for a specific playthrough.
-
-    Spaceborne objects may stack, because it's space.
-    """
-    def __init__(self, contents=None):
-        if contents is None:
-            contents = dict()
-        self.contents = contents # set or list most likely
-
-
 class UserInterface:
     pass
 
@@ -122,17 +111,23 @@ class Simulation:
 
     Also can access most of the semantics too.
     """
-    map: Map
+    squadron: set = dataclasses.field(default_factory=set)
     # left None here for bootstrapping porpoises
     user_interface: UserInterface = None
     clock: int = 0 # game clock; starts at 0. User will be shown stardate
+    # player's ships:
 
     class Message(enum.Enum):
         ARRIVE = 'arrive'
 
     def __post_init__(self):
-        for o in self.map.contents:
+        for o in self.squadron:
             o.simulation = self
+
+    def objects(self):
+        """Generator for all the objects in the simulation."""
+        for o in self.squadron:
+            yield o
 
     def message(self, type, text, **details):
         """Cause the simulation to emit a message to the user interface."""
@@ -147,6 +142,5 @@ def default_scenario():
         Ship('doug', point(4, 58)),
         Ship('alice', point(7, 7)),
     }
-    map = Map(contents=ships)
-    sim = Simulation(map)
+    sim = Simulation(ships)
     return sim

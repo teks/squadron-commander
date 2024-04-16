@@ -23,3 +23,9 @@ def test_point_validate_low():
 def test_point_validate_high():
     with pytest.raises(AttributeError):
         trek.point(65, 5)
+
+def test_simulation_objects():
+    simulation = trek.default_scenario()
+    objects = list(simulation.objects())
+    # import pdb; pdb.set_trace()
+    assert len(objects) == 5

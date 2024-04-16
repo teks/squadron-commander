@@ -66,11 +66,9 @@ class CmdUserInterface(trek.UserInterface):
 
     def short_range_map(self, center_point, radius=8):
         """Returns the map for a given bounding box."""
-        objects = self.simulation.map.contents
         cells = collections.defaultdict(list)
-        [cells[o.point].append(o) for o in objects]
-        # debugging output:
-        s = pprint.pformat(objects) + '\n' + pprint.pformat(cells) + '\n'
+        [cells[o.point].append(o) for o in self.simulation.objects()]
+        s = pprint.pformat(cells) + '\n' # debugging output
         # set bounding box including bounds-check for attempting to show territory outside the map
         lower_left = trek.point(max(1, center_point.x - radius), max(1, center_point.y - radius))
         upper_right = trek.point(min(trek.MAX_X, center_point.x + radius),
@@ -93,7 +91,7 @@ class CmdUserInterface(trek.UserInterface):
     def long_range_map(self):
         """Return trek-style map of entire simulation."""
         zones = collections.defaultdict(list)
-        for o in self.simulation.map.contents:
+        for o in self.simulation.objects():
             zones[o.point.zone()].append(o)
 
         # generate the triple-digit displays & make grid
@@ -153,7 +151,7 @@ class CmdUserInterface(trek.UserInterface):
         """Returns the object with the given designator."""
         if object_desig is None: # avoid fetching a random thing by accident
             raise ValueError("'None' is an invalid object designator")
-        for o in self.simulation.map.contents:
+        for o in self.simulation.objects():
             if getattr(o, '_cui_designator', None) == object_desig:
                 return o
         raise ValueError(f"Object designated '{object_desig}' not found.")
