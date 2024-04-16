@@ -136,6 +136,86 @@ class ArtificialObject(SpaceborneObject):
         self.fought_last_tick = False
         self.current_shields = self.max_shields
         self.current_hull = self.max_hull
+        self.planned_move = None
+
+    def displacement(self, ticks=1):
+        return self.point # ain't goin nowhere
+
+    def destination(self):
+        return self.point # still ain't goin nowhere
+
+    def recharge_shields(self):
+        if self.fought_last_tick:
+            self.fought_last_tick = False
+        else:
+            self.current_shields = self.max_shields
+
+    def combat_value(self):
+        # TODO add in morale and possibly other factors
+        return self._combat_value
+
+    def shields_status(self):
+        """Ships's shields as a ratio; 0.8 = shields are at 80%."""
+        # some vessels may not have shields so catch div-by-zero case:
+        return 0.0 if self.max_shields == 0.0 else self.current_shields / self.max_shields
+
+    def hull_status(self):
+        """as shields_status but for hull"""
+        return self.current_hull / self.max_hull
+
+    def retreats_from(self, side_cv_ratio):
+        return False # mama didn raise no quitter
+
+    def receive_damage(self, quantity: float):
+        """Damage shields the given amount, applying overflow to hull.
+
+        If damage is dealt to the hull, it may result in system damage.
+
+        Returns a tuple:
+        (destroyed: bool, shield damage, hull damage, system damage)
+        """
+        assert quantity >= 0.0, "Damage value should not be negative"
+        if self.current_shields >= quantity:
+            shield_dmg = quantity
+            hull_dmg = 0.0
+        else: # overflow damage to hull
+            shield_dmg = self.current_shields
+            hull_dmg = quantity - shield_dmg
+
+        self.current_shields -= shield_dmg
+        # intentionally let it go negative, for how busted up the hulk is I guess
+        self.current_hull -= hull_dmg
+
+        sys_dmg = self.system_damage(hull_dmg)
+
+        return (self.is_destroyed(), shield_dmg, hull_dmg, sys_dmg)
+
+    # TODO Hulk instance for wreckage? maybe raiders scavenge it
+    def is_destroyed(self):
+        return self.current_hull <= 0.0
+
+    def system_damage(self, hull_dmg):
+        if hull_dmg <= 0.0:
+            return None
+        # TODO system damage; I got some ideas written down somewhere I think
+        # hdf = self.hull_damage_fraction()
+        return None
+
+    def combat(self):
+        """Notify the ship that it has fought this tick."""
+        self.fought_last_tick = True
+
+    # TODO it's odd to have boilerplate like this
+    def plan_move(self):
+        pass
+
+    def move(self):
+        pass
+
+    def post_action(self):
+        # TODO any AI ships with no orders should choose an order
+        self.planned_move = None
+        self.recharge_shields()
 
 
 class Ship(ArtificialObject):
@@ -190,10 +270,10 @@ class Ship(ArtificialObject):
         return Point(x=(relative_dest.x * distance_ratio),
                      y=(relative_dest.y * distance_ratio))
 
-    def destination(self, pos_if_none=True):
+    def destination(self):
         if self.has_orders() and self.current_order.is_movement_order():
             return self.current_order_params['destination']
-        return self.point if pos_if_none else None
+        return self.point
 
     def intercept_point(self, target) -> (bool, Point, int):
         """Return the earliest time & place at which self can intercept the target.
@@ -234,16 +314,6 @@ class Ship(ArtificialObject):
             if d >= d_last:
                 return False, t_dest, self.point.distance(t_dest) / self.speed
             d_last = d
-
-    def recharge_shields(self):
-        if self.fought_last_tick:
-            self.fought_last_tick = False
-        else:
-            self.current_shields = self.max_shields
-
-    def combat_value(self):
-        # TODO add in morale and possibly other factors
-        return self._combat_value
 
     def shields_status(self):
         """Ships's shields as a ratio; 0.8 = shields are at 80%."""
@@ -288,45 +358,6 @@ class Ship(ArtificialObject):
         # garaunteed: 0.0 <= random.random() < 1.0
         retreats = self.retreat_chance(side_cv_ratio) > random.random()
         return retreats
-
-    def receive_damage(self, quantity: float):
-        """Damage shields the given amount, applying overflow to hull.
-
-        If damage is dealt to the hull, it may result in system damage.
-
-        Returns a tuple:
-        (destroyed: bool, shield damage, hull damage, system damage)
-        """
-        assert quantity >= 0.0, "Damage value should not be negative"
-        if self.current_shields >= quantity:
-            shield_dmg = quantity
-            hull_dmg = 0.0
-        else: # overflow damage to hull
-            shield_dmg = self.current_shields
-            hull_dmg = quantity - shield_dmg
-
-        self.current_shields -= shield_dmg
-        # intentionally let it go negative, for how busted up the hulk is I guess
-        self.current_hull -= hull_dmg
-
-        sys_dmg = self.system_damage(hull_dmg)
-
-        return (self.is_destroyed(), shield_dmg, hull_dmg, sys_dmg)
-
-    # TODO Hulk instance for trashed ships?
-    def is_destroyed(self):
-        return self.current_hull <= 0.0
-
-    def system_damage(self, hull_dmg):
-        if hull_dmg <= 0.0:
-            return None
-        # TODO system damage; I got some ideas written down somewhere I think
-        # hdf = self.hull_damage_fraction()
-        return None
-
-    def combat(self):
-        """Notify the ship that it has fought this tick."""
-        self.fought_last_tick = True
 
     def plan_move(self): # currently simulation param isn't needed
         if not self.has_orders():
