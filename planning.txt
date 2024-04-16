@@ -8,9 +8,13 @@
         [v] set initial value: self.morale = 0.0 # neutral
         [v] depletion & restoration
         [v] effect on combat
+        [ ] write some tests
+        [ ] do playtest
     [ ] system damage
         [ ] when there's hull damage, apply systems damage
         [ ] add systems to ships
+        [ ] write some tests
+        [ ] do playtests
     [ ] refine ship's combat value further? (shields down, sys dmg?)
 [ ] `status <unit>...` to show system damage etc
     see `doc/object-detail-view.md`
@@ -19,8 +23,23 @@
 
 Roadmap
 =======
-UX
-[ ] how much more time am I going to spend on a console game before switching to pygame or something?
+Complete Beta
+(ux improvements as-needed, and):
+[ ] system damage, see i11
+[ ] ship repairs
+[ ] force movement on retreat
+    [ ] retreat moves using EMERGENCY SPEED
+    [ ] Each ship's emergency warp value is used for this.
+    [ ] Ships from a side tend to retreat in the same direction.
+    [ ] order that toggles `ship.evasive` & retreat_check checks it
+[ ] make some ship classes and experiment with combat outcomes
+    for now symmetrically:
+    [ ] go over numerical balance of ship values; see number-mull
+    [ ] corvette (enemy: crow) <-- enemies are named after birds I guess
+    [ ] cruiser (enemy: vulture)
+[ ] playable scenario:
+    [ ] enemies appear to the left, retreat to the left?
+    [ ] new ones spawn periodically
 
 
 Backlog
@@ -39,25 +58,16 @@ Backlog
     [ ] show tick in prompt? eg `(+14h) ` or maybe `[0300] ` for 3 AM
     [ ] most messages should be prefixed with tick (in hours or walltime) eg:
         +13h ARRIVAL: ^2 baker has arrived at Point(x=32.0, y=32.0).
-[ ] when units are stacked up eg `:3`, need a way to quickly list contents
 [ ] need a "tell me about the local area" command that
     lists everything in the area and gives status
     maybe a 'sitrep' cmd issues to a ship?
+    this can provide info when units are stacked up eg `:3`
+[ ] how much more time am I going to spend on a console game before switching
+    to pygame or something?
+
 
 ### ops: repair & docking
 [ ] raise morale to 0.0 by docking at a base and staying 24 hours, +0.1 for each 24h after
-
-### combat (descending priority):
-[ ] force movement on retreat
-  [ ] retreat moves using EMERGENCY SPEED
-  [ ] Each ship's emergency warp value is used for this.
-  [ ] Ships from a side tend to retreat in the same direction.
-[ ] make some ship classes and experiment with combat outcomes
-    for now symmetrically:
-    [ ] go over numerical balance of ship values; see number-mull
-    [ ] corvette (enemy: crow) <-- enemies are named after birds I guess
-    [ ] cruiser (enemy: vulture)
-[ ] order that toggles `ship.evasive` & retreat_check checks it
 
 ### misc
 [ ] help facility?
