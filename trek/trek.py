@@ -59,8 +59,11 @@ class Point(typing.NamedTuple):
         Grid cells are assumed to be labelled with whole numbers.
         The grid may have a different resolution, so scale first.
         """
-        # conveniently, round() returns an integer
-        return self.__class__(x=round(self.x * scale), y=round(self.y * scale))
+        # python's rounding is odd: https://docs.python.org/3/library/functions.html#round
+        def round_sanely(v):
+            floor = math.floor(v)
+            return floor if v - floor < 0.5 else math.ceil(v)
+        return self.__class__(x=round_sanely(self.x * scale), y=round_sanely(self.y * scale))
 
     def bearing_to(self, other):
         """In radians.

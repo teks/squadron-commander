@@ -2,17 +2,17 @@
 [v] class Scenario; check it for victory conditions each tick
 [v] enemies appear to the left, retreat to the left?
 [v] new ones spawn periodically
-[ ] retreat should alter behavior of retreating enemies;
-    they should actually retreat towards their origin direction for a bit
-    (it's a way of driving enemies away from a base or target)
-[ ] vessels keep moving after they're destroyed if they were destroyed while moving
-[ ] smap has difficulty with units that have x=1:
+[v] vessels keep moving after they're destroyed if they were destroyed while moving
+[v] smap has difficulty with units that have x=1:
     16 . . . .
        + . . . <-- the '+' is the heading indicator for !1 at (1, 14)
     12 . . . .
          4   8
 [ ] complete a few playthroughs, notes here:
     (notes go here)
+[ ] retreat should alter behavior of retreating enemies;
+    they should actually retreat towards their origin direction for a bit
+    (it's a way of driving enemies away from a base or target)
 
 ### i15 make some ship classes and experiment with combat outcomes
 for now symmetrically:
