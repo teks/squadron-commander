@@ -1,5 +1,14 @@
 ### i13 round of ux improvements
-[ ] can I get argparse doc text to show up in Cmd outputs eg `> ? smap`?
+[v] can I get argparse doc text to show up in Cmd outputs eg `> ? smap`?
+    yes: `def help_map(self): self.map_parser.print_help()`
+    but it'll need a buncha work to make it nice; may be easier to just
+    keep adding to docstrings:
+    * parser needs some massaging to make its help text look right
+    * class trek.cli.CLI needs machinery to avoid boilerplate, eg:
+        class CLI(cmd.Cmd):
+            pass
+        MapCommand(CLI,...)  # adds do_map and help_map
+        ListCommand(Cli,...) # adds do_list and help_list
 [ ] map's ':N' issues:
     [ ] when there's a `:N` showing on a map, display its contents someplace
         every time there's a combat those `:N` displays show up, and
@@ -34,6 +43,7 @@ Roadmap
 Complete Beta: That which isn't embarrassing to show other people
 (ux improvements as-needed, and):
 [ ] lastly, add a license & push to github
+[ ] second-to-lastly add docstrings to Cmd do_foo methods
 [ ] additional ux as issues reveal themselves
     [ ] groom this backlog - what *really* needs to be in the beta?
     [ ] `show` defaulting to showing all units might be nice
