@@ -69,6 +69,8 @@ class Point(typing.NamedTuple):
 
     def validate(self, is_zone=False):
         """Perform safety checks on self."""
+        if self.x == self.y == 0.0:  # relative coords are sometimes (0, 0)
+            return
         max_x, max_y = MAX_X, MAX_Y
         if is_zone:
             max_x, max_y = MAX_ZONE_X, MAX_ZONE_Y
@@ -89,7 +91,6 @@ def point(*args, **kwargs):
     p = Point(*args, **kwargs)
     p.validate()
     return p
-
 
 def zone(*args, **kwargs):
     """Factory for points that represent one zone."""
@@ -299,7 +300,7 @@ class Ship(ArtificialObject):
         """
         d = self.destination() if destination is None else destination
         if self.point == d:
-            return self.point
+            return point(0.0, 0.0) # we're here! everybody remember where we parked
         distance_to_dest = self.point.distance(d)
         travel_distance = min(ticks * self.speed, distance_to_dest)
         relative_dest = self.point.delta_to(d)
@@ -335,7 +336,7 @@ class Ship(ArtificialObject):
         ### initial values
         d_last = sys.float_info.max # helps check for impossible interception
         elapsed_time = 0
-        t_pos  = target.point
+        t_pos = target.point
         t_travel_dist = 0
 
         ### walk along the target's travel path, trying to find an intercept point

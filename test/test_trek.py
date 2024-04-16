@@ -217,6 +217,12 @@ def test_Ship_intercept_point(i_coord, i_speed, e_early, e_time, e_coord):
 
     assert (e_early, e_time) == (early, time) and trek.point(*e_coord).isclose(point)
 
+def test_same_place_intercept():
+    e = trek.EnemyShip('e', trek.point(40, 12))
+    c = trek.SpaceColony('c', trek.point(40, 12))
+    _, actual_ip, _ = e.intercept_point(c)
+    assert (40, 12) == actual_ip
+
 @pytest.mark.parametrize('group', [
     # for now one obvious test is enough
     [(10, 10), (10, 10)],
