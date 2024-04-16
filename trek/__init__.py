@@ -1,1 +1,1 @@
-print("we come in peace")
+from .trek import distance
