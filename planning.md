@@ -25,11 +25,20 @@ Iterations
 [v] basic UX messaging: simulation emits messages consumed by UX object
 [ ] basic simulation ticking
 [ ] after each order to a ship:
-    [ ] if untasked ships, list them
+    [v] if untasked ships, list them
     [ ] otherwise, emit clock start message & run clock
 [ ] move a ship within the simulation's timekeeping
 ```
 
+## Iteration 4
+fix random stuff, look for TODOs and cleanup:
+```
+[ ]
+[ ]
+[ ]
+[ ]
+[ ]
+```
 
 ## Future Iterations:
 

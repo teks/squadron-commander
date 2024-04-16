@@ -175,4 +175,5 @@ class CmdUserInterface(trek.UserInterface):
 if __name__ == '__main__':
     simulation = trek.default_scenario()
     ui = CmdUserInterface(simulation)
+    print(ui.short_range_map(trek.point(60, 60)))
     ui.start()

@@ -110,9 +110,11 @@ class SpaceborneObject(abc.ABC):
 # TODO this is acting like a friendly ship class as it responds to Orders;
 #   enemy vessels need a separate class, and this class needs to be renamed
 class Ship(SpaceborneObject):
-    def __init__(self, designation: str, point: Point, ftl_max_velocity: int=1):
+    def __init__(self, designation: str, point: Point, cruising_speed: float=1.0):
+        """Cruising speed is in light year per hour."""
+        # TODO did I discover that a dataclass doesn't inherit right?
         super().__init__(designation, point)
-        self.ftl_max_velocity = ftl_max_velocity
+        self.cruising_speed = cruising_speed
         self.current_order = None # start out with no orders
 
     class Order(enum.Enum):

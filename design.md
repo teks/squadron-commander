@@ -71,8 +71,8 @@ coordinates. Warp travel is *always* required to move 1+ spaces; impulse drive
 is used to improve combat maneuvering and is necessary for orbiting and
 de-orbiting.
 
-Combat is between adjacent or stacked opponents. There's no tactical grid; just
-the strategic one.
+Combat is between stacked opponents. There's no tactical grid; just the
+strategic one.
 
 Warp travel isn't instantaneous. Friendly and enemy ships may be in motion
 while other events occur. However, ships can intercept each other, resulting in
