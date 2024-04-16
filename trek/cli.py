@@ -132,7 +132,8 @@ class CommandLineParser(argparse.ArgumentParser):
     https://github.com/python/cpython/issues/103498
     """
     def __init__(self, arguments, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        # rely on `help COMMAND` instead vvvvv
+        super().__init__(*args, add_help=False, **kwargs)
         for *args, kwargs in arguments:
             self.add_argument(*args, **kwargs)
 
@@ -154,7 +155,16 @@ class CommandLineParser(argparse.ArgumentParser):
 class CLI(cmd.Cmd):
     _cmd_ui = None # set later; just doing this to make pycharm less wrong
 
+    intro = (
+        "PYTREK: A 2D interstellar wargame like the trek games of the 70s and 80s\n"
+        "   'help' or '?' to get started; try 'sm' to view the field of play."
+    )
+
+    doc_header = "Commands (type help <command>)"
+    misc_header = "Other Help Topics (type help <topic>)"
+
     def do_debug(self, _):
+        """Drop into a pdb session."""
         ui = self._cmd_ui
         simulation = self._cmd_ui.simulation
         import pdb
@@ -166,7 +176,6 @@ class CLI(cmd.Cmd):
         ['scale', dict(nargs='?', type=float, default=1.0)],
     ))
 
-    # TODO commands are looking boilerplate-y, consider a callback or similar
     def do_map(self, arg):
         """map centerpoint_x centerpoint_y radius=8 scale=1.0"""
         # TODO scale > 1 does strange things eg map 32 32 10 2
@@ -176,7 +185,7 @@ class CLI(cmd.Cmd):
                                                    parsed_line.radius, parsed_line.scale)
             print(map_str)
 
-    def do_smap(self, _):
+    def do_sm(self, _):
         """Show the strategic map, ie, half resolution (1 cell = 2 simulation cells)."""
         map_str = self._cmd_ui.short_range_map(trek.point(32, 32), 32, 0.5)
         print(map_str)
@@ -188,12 +197,21 @@ class CLI(cmd.Cmd):
 
     object_id_list_parser = CommandLineParser(arguments=(MULTI_OBJECT_ID_ARG,))
 
-    def do_list(self, arg):
+    def do_ls(self, arg):
+        """Give a one-line status display for any number of objects:
+
+        0h> ls e0 s0
+        e0 Raider-A   ( 1.00, 18.00) W=1.00 CV=1.00 [###])))  ATTACKING c0 Harmony (34.00, 19.00)
+        s0 Defender-1 ( 4.00, 38.00) W=1.00 CV=1.00 [###])))  NO ORDERS
+
+        With no arguments, lists all objects.
+        """
         parsed_line = self.object_id_list_parser.parse_line(arg)
         if parsed_line is not None:
             self._cmd_ui.object_catalog(*parsed_line.object_id_list)
 
-    def do_show(self, arg):
+    def do_sh(self, arg):
+        """As ls, but gives a more detailed display for each object."""
         parsed_line = self.object_id_list_parser.parse_line(arg)
         if parsed_line is not None:
             self._cmd_ui.object_detail_display(*parsed_line.object_id_list)
@@ -205,7 +223,11 @@ class CLI(cmd.Cmd):
         # ('speed', dict(nargs='?', type=int, default=None)),
     ))
 
-    def do_move(self, arg):
+    def do_mv(self, arg):
+        """Instruct any number of vessels to proceed to a given point:
+
+        mv s0 s1 s2 32 32
+        """
         parsed_line = self.move_parser.parse_line(arg)
         if parsed_line is not None:
             # TODO hypervelocity goes in (also call it 'warpspeed'?)
@@ -216,8 +238,13 @@ class CLI(cmd.Cmd):
         OBJECT_ID_ARG,
     ))
 
-    def do_visit(self, arg):
-        """Move to the location of the given object; doesn't follow the object."""
+    def do_vs(self, arg):
+        """As mv, but instructs one or more vessels to the location of a chosen target:
+
+        Here, s2 and s3 are ordered to c0's location: vs s2 s3 c0
+        Note the target's location is only checked once, when the command is issued. To
+        pursue an enemy in motion, see `help at`.
+        """
         parsed_line = self.visit_parser.parse_line(arg)
         if parsed_line is not None:
             target = self._cmd_ui.get_object(parsed_line.object_id)
@@ -229,7 +256,14 @@ class CLI(cmd.Cmd):
         ('target_id', dict(type=str)),
     ))
 
-    def do_attack(self, arg):
+    def do_at(self, arg):
+        """Order any number of vessels to intercept and attack a target:
+
+        at s0 s1 e0
+
+        The target is pursued and attacked until it is destroyed or the
+        interceptors are given new orders.
+        """
         parsed_line = self.attack_parser.parse_line(arg)
         if parsed_line is not None:
             self._cmd_ui.attack(parsed_line.target_id, *parsed_line.object_id_list)
@@ -239,7 +273,11 @@ class CLI(cmd.Cmd):
         # TODO support timeouts in Order.IDLE params: ('duration', dict(type=int)),
     ))
 
-    def do_wait(self, arg):
+    def do_wt(self, arg):
+        """Order any number of vessels to stop until ordered to do otherwise:
+
+        wt s0 s1
+        """
         parsed_line = self.wait_parser.parse_line(arg)
         if parsed_line is not None:
             self._cmd_ui.wait(*parsed_line.object_id_list)
@@ -257,27 +295,26 @@ class CLI(cmd.Cmd):
         ('hour_count', dict(type=positive_int, nargs='?', default=24)),
     ))
 
-    def do_run(self, arg):
+    def do_r(self, arg):
+        """Run the simulation for the given number of ticks (default is 24):
+
+        Run for 24 ticks (24 hours): r
+        Run for 12 ticks:            r 12
+
+        All ships under your control must have orders or the simulation won't run.
+        """
         parsed_line = self.run_parser.parse_line(arg)
         if parsed_line is not None:
             self._cmd_ui.run(parsed_line.hour_count)
             self.set_prompt()
 
-    # set short commands (python 3 is just <3)
-    do_ls = do_list
-    do_sh = do_show
-    do_mv = do_move
-    do_vs = do_visit
-    do_at = do_attack
-    do_wt = do_wait
-    do_sm = do_smap
-    do_r = do_run
-
     def do_EOF(self, _):
+        """End-of-file characters quit the simulation."""
         print()
         return self.do_quit(_)
 
     def do_quit(self, _):
+        """Quit the simulation."""
         print("Quitting!")
         return True
 
@@ -380,10 +417,13 @@ class CmdUserInterface(trek.UserInterface):
         if o is not None:
             text = '\n'.join([
                 self.single_line_object_display(o),
+                # add in current repair rate; have to pull out modifier from repair()
+                f"    Base Repair Rate: {percent_str(o.repair_rate)} / hour"
                 #     Morale: <in-universe statement from the captain here> (n)
-                f"    Morale: {o.morale:.2f}",
-                f"    Repair: {percent_str(o.repair_rate)} / hour",
-                *(f"    {name}: " + percent_str(component.health)
+                    f"        Morale: {o.morale:.2f}",
+                # :9 is for vertical formatting:
+                "    SYSTEM STATUS",
+                *(f"        {name + ':':9} {percent_str(component.health)}"
                     for name, component in o.components.items())
             ])
             print(text)
