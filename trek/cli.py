@@ -2,8 +2,29 @@ import cmd
 import pprint
 import collections
 import string
+import argparse
 
 import trek
+
+class ComandLineParser(argparse.ArgumentParser):
+    """Needed because they let an awful glaring bug into a release:
+
+    https://github.com/python/cpython/issues/103498
+    """
+    def error(self, message):
+        raise ValueError(message)
+
+    def exit(self, status=0, message=None):
+        raise ValueError(
+            "unexpected call to ArgumentParser.exit(status={status}, message='{message}')")
+
+    def parse_line(self, line):
+        try:
+            # if needed, `import shlex` for better lexing (say, quoting of ship names)
+            return self.parse_args(line.split())
+        except Exception as e:
+            print(e)
+
 
 class CLI(cmd.Cmd):
     _cmd_ui = None # set later; just doing this to make pycharm less wrong
@@ -12,11 +33,17 @@ class CLI(cmd.Cmd):
         import pdb
         pdb.set_trace()
 
+    map_parser = ComandLineParser()
+    map_parser.add_argument('x', type=int)
+    map_parser.add_argument('y', type=int)
+    map_parser.add_argument('radius', nargs='?', type=int, default=8)
+
     def do_map(self, arg):
-        x, y = arg.split()
-        center = trek.point(int(x), int(y))
-        map_str = self._cmd_ui.short_range_map(center)
-        print(map_str)
+        parsed_line = self.map_parser.parse_line(arg)
+        if parsed_line is not None:
+            center = trek.point(parsed_line.x, parsed_line.y)
+            map_str = self._cmd_ui.short_range_map(center, parsed_line.radius)
+            print(map_str)
 
     def do_aomap(self, arg):
         map_str = self._cmd_ui.long_range_map()

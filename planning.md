@@ -35,9 +35,12 @@ fix random stuff, look for TODOs and cleanup:
 [v] stop using uncommited code as initializer
     [v] it'll need argparse eventually anyway, just do it now
 [v] populate the cui labels at startup (later will need to do it at spawn time)
-[ ]
-[ ]
-[ ]
+[v] research CLI argument parsing:
+    [v] demo argparse
+    [v] read about shlex, compare & contrast:
+        https://docs.python.org/3/library/shlex.html#module-shlex
+    [v] make CLI arg parsing decision
+[v] implement arg parsing for CLI based on ---^
 ```
 
 ## Future Iterations:
