@@ -1,0 +1,36 @@
+## iteration 8
+continue developing combat
+[ ] check for ship destruction and send message
+[ ] add messaging to combate engine
+[ ] make some ship classes and experiment with combat outcomes
+    [ ] corvette
+    [ ] cruiser
+[ ] bring combat to a basic functional state
+    [ ] each tick, after movement step, run combat step
+    [ ] force movement on retreat
+
+
+
+Future Iterations
+=================
+[ ] look into non-flat probabilities:
+    https://docs.python.org/3/library/random.html#real-valued-distributions
+
+### combat
+[ ] system damage
+    [ ] on hull damage, apply systems damage
+    [ ] add systems to ships
+[ ] mull a 'maneuverability' value for ships
+[ ] morale: depletion, restoration, and effect on combat
+    set initial value: self.morale = 0.0 # neutral
+[ ] refine ship's combat value (shields down, morale, etc)
+
+### misc
+[ ] enemy ships:
+    AI-driven enemy vessels' class should be child of Ship;
+    enemies assign orders to themselves over time
+[ ] attempt to use dataclasses for SpaceborneObject & children
+[ ] concrete CLI ux class
+    [v] cmd
+    [ ] displays for various entities & the map
+    [ ] help facility?
