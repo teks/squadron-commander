@@ -579,10 +579,11 @@ class Simulation:
         if side is not None:
             i = (o for o in i if o.side == side)
         if controller is not None:
-            i = (o for o in i if o.side == controller)
+            i = (o for o in i if o.controller == controller)
         yield from i
 
     def get_object(self, side, designation):
+        """Get a single object by side and object's designation."""
         return self.objects[(side, designation)]
 
     def add_object(self, obj):

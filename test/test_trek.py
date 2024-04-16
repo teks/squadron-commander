@@ -38,24 +38,30 @@ def test_point_validate_high():
     with pytest.raises(AttributeError):
         trek.point(65, 5)
 
-@pytest.fixture(params=[
+@pytest.mark.parametrize('raw_p, expected_z', [
     [( 3.5, 5.5), (1, 1)],
     [( 8.7, 4.0), (2, 1)],
     [(15.8, 16.3), (2, 2)],
 ])
-def points_and_zones(request):
-    return request.param
-
-def test_point_zone(points_and_zones):
+def test_point_zone(raw_p, expected_z):
     """Confirm Point.zone() correctly assigns a zone to a Point."""
-    raw_p, expected_z = points_and_zones
     p = trek.Point(*raw_p)
     assert expected_z == p.zone()
 
-def test_simulation_objects():
-    simulation = trek.default_scenario()
-    objects = list(simulation.get_objects())
-    assert len(objects) == 5
+@pytest.mark.parametrize('expected_object_cnt, side, controller', [
+    (8, None, None),
+    (5, trek.Side.FRIENDLY, None),
+    (3, trek.Side.ENEMY, None),
+    (4, None, trek.Controller.PLAYER),
+    (3, None, trek.Controller.ENEMY_AI),
+    (4, trek.Side.FRIENDLY, trek.Controller.PLAYER),
+])
+def test_simulation_get_objects(side, controller, expected_object_cnt):
+    simulation = trek.default_scenario(enemies=True)
+    # so not all friendlies are player-controlled:
+    simulation.get_object(trek.Side.FRIENDLY, 'charlie').controller = None
+    objects = list(simulation.get_objects(side=side, controller=controller))
+    assert expected_object_cnt == len(objects)
 
 def test_simulation_run_not_ready():
     """Confirm simulation won't run if ships have no orders."""
