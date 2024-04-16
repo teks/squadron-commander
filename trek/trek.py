@@ -169,6 +169,9 @@ class Side(enum.Enum):
     ENEMY = 'enemy'
     NEUTRAL = 'neutral'
 
+    def is_hostile_to(self, other):
+        return {self, other} == {self.FRIENDLY, self.ENEMY}
+
 
 class Controller(enum.Enum):
     """When it comes to fights and other interactions, what side is this object on?"""
@@ -260,6 +263,24 @@ class ArtificialObject(SpaceborneObject):
     MORALE_CV_FACTOR = 0.25
     MORALE_RETREAT_FACTOR = 0.5
 
+    def hull_damage_morale_change(self, hull_dmg):
+        self.morale -= self.MORALE_HULL_DMG_FACTOR * (hull_dmg / self.max_hull)
+
+    def combat_participation_morale_change(self, report):
+        self.morale -= 0.05 # being in battle at all is bad for morale
+        # but a retreating opponent is good for morale
+        opposing_retreaters = {Side.FRIENDLY: report.enemy_side.retreaters,
+                               Side.ENEMY: report.friendly_side.retreaters,
+                               }[self.side]
+        self.morale += len(opposing_retreaters) * 0.05
+
+    def destroyed_object_morale_change(self, obj):
+        if obj.side == self.side:
+            self.morale -= 0.2
+        elif self.side.is_hostile_to(obj.side):
+            # if witnessing destruction close at hand (say in battle), bonus morale
+            self.morale += 0.2 if self.point.isclose(obj.point) else 0.1
+
     def combat_value(self):
         # TODO other factors possibly
         return self._combat_value * (1.0 + self.morale * self.MORALE_CV_FACTOR)
@@ -292,7 +313,7 @@ class ArtificialObject(SpaceborneObject):
             shield_dmg = self.current_shields
             hull_dmg = quantity - shield_dmg
             # crew doesn't like getting shot at
-            self.morale -= self.MORALE_HULL_DMG_FACTOR * (hull_dmg / self.max_hull)
+            self.hull_damage_morale_change(hull_dmg)
 
         self.current_shields -= shield_dmg
         # intentionally let it go negative, for how busted up the hulk is I guess
@@ -320,12 +341,7 @@ class ArtificialObject(SpaceborneObject):
     def combat(self, report):
         """Notify the ship that it has fought this tick."""
         self.fought_last_tick = True
-        self.morale -= 0.05 # being in battle at all is bad for morale
-        # but a retreating opponent is good for morale
-        opposing_retreaters = {Side.FRIENDLY: report.enemy_side.retreaters,
-                               Side.ENEMY: report.friendly_side.retreaters,
-                               }[self.side]
-        self.morale += len(opposing_retreaters) * 0.05
+        self.combat_participation_morale_change(report)
 
     # TODO it's odd to have boilerplate like this
     def compute_move(self, ticks=None):
@@ -483,14 +499,7 @@ class Ship(ArtificialObject):
     def receive_message(self, message):
         """Receive a Message, acting on it if needed."""
         if isinstance(message, DestroyedObjectMessage):
-            o = message.obj
-            # this is a hack: 1) neglects neutral units and
-            # 2) combat report is less brittle source of battle participation info than proximity
-            if o.side != self.side:
-                # same battle so self just helped destory it, so bonus morale
-                self.morale += 0.2 if self.point.isclose(o.point) else 0.1
-            elif o.side == self.side:
-                self.morale -= 0.2
+            self.destroyed_object_morale_change(message.obj)
 
     def compute_move(self, ticks=1):
         if self.current_order == self.Order.MOVE:
