@@ -1,4 +1,5 @@
 ### i11
+in retrospect this iteration is too big and mixes too many disjoint concerns
 [v] use `ls` to show a ship when it needs orders:
     24h> mv ^0 28 56
     1 units need orders:
@@ -18,10 +19,10 @@
                 * Severity of damage also grows with hull damage fraction.
                 Each system is tracked separately as a fraction (1.0 = undamaged).
                 The fraction tells how much performance is degrading.
-        [ ] List of systems to damage and the effects of damage:
-            [ ] Shields: Damage reduces maximum
-            [ ] Warp Drive: Reduced speed and energy efficiency
-            [ ] Tactical Systems: Reduced combat value
+        [v] List of systems to damage and the effects of damage:
+            [v] Shields: Damage reduces maximum
+            [v] Warp Drive: Reduced speed
+            [v] Tactical Systems: Reduced combat value
         [ ] write some tests
         [ ] do playtests
 [v] `show <unit>...` to show system damage etc
@@ -35,11 +36,6 @@ Complete Beta
 (ux improvements as-needed, and):
 [ ] system damage, see i11
 [ ] ship repairs
-[ ] force movement on retreat
-    [ ] retreat moves using EMERGENCY SPEED
-    [ ] Each ship's emergency warp value is used for this.
-    [ ] Ships from a side tend to retreat in the same direction.
-    [ ] order that toggles `ship.evasive` & retreat_check checks it
 [ ] make some ship classes and experiment with combat outcomes
     for now symmetrically:
     [ ] go over numerical balance of ship values; see number-mull
@@ -55,7 +51,8 @@ Complete Beta
     [ ] when there's a `:N` showing on a map, display its contents someplace
         every time there's a combat those `:N` displays show up, and
         the player needs good info on what `:N`; means
-
+[ ] retreat should alter behavior of retreating enemies;
+    they should actually change their destination for a bit
 
 Backlog
 =======
@@ -90,9 +87,32 @@ Backlog
 [ ] `wait <unit> <duration>`  <-- add duration?
 
 ### low priority
+[ ] auto-retreat button: order that toggles `ship.evasive` & retreat_check checks it
+[ ] ships should be able to exceed cruising speed at risk of drive damage
+    [ ] maximum speed is . . . ?
+    [ ] command for setting a ship's speed . . . ?
+        feels like a captain concern not a squad commander concern
 [ ] mull a 'maneuverability' value for ships
 [ ] look into non-flat probabilities:
     https://docs.python.org/3/library/random.html#real-valued-distributions
 [ ] raiders sometimes carry off hostages when they raid settlements?
     have to send ships to get them back? that implies boarding ops
 [ ] attempt to use dataclasses for SpaceborneObject & children
+[ ] fancier protection of bases:
+    one can already protect bases; that's what interception is for, but maybe
+    something more fancy:
+    [ ] option 1: retreat results in forced movement (away from a base if present)
+        [ ] retreat moves using EMERGENCY SPEED
+        [ ] Each ship's emergency warp value is used for this.
+        [ ] Ships from a side tend to retreat in the same direction.
+    [ ] option 2: if battle includes friendlies and a base, sometimes/somehow exclude the base:
+        [ ] if friendlies are doing Order.PROTECT(base)?
+            [ ] Sometimes one WANTS the base to engage; that suggests an Order.
+            [ ] implement algorithm:
+                for base in local bases:
+                    if (any present friendly vessel is PROTECTing a base
+                            and there are enough friendlies present vs. too many foes (ratio tbd):
+                        exclude(base)
+    [ ] option n: As 2 but TBD
+        [ ] if friendlies were there during the previous tick (so they have time to range out and engage the foes?)
+        [ ] if len(friendly vessels) >= len(enemies), exclude base

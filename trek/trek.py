@@ -208,6 +208,8 @@ class ArtificialObject(SpaceborneObject):
     Order = Order
     valid_orders = {Order.IDLE}
 
+    # TODO ArtificialObject does not yet exist so can't use it as a type
+    #   annotation in Component, and can't use typing.Self because that refers to the wrong class
     @dataclasses.dataclass
     class Component:
         """Parts or Systems on the vessel that can be damaged individually."""
@@ -222,7 +224,7 @@ class ArtificialObject(SpaceborneObject):
         def health(self, new_value: float):
             self._health = 1.0 if new_value > 1.0 else (0.0 if new_value < 0.0 else new_value)
 
-        def damage_check(self, hull_damage: float, hull_fraction: float) -> float | None:
+        def damage_check(self, hull_damage: float, hull_fraction: float, vessel) -> float | None:
             """Check for damage to the given component if there has been hull damage.
 
             The chance of component damage is up to 50%. The amount of
@@ -233,7 +235,16 @@ class ArtificialObject(SpaceborneObject):
                 return None
             dmg_fraction = self.random() * (1 - hull_fraction)
             self.health -= dmg_fraction
+            self.apply_to(vessel)
             return dmg_fraction
+
+        def apply_to(self, vessel):
+            """Immediate effects of component damage, if any."""
+            pass
+
+    class Shields(Component):
+        def apply_to(self, vessel):
+            vessel.current_shields = min(vessel.current_shields, vessel.max_shields * self.health)
 
     def __init__(self, designation: str, point: Point, simulation=None):
         super().__init__(designation, point, simulation)
@@ -246,7 +257,7 @@ class ArtificialObject(SpaceborneObject):
         self.speed = 0
         # start with neutral morale, worst and best is [-1, 1]
         self._morale = 0.0
-        self.components = dict(shields=self.Component(), tactical=self.Component())
+        self.components = dict(shields=self.Shields(), tactical=self.Component())
 
     def has_orders(self):
         return self.current_order is not None
@@ -272,6 +283,7 @@ class ArtificialObject(SpaceborneObject):
             self.fought_last_tick = False
         else:
             self.current_shields = self.max_shields
+            self.components['shields'].apply_to(self)
 
     @property
     def morale(self):
@@ -311,7 +323,8 @@ class ArtificialObject(SpaceborneObject):
 
     def combat_value(self):
         # TODO other factors possibly
-        return self._combat_value * (1.0 + self.morale * self.MORALE_CV_FACTOR)
+        return (self._combat_value * (1.0 + self.morale * self.MORALE_CV_FACTOR)
+                * self.components['tactical'].health)
 
     def shields_status(self):
         """Ships's shields as a ratio; 0.8 = shields are at 80%."""
@@ -363,7 +376,7 @@ class ArtificialObject(SpaceborneObject):
         damage_report = dict()
         hull_fraction = self.hull_status()
         for name, component in self.components.items():
-            damage_report[name] = component.damage_check(hull_dmg, hull_fraction)
+            damage_report[name] = component.damage_check(hull_dmg, hull_fraction, self)
         return damage_report
 
     def combat(self, report):
@@ -398,16 +411,22 @@ class SpaceColony(ArtificialObject):
 class Ship(ArtificialObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
     # Cruising speed is in light year per hour.
+    # TODO there's no capacity to accelerate
     cruising_speed = 1 # warp, not newtonian
     acceleration = 0.1 # warp, not newtonian
     side = Side.NEUTRAL
     valid_orders = set(Order) # can do anything
 
+    class Drive(ArtificialObject.Component):
+        def apply_to(self, vessel):
+            # TODO this is a bit funny because maximum speed was never established
+            vessel.speed = min(vessel.speed, vessel.cruising_speed * self.health)
+
     def __init__(self, designation: str, point: Point, simulation=None):
         """Cruising speed is in light year per hour."""
         super().__init__(designation, point, simulation)
         self.speed = self.cruising_speed
-        self.components['drive'] = self.Component()
+        self.components['drive'] = self.Drive()
 
     def displacement(self, destination: Point=None, ticks=1):
         """Where will self be at a future time?
@@ -478,11 +497,6 @@ class Ship(ArtificialObject):
             if d >= d_last:
                 return False, t_dest, self.point.distance(t_dest) / self.speed
             d_last = d
-
-    def shields_status(self):
-        """Ships's shields as a ratio; 0.8 = shields are at 80%."""
-        # some vessels may not have shields so catch div-by-zero case:
-        return 0.0 if self.max_shields == 0.0 else self.current_shields / self.max_shields
 
     def hull_status(self):
         """as shields_status but for hull"""
