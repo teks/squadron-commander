@@ -31,3 +31,5 @@ nevertheless I swear I've never worked for Bethesda.
 To run the test suite:
 1. `pip -r requirements.txt`
 2. `PYTHONPATH=\`pwd\` pytest`
+
+`design/` contains design notes, including many unused ideas.
