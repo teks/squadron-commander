@@ -134,7 +134,7 @@ class Ship(SpaceborneObject):
 
     def move(self, destination):
         """Perform 1 tick of movement."""
-        print(f"{self} is MOVIN to {destination}")
+        # print(f"{self} is MOVIN to {destination}")
         distance_to_dest = self.point.distance(destination)
         travel_distance = min(self.speed, distance_to_dest)
         assert travel_distance > 0, "Unexpectedly arrived at destination"
@@ -146,9 +146,7 @@ class Ship(SpaceborneObject):
 
         if distance_to_dest - travel_distance <= 0.0:
             self.reset_order()
-            self.simulation.message(
-                self.simulation.Message.ARRIVE, f"{self} arrived at {destination}.",
-                ship=self, destination=destination)
+            self.simulation.message(ArriveMessage(self))
             return
 
     def act(self):
@@ -159,6 +157,17 @@ class Ship(SpaceborneObject):
             case _:
                 raise ValueError(f"Invalid order {self.current_order}")
 
+
+class Message:
+    """Used for sending and receiving signals resulting from game events."""
+
+@dataclasses.dataclass
+class ArriveMessage(Message):
+    ship: Ship
+
+@dataclasses.dataclass
+class SpawnMessage(Message):
+    obj: SpaceborneObject
 
 class UserInterface:
     pass
@@ -176,9 +185,6 @@ class Simulation:
     clock: int = 0 # game clock; starts at 0. User will be shown stardate
     # player's ships:
 
-    class Message(enum.Enum):
-        ARRIVE = 'arrive'
-
     def __post_init__(self):
         for o in self.squadron:
             o.simulation = self
@@ -188,9 +194,9 @@ class Simulation:
         for o in self.squadron:
             yield o
 
-    def message(self, type, text, **details):
-        """Cause the simulation to emit a message to the user interface."""
-        self.user_interface.message(type, text, **details)
+    def message(self, message):
+        """Send a message to the simulation and the user interface."""
+        self.user_interface.message(message)
 
     def ready_to_run(self):
         return all(s.has_orders() for s in self.squadron)

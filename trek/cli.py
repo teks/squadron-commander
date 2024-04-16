@@ -193,5 +193,11 @@ class CmdUserInterface(trek.UserInterface):
         else:
             print(f"{len(idle_ships)} ships have no orders.")
 
-    def message(self, type, text, **details):
-        print(f"{type}: {text}; details: {details}")
+    def message(self, message):
+        match message:
+            # not a real instantiation; the match syntax is gross:
+            case trek.ArriveMessage():
+                m = f"ARRIVAL: {message.ship.designation} has arrived at {message.ship.point}."
+            case _:
+                m = f"Received message: {message}"
+        print(m)
