@@ -7,7 +7,7 @@ Game/Simulation: instance to manage everything
             supernova: binary flag
             8x8 grid of sectors
                 Sector:
-                    contents: list
+                    contents: dict of (tuple -> object)
 ```
 
 How much to keep it like OG/EGA Trek?
