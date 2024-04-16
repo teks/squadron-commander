@@ -100,6 +100,7 @@ class PointAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, trek.point(*values))
 
+# TODO it's an object_id or unit_id really, not just ships
 SHIP_ID_ARG = ('ship_id', dict(type=str))
 
 class CommandLineParser(argparse.ArgumentParser):
@@ -161,6 +162,16 @@ class CLI(cmd.Cmd):
     def do_list(self, _):
         self._cmd_ui.object_catalog()
 
+
+    status_parser = CommandLineParser(arguments=(
+        SHIP_ID_ARG,
+    ))
+
+    def do_show(self, arg):
+        parsed_line = self.status_parser.parse_line(arg)
+        if parsed_line is not None :
+            self._cmd_ui.object_detail_display(parsed_line.ship_id)
+
     move_parser = CommandLineParser(arguments=(
         SHIP_ID_ARG,
         ('destination', dict(nargs=2, type=int, action=PointAction)),
@@ -204,6 +215,7 @@ class CLI(cmd.Cmd):
 
     # set short commands (python 3 is just <3)
     do_ls = do_list
+    do_sh = do_show
     do_mv = do_move
     do_at = do_attack
     do_wt = do_wait
@@ -299,6 +311,17 @@ class CmdUserInterface(trek.UserInterface):
                       ')) ' if ss < 0.75 else ')))')
 
         return f"[{hull_str}]{shield_str} "
+
+    def object_detail_display(self, object_id):
+        o = self.get_object(object_id)
+        if o is not None:
+            text = '\n'.join([
+                self.single_line_object_display(o),
+                #     Morale: <in-universe statement from the captain here> (n)
+                f"    Morale: {o.morale:.1f}"
+            ])
+            print(text)
+            return text
 
     def add_movement_markers(self, layer, obj, scale):
         a, b = [obj.compute_move(ticks=n) for n in (1, 2)]

@@ -208,6 +208,7 @@ class ArtificialObject(SpaceborneObject):
         self.current_order = None # start out with no orders
         self.current_order_params = None
         self.speed = 0
+        self.morale = 0.0
 
     def has_orders(self):
         return self.current_order is not None
