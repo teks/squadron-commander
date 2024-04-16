@@ -1,1 +1,1 @@
-from .trek import distance
+from .trek import *

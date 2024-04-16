@@ -11,7 +11,7 @@ import trek
 ])
 def distances(request):
     a, b, d = request.param
-    return a, b, d, trek.distance(a, b)
+    return a, b, d, trek.Point(*a).distance(trek.Point(*b))
 
 def test_distance(distances):
     _, _, expected_distance, actual_distance = distances
