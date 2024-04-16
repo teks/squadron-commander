@@ -305,10 +305,10 @@ class CmdUserInterface(trek.UserInterface):
             # not a real instantiation; the match syntax is gross:
             case trek.ArriveMessage():
                 m = f"ARRIVAL: {message.ship.designation} has arrived at {message.ship.point}."
-            case trek.SpawnMessage:
+            case trek.SpawnMessage():
                 m = (f"Object spawned: {message.obj}; "
                      f"assigned label {self.set_ui_label(message.obj)}")
-            case trek.CombatReport:
+            case trek.CombatReport():
                 m = combat_report_string(message)
             case _:
                 m = f"Received message: {message}"
