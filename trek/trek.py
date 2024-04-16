@@ -6,6 +6,7 @@ import math
 import typing
 import dataclasses
 import abc
+import enum
 
 # min x & y are both 1, not 0, for both spaces and zones
 MAX_X = 64
@@ -86,7 +87,18 @@ class SpaceborneObject(abc.ABC):
 
 # TODO are Ships friendly or is this the superclass for friendly and enemy ships?
 class Ship(SpaceborneObject):
-    pass
+    def __init__(self, designation: str, point: Point, ftl_max_velocity: int=1):
+        super().__init__(designation, point)
+        self.ftl_max_velocity = ftl_max_velocity
+        self.current_order = None # start out with no orders
+
+    class Order(enum.Enum):
+        MOVE = 'move'
+
+    def order(self, order: Order, **kwargs):
+        if order not in self.Order:
+            raise ValueError(f"'{order}' is not a valid order")
+        self.current_order = order, kwargs
 
 
 class Map:
@@ -114,6 +126,17 @@ class Simulation:
     # left None here for bootstrapping porpoises
     user_interface: UserInterface = None
     clock: int = 0 # game clock; starts at 0. User will be shown stardate
+
+    class Message(enum.Enum):
+        ARRIVE = 'arrive'
+
+    def __post_init__(self):
+        for o in self.map.contents:
+            o.simulation = self
+
+    def message(self, type, text, **details):
+        """Cause the simulation to emit a message to the user interface."""
+        self.user_interface.message(type, text, **details)
 
 
 def default_scenario():

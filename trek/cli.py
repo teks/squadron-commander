@@ -17,8 +17,17 @@ class CLI(cmd.Cmd):
         print(map_str)
 
     def do_move(self, arg):
-        ship_desig, x, y = arg.split()
-        self._cmd_ui.move_ship(ship_desig, trek.point(int(x), int(y)))
+        # TODO probably need standard argument parsing function
+        #   that has standard error reporting etc
+        #   ship_desig, destination, speed = self._cmd_ui.parse(arg,
+        #       parse.SHIP_DESIG, parse.POINT, float)
+        try:
+            ship_desig, *rest = arg.split()
+            destination = trek.point(int(rest[0]), int(rest[1]))
+        except Exception as e:
+            print(f"Invalid command: {e}")
+            return
+        self._cmd_ui.move_ship(ship_desig, destination)
 
     def do_EOF(self, _):
         print()
@@ -151,8 +160,10 @@ class CmdUserInterface(trek.UserInterface):
 
     def move_ship(self, ship_desig, destination):
         ship = self.get_object(ship_desig)
-        ship.point = destination
-        print("SHIP", ship, "MOVED TO", destination)
+        ship.order(trek.Ship.Order.MOVE, destination=destination)
+
+    def message(self, type, text, **details):
+        print(f"{type}: {text}; details: {details}")
 
 # maybe not here in the long run
 if __name__ == '__main__':
