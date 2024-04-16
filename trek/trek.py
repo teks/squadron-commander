@@ -41,9 +41,13 @@ def point(*args, **kwargs):
 
 class SpaceborneObject(abc.ABC):
     """All vessels, planets, stations, and other objects."""
+    # TODO may want to scope this by Simulation
+    designations = set()
 
     def __init__(self, designation: str, point: Point):
-        # TODO use class global to garauntee non-repeating designation
+        if designation in self.designations:
+            raise ValueError(f"SpaceborneObject designated '{designation}' already exists")
+        self.designations.add(designation)
         self.designation = designation
         self.point = point
 
