@@ -114,11 +114,18 @@ class SpaceborneObject(abc.ABC):
         fq_name = self.__class__.__module__ + '.' + self.__class__.__qualname__
         return f"<{fq_name} {self.designation} {self.point}>"
 
+    def message(self, message):
+        if self.simulation is not None:
+            self.simulation.message(message)
 
-class Ship(SpaceborneObject):
-    """Mobile spaceborne object. Issue orders to have it move and take other actions."""
-    cruising_speed = 1 # warp, not newtonian
-    acceleration = 0.1 # warp, not newtonian
+
+class ArtificialObject(SpaceborneObject):
+    """Any spaceborne object that is artificially constructed.
+
+    Thus it has a hull, a combat value, and optionally, shields.
+    For now, such objects can't be given orders; they just sit there
+    and defend themselves if needed.
+    """
     max_hull = 1
     max_shields = 0
     _combat_value = 1
@@ -126,12 +133,22 @@ class Ship(SpaceborneObject):
     def __init__(self, designation: str, point: Point, simulation=None):
         """Cruising speed is in light year per hour."""
         super().__init__(designation, point, simulation)
-        self.speed = self.cruising_speed
-        self.current_order = None # start out with no orders
-        self.current_order_params = None
         self.fought_last_tick = False
         self.current_shields = self.max_shields
         self.current_hull = self.max_hull
+
+
+class Ship(ArtificialObject):
+    """Mobile spaceborne object. Issue orders to have it move and take other actions."""
+    cruising_speed = 1 # warp, not newtonian
+    acceleration = 0.1 # warp, not newtonian
+
+    def __init__(self, designation: str, point: Point, simulation=None):
+        """Cruising speed is in light year per hour."""
+        super().__init__(designation, point, simulation)
+        self.speed = self.cruising_speed
+        self.current_order = None # start out with no orders
+        self.current_order_params = None
 
     # not sure python enums are worth it, but here it is:
     class Order(enum.Enum):
@@ -156,10 +173,6 @@ class Ship(SpaceborneObject):
     def reset_order(self):
         self.current_order = None
         self.current_order_params = None
-
-    def message(self, message):
-        if self.simulation is not None:
-            self.simulation.message(message)
 
     def displacement(self, destination: Point=None, ticks=1):
         """Where will self be at a future time?
