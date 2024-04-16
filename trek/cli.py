@@ -198,10 +198,8 @@ class CLI(cmd.Cmd):
     ))
 
     def do_map(self, arg):
-        """map centerpoint_x centerpoint_y radius=8 scale=1.0
-
-        Currently disabled due to bugs.
-        """
+        """`map` is currently disabled due to bugs. Try `sm`."""
+        # map centerpoint_x centerpoint_y radius=8 scale=1.0
         print("This command has bugs and is disabled for the beta, sorry.")
         print("See `help sm` for info about the strategic map.")
         return
@@ -213,7 +211,7 @@ class CLI(cmd.Cmd):
             print(map_str)
 
     def do_sm(self, _):
-        """Show the strategic map, ie, half resolution (1 cell = 2 simulation cells)."""
+        """`sm` shows the strategic map, which is the entire field of play."""
         map_str = self._cmd_ui.short_range_map(trek.point(32, 32), 32, 0.5)
         print(map_str)
 
@@ -225,7 +223,7 @@ class CLI(cmd.Cmd):
     object_id_list_parser = CommandLineParser(arguments=(MULTI_OBJECT_ID_ARG,))
 
     def do_ls(self, arg):
-        """Give a one-line status display for any number of objects:
+        """`ls` gives a one-line status display for any number of objects:
 
         0h> ls e0 s0
         e0 Raider-A   ( 1.00, 18.00) W=1.00 CV=1.00 [###])))  ATTACKING c0 Harmony (34.00, 19.00)
@@ -238,7 +236,16 @@ class CLI(cmd.Cmd):
             self._cmd_ui.object_catalog(*parsed_line.object_id_list)
 
     def do_sh(self, arg):
-        """As ls, but gives a more detailed display for each object."""
+        """`sh` shows the same output as `ls` but with more details added:
+
+        0h> sh s0
+        s0 Defender-1 (22.00, 60.00) W=1.00 CV=1.00 [###])))  MOVING to (25.00, 32.00)
+            Base Repair Rate: 1% / hour        Morale: 0.00
+            SYSTEM STATUS
+                shields:  100%
+                tactical: 100%
+                drive:    100%
+        """
         parsed_line = self.object_id_list_parser.parse_line(arg)
         if parsed_line is not None:
             self._cmd_ui.object_detail_display(*parsed_line.object_id_list)
@@ -251,9 +258,10 @@ class CLI(cmd.Cmd):
     ))
 
     def do_mv(self, arg):
-        """Instruct any number of vessels to proceed to a given point:
+        """`mv` orders any number of vessels to move to a destination point:
 
-        mv s0 s1 s2 32 32
+        15h> mv s2 15 25
+        15h> mv s0 s1 s2 32 32
         """
         parsed_line = self.move_parser.parse_line(arg)
         if parsed_line is not None:
@@ -266,9 +274,11 @@ class CLI(cmd.Cmd):
     ))
 
     def do_vs(self, arg):
-        """As mv, but instructs one or more vessels to the location of a chosen target:
+        """`vs` orders vessels to visit the current location of any spaceborne object:
 
-        Here, s2 and s3 are ordered to c0's location: vs s2 s3 c0
+        Here, s2 and s3 are ordered to c0's location:
+        20h> vs s2 s3 c0
+
         Note the target's location is only checked once, when the command is issued. To
         pursue an enemy in motion, see `help at`.
         """
@@ -284,9 +294,9 @@ class CLI(cmd.Cmd):
     ))
 
     def do_at(self, arg):
-        """Order any number of vessels to intercept and attack a target:
+        """`at` orders any number of vessels to intercept and attack a target:
 
-        at s0 s1 e0
+        17h> at s0 s1 e0
 
         The target is pursued and attacked until it is destroyed or the
         interceptors are given new orders.
@@ -301,9 +311,11 @@ class CLI(cmd.Cmd):
     ))
 
     def do_wt(self, arg):
-        """Order any number of vessels to stop until ordered to do otherwise:
+        """`wt` order any number of vessels to wait wherever they are.
 
         wt s0 s1
+
+        They'll hold position until ordered to do otherwise.
         """
         parsed_line = self.wait_parser.parse_line(arg)
         if parsed_line is not None:
@@ -323,10 +335,11 @@ class CLI(cmd.Cmd):
     ))
 
     def do_r(self, arg):
-        """Run the simulation for the given number of ticks (default is 24):
+        """`r` runs the simulation for the given number of ticks (default is 24):
 
-        Run for 24 ticks (24 hours): r
-        Run for 12 ticks:            r 12
+        53h> r
+        77h> r 12
+        89h>
 
         All ships under your control must have orders or the simulation won't run.
         """
@@ -341,7 +354,7 @@ class CLI(cmd.Cmd):
         return self.do_quit(_)
 
     def do_quit(self, _):
-        """Quit the simulation."""
+        """`quit` quits."""
         print("Quitting!")
         return True
 
