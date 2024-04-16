@@ -31,9 +31,13 @@ class Point(typing.NamedTuple):
         d = ((ax - bx)**2 + (ay - by)**2)**0.5
         return d
 
-    def validate(self):
+    # TODO use this  ----vvvvvvvvv
+    def validate(self, is_zone=False):
         """Perform safety checks on self."""
-        if not (0 < self.x <= MAX_X) or not (0 < self.y <= MAX_Y):
+        max_x, max_y = MAX_X, MAX_Y
+        if is_zone:
+            max_x, max_y = MAX_ZONE_X, MAX_ZONE_Y
+        if not (0 < self.x <= max_x) or not (0 < self.y <= max_y):
             raise AttributeError(f"{self} is outside the map bounds")
 
     def zone(self):
@@ -53,6 +57,13 @@ def point(*args, **kwargs):
     return p
 
 
+def zone(*args, **kwargs):
+    """Factor for zones, which are points with different validation."""
+    p = Point(*args, **kwargs)
+    p.validate_zone()
+    return p
+
+
 class SpaceborneObject(abc.ABC):
     """All vessels, planets, stations, and other objects."""
     # TODO may want to scope this by Simulation
@@ -68,7 +79,12 @@ class SpaceborneObject(abc.ABC):
     def __hash__(self):
         return hash(self.designation)
 
+    def __repr__(self):
+        fq_name = self.__class__.__module__ + '.' + self.__class__.__qualname__
+        return f"<{fq_name} {self.designation} {self.point}>"
 
+
+# TODO are Ships friendly or is this the superclass for friendly and enemy ships?
 class Ship(SpaceborneObject):
     pass
 

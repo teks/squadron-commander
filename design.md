@@ -48,8 +48,8 @@ Spatiodesy
 +X is always to the right; +Y is always up. When letters are used instead of
 numbers, lexicographic order is considered to be ascending (ie A, B, C...).
 
-* Squares are identified by absolute coordinates, eg '35,53'.
-* Zones are overlaid 8x8 grid of squares, with 8x8 squares within each.
+* Cells are identified by absolute coordinates, eg '35,53'.
+* Zones are overlaid 8x8 grid, with 8x8 cells within each.
 * When needed, letter-based coordinates ('AB') are used for identifying a zone.
 
 Zones are mostly used for the large-scale map and its grid of '123' displays

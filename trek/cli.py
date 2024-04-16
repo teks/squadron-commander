@@ -1,12 +1,16 @@
 import cmd
 import pprint
 import collections
+import string
 
 import trek
 
 class CLI(cmd.Cmd):
-    def do_echo(self, arg):
-        print(f"Echoing: '{arg}'")
+    def do_map(self, arg):
+        x, y = arg.split()
+        center = trek.point(int(x), int(y))
+        map_str = self._cmd_ui.short_range_map(center)
+        print(map_str)
 
     def do_aomap(self, arg):
         map_str = self._cmd_ui.long_range_map()
@@ -30,9 +34,48 @@ class CmdUserInterface(trek.UserInterface):
         simulation.user_interface = self
         self.cli = CLI()
         self.cli._cmd_ui = self
+        self.designation_prefixes = {
+            trek.Ship: '^',
+            # TODO enemies
+            # TODO stars
+        }
+        # keep track of iteration of spaceborne object designation
+        designator_seq = string.digits + string.ascii_uppercase
+        self.designators = {
+            trek.Ship: iter(designator_seq),
+            # TODO add in:
+            # '!': iter(designator_seq),
+            # '^': iter(designator_seq),
+        }
 
     def start(self):
         return self.cli.cmdloop()
+
+    def short_range_map(self, center_point, radius=8):
+        """Returns the map for a given bounding box."""
+        objects = self.simulation.map.contents
+        cells = collections.defaultdict(list)
+        [cells[o.point].append(o) for o in objects]
+        # debugging output:
+        s = pprint.pformat(objects) + '\n' + pprint.pformat(cells) + '\n'
+        # set bounding box including bounds-check for attempting to show territory outside the map
+        lower_left = trek.point(max(1, center_point.x - radius), max(1, center_point.y - radius))
+        upper_right = trek.point(min(trek.MAX_X, center_point.x + radius),
+                                 min(trek.MAX_Y, center_point.y + radius))
+        rows = []
+        for y in range(lower_left.y, upper_right.y + 1):
+            row = f'{y:2} ' # row label
+            for x in range(lower_left.x, upper_right.x + 1):
+                current_point = trek.point(x, y)
+                if current_point in cells:
+                    row += self.cell_string(cells[current_point])
+                else:
+                    row += '. '
+            rows.append(row)
+        s += '\n'.join(reversed(rows))
+        # column labels in bottom row, but need to be spaced out
+        s += '\n  ' + ''.join([f'  {c:2}' for c in range(lower_left.x + 1, upper_right.x + 1, 2)])
+        return s
 
     def long_range_map(self):
         """Return trek-style map of entire simulation."""
@@ -77,13 +120,22 @@ class CmdUserInterface(trek.UserInterface):
 
         return f'0{ship_cnt}0'
 
-    def local_map(self, center: trek.Point):
-        """
-        likely spacing is 2x1:
-        . . .
-        . . .
-        . . .
-        """
+    def cell_string(self, contents):
+        """Emits a string to describe a single grid cell."""
+        # TODO Natural phenomena (ie a star) aren't included in the count.
+        #   so if only one artificial object is present, its shown as eg ^T.
+        #   perhaps ';' for multiple contacts which includes natural phenomena eg: ;7
+        # :7  multiple contacts; in this case 7 contacts
+        if (object_cnt := len(contents)) > 1:
+            return f':{object_cnt}'
+        o = contents[0]
+        # persistently attach unique UX designators [0-9A-Z] to the object:
+        # TODO maybe do this on a signal from the game engine (and all at once at the beginning)?
+        if getattr(o, '_cui_designator', None) is None:
+            cls = o.__class__
+            o._cui_designator = self.designation_prefixes[cls] + next(self.designators[cls])
+        return o._cui_designator
+
 
 # maybe not here in the long run
 if __name__ == '__main__':

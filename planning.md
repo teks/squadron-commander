@@ -12,9 +12,14 @@ Iterations
 [v] plan more, clearly
 ```
 
-## Iteration 2: ???
+## Iteration 2: draft short-ranged map
 ```
-[ ] local map command: map <x> <y>
+[v] local map command: map <x> <y>
+[v] ship designation
+```
+
+## Iteration 3: Timekeeping + Friendly ship movement
+```
 [ ] move a ship instantly
 [ ] design FTL system; probably linear hyperspace speed in squares/day
 [ ] basic timekeeping, CF `design.md`, Time & Timing
