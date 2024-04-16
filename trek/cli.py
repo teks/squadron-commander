@@ -556,8 +556,8 @@ class CmdUserInterface(trek.UserInterface):
                 s = message.ship
                 m += f"ARRIVAL: {s._ui_label} {s.designation} has arrived at {s.point}."
             case trek.SpawnMessage():
-                m += (f"Object spawned: {message.obj}; "
-                     f"assigned label {self.set_ui_label(message.obj)}")
+                self.set_ui_label(message.obj)
+                m += "Object spawned: " + self.single_line_object_display(message.obj)
             case trek.CombatReport():
                 m += combat_report_string(message)
             case _:
