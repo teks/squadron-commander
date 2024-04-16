@@ -17,29 +17,29 @@ def combat_report_string(combat_report):
     fs, es = combat_report.friendly_side, combat_report.enemy_side
     # no way to specify f-string here than interpolate later
 
-    # TODO limit width of floats to xx.xx
-    # TODO add in location & UX designators
+    point = combat_report.point
     # TODO add in system damage
-    # TODO who retreated and who didn't?
-    s = cli_header(5, 'COMBAT REPORT')
+    s = cli_header(5, f'COMBAT REPORT for coordinates ({point.x:.2f}, {point.y:.2f})')
     s += 'FRIENDLY FORCES\n'
+    s += combat_report_side_string(fs)
+    s += '\nENEMY FORCES\n'
+    s += combat_report_side_string(es)
+    return s
+
+def combat_report_side_string(side):
     indent = '  '
-    for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in fs.outcomes.items():
+    s = f'Combat Value multiplier: x{side.cv_modifier:.2f}\n'
+    for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in side.outcomes.items():
         s += getattr(u, '_ui_label', '--') + f' {u.designation}\n'
-        s += indent + f'SHIELD DAMAGE = {shield_dmg};\t{u.current_shields}/{u.max_shields} remaining\n'
-        s += indent + f'  HULL DAMAGE = {hull_dmg};\t{u.current_hull}/{u.max_hull} remaining\n'
-        retreated = u in fs.retreaters
+        s += indent + f'SHIELD DAMAGE = {shield_dmg:.2f}   {u.current_shields:.2f}/{u.max_shields:.2f} remaining\n'
+        s += indent + f'  HULL DAMAGE = {  hull_dmg:.2f}   {u.current_hull:.2f}/{u.max_hull:.2f} remaining\n'
+        retreated = u in side.retreaters
         if destroyed and retreated:
             s += indent + ('Vessel attempted to retreat, but was lost.\n')
         elif destroyed:
             s += indent + "Vessel was lost.\n"
         elif retreated:
             s += indent + 'Vessel retreated.\n'
-
-    s += 'ENEMY FORCES\n'
-    s += '(TODO)'
-    # for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in es.outcomes.items():
-    #     s += unit_format_str.format(u, shield_dmg, hull_dmg, "Vessel was lost." if destroyed else '')
     return s
 
 

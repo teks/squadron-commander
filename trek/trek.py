@@ -261,10 +261,12 @@ class Ship(SpaceborneObject):
 
 class FriendlyShip(Ship):
     type = 'friendly'
+    max_shields = 1
 
 
 class EnemyShip(Ship):
     type = 'enemy'
+    max_shields = 1
 
     def act(self, simulation):
         pass # stub for now
@@ -344,6 +346,7 @@ class CombatReport(Message):
         * each ship's damage to shields, hull, and systems
         * Which ships where destroyed
     """
+    point: Point
     friendly_side: CombatSide
     enemy_side: CombatSide
 
@@ -404,7 +407,7 @@ class Simulation:
         enemy_side.receive_damage(friendly_side.combat_value())
 
         # report outcomes for this tick of combat:
-        report = CombatReport(friendly_side, enemy_side)
+        report = CombatReport(next(iter(friendly_side.members)).point, friendly_side, enemy_side)
         self.message(report)
 
         # TODO here down:
