@@ -147,7 +147,7 @@ class Ship(SpaceborneObject):
         if distance_to_dest - travel_distance <= 0.0:
             self.reset_order()
             self.simulation.message(
-                self.simulation.ARRIVE, f"{self} arrived at {destination}.",
+                self.simulation.Message.ARRIVE, f"{self} arrived at {destination}.",
                 ship=self, destination=destination)
             return
 
@@ -219,7 +219,7 @@ class Simulation:
         while self.clock < stop_time:
             self.clock += 1
             for s in self.squadron:
-                # TODO receive messages here instead of self.simulation?
+                # TODO receive messages here instead of SpaceborneObject.simulation?
                 #   can self.simulation be removed?
                 s.act()
             if self.should_pause():

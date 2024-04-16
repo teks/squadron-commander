@@ -26,7 +26,7 @@ Iterations
 [v] basic simulation ticking
 [v] after each order to a ship, if untasked ships, list them
 [v] move a ship within the simulation's timekeeping
-[ ] 'run' command with default tick count of 24h = 24 ticks
+[v] 'run' command with default tick count of 24h = 24 ticks
 ```
 
 ## Iteration 4
