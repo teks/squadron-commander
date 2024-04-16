@@ -14,50 +14,53 @@
 
 Future Iterations
 =================
-[ ] need a "tell me about the local area" command that
-  lists everything in the area and gives status
-  maybe a 'sitrep' cmd issues to a ship?
 
-### i9 playtesting feedback
-[ ] `status` command: by default show status of all units
-    [ ] `status <unit>...` to show status of chosen units
-[ ] `wait <unit>` command that assigns IDLE
-[ ] Message when a raider chooses a new target
+### ux & i9 playtesting feedback
+[ ] show interception point in `ls` when ATTACK
+[ ] `status <unit>...` to show status of chosen units
+    see `doc/object-detail-view.md`
+[ ] add `<duration>` arg to `run` cmd
 [ ] Message for interception
-[ ] message for tick passage
-[ ] pause simulation after each combat
+[ ] message for tick passage, maybe every 5 or 10? make it configurable
+[ ] on each pause, give a report?
+[ ] showing turn or tick number more often eg:
+    [ ] show tick in prompt? eg `(+14h) ` or maybe `[0300] ` for 3 AM
+    [ ] most messages should be prefixed with tick (in hours or walltime) eg:
+        +13h ARRIVAL: ^2 baker has arrived at Point(x=32.0, y=32.0).
+[ ] need a "tell me about the local area" command that
+    lists everything in the area and gives status
+    maybe a 'sitrep' cmd issues to a ship?
 
-### combat
+### combat (descending priority):
+
 [ ] force movement on retreat
   [ ] retreat moves using EMERGENCY SPEED
   [ ] Each ship's emergency warp value is used for this.
   [ ] Ships from a side tend to retreat in the same direction.
+[ ] system damage
+    [ ] on hull damage, apply systems damage
+    [ ] add systems to ships
+[ ] morale: depletion, restoration, and effect on combat
+    set initial value: self.morale = 0.0 # neutral
+[ ] refine ship's combat value (shields down, morale, etc)
 
 [ ] make some ship classes and experiment with combat outcomes
     for now symmetrically:
     [ ] corvette (enemy: crow) <-- enemies are named after birds I guess
     [ ] cruiser (enemy: vulture)
-[ ] system damage
-    [ ] on hull damage, apply systems damage
-    [ ] add systems to ships
 [ ] mull a 'maneuverability' value for ships
-[ ] morale: depletion, restoration, and effect on combat
-    set initial value: self.morale = 0.0 # neutral
-[ ] refine ship's combat value (shields down, morale, etc)
 [ ] order that toggles `ship.evasive` & retreat_check checks it
 [ ] go over numerical balance of ship values; see number-mull
 
 ### misc
-[ ] enemy ships:
-    AI-driven enemy vessels' class should be child of Ship;
-    enemies assign orders to themselves over time
-[ ] attempt to use dataclasses for SpaceborneObject & children
-[ ] concrete CLI ux class
-    [ ] displays for various entities & the map
-    [ ] help facility?
+[ ] help facility?
+[ ] `wait <unit> <duration>`  <-- add duration?
+
+### low priority
 
 [ ] look into non-flat probabilities:
     https://docs.python.org/3/library/random.html#real-valued-distributions
 
 [ ] raiders sometimes carry off hostages when they raid settlements?
     have to send ships to get them back? that implies boarding ops
+[ ] attempt to use dataclasses for SpaceborneObject & children
