@@ -81,3 +81,34 @@ continue developing combat
 [v] add movement prediction markers to short range map
 [v] pause simulation after each combat
 [v] revise combat report; it's hard to read
+
+### i11
+in retrospect this iteration is too big and mixes too many disjoint concerns
+[v] use `ls` to show a ship when it needs orders:
+    24h> mv ^0 28 56
+    1 units need orders:
+    <trek.trek.FriendlyShip alice Point(x=29.740456597169644, y=10.44552372684389)>
+[v] combat enrichment
+    [v] morale:
+        [v] set initial value: self.morale = 0.0 # neutral
+        [v] depletion & restoration
+        [v] effect on combat
+        [v] write some tests
+        [v] do playtest; fallout:
+            [v] in `ls`, CV can have too many digits: CV=0.9875
+    [v] system damage
+        [v] when there's hull damage, apply systems damage
+            [v] Each system is subjected to a separate roll:
+                * Chance of damage grows with hull damage fraction.
+                * Severity of damage also grows with hull damage fraction.
+                Each system is tracked separately as a fraction (1.0 = undamaged).
+                The fraction tells how much performance is degrading.
+        [v] List of systems to damage and the effects of damage:
+            [v] Shields: Damage reduces maximum
+            [v] Warp Drive: Reduced speed
+            [v] Tactical Systems: Reduced combat value
+        [v] do playtests
+        [v] ship's velocity can't be shown; no way to check on drive damage
+        [x] write some tests
+[v] `show <unit>...` to show system damage etc
+    see `doc/object-detail-view.md`
