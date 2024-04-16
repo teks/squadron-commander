@@ -178,14 +178,13 @@ class CmdUserInterface(trek.UserInterface):
             * right digit is star count
             * Period in any column: No information
         """
-        # TODO try rewrite using patterns
-        # https://docs.python.org/3/reference/compound_stmts.html#index-18
         ship_cnt = 0
         for o in contents:
-            if isinstance(o, trek.Ship):
-                ship_cnt += 1
-            else:
-                raise ValueError(f"Type for {o} isn't supported.")
+            match o:
+                case trek.Ship():
+                    ship_cnt += 1
+                case _:
+                    raise ValueError(f"Type for {o} isn't supported.")
 
         return f'0{ship_cnt}0'
 
