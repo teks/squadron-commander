@@ -831,6 +831,7 @@ class Simulation:
         self.user_interface = None
         self.clock = 0
         self.objects = {}
+        self.destroyed_objects = {}
         if objects is not None:
             for o in objects:
                 self.add_object(o)
@@ -857,6 +858,13 @@ class Simulation:
         obj.simulation = self
         self.objects[k] = obj
         self.message(SpawnMessage(obj))
+
+    def destroy_object(self, obj):
+        if not obj.is_destroyed(): # destroy it if it's not already
+            obj.current_hull = 0.0
+        k = (obj.side, obj.designation)
+        self.objects.pop(k)
+        self.destroyed_objects[k] = obj
 
     @staticmethod
     def validate_colocations(group):
@@ -922,10 +930,13 @@ class Simulation:
         The message is also propagated to the simulated objects.
         """
         message.tick = self.clock
-        if self.user_interface is not None:
-            self.user_interface.message(message)
+        match message:
+            case DestroyedObjectMessage():
+                self.destroy_object(message.obj)
         for o in self.get_objects():
             o.receive_message(message)
+        if self.user_interface is not None:
+            self.user_interface.message(message)
 
     def initialize(self):
         """Perform setup actions.

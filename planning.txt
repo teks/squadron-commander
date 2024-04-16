@@ -11,6 +11,8 @@
        + . . . <-- the '+' is the heading indicator for !1 at (1, 14)
     12 . . . .
          4   8
+[ ] complete a few playthroughs, notes here:
+    (notes go here)
 
 ### i15 make some ship classes and experiment with combat outcomes
 for now symmetrically:
