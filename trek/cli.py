@@ -110,6 +110,7 @@ class PointAction(argparse.Action):
 
 # TODO it's an object_id or unit_id really, not just ships
 SHIP_ID_ARG = ('ship_id', dict(type=str))
+OBJECT_ID_ARG = ('object_id', dict(type=str))
 MULTI_OBJECT_ID_ARG = ('object_id_list', dict(type=str, nargs='*'))
 
 class CommandLineParser(argparse.ArgumentParser):
@@ -186,7 +187,7 @@ class CLI(cmd.Cmd):
 
     move_parser = CommandLineParser(arguments=(
         SHIP_ID_ARG,
-        ('destination', dict(nargs=2, type=int, action=PointAction)),
+        ('destination', dict(nargs=2, type=float, action=PointAction)),
         # TODO add speed setting to move & attack cmd?
         # ('speed', dict(nargs='?', type=int, default=None)),
     ))
@@ -196,6 +197,19 @@ class CLI(cmd.Cmd):
         if parsed_line is not None:
             # TODO hypervelocity goes in (also call it 'warpspeed'?)
             self._cmd_ui.move_ship(parsed_line.ship_id, parsed_line.destination)
+
+    visit_parser = CommandLineParser(arguments=(
+        SHIP_ID_ARG,
+        OBJECT_ID_ARG,
+    ))
+
+    def do_visit(self, arg):
+        """Move to the location of the given object; doesn't follow the object."""
+        parsed_line = self.visit_parser.parse_line(arg)
+        if parsed_line is not None:
+            target = self._cmd_ui.get_object(parsed_line.object_id)
+            if target is not None:
+                self._cmd_ui.move_ship(parsed_line.ship_id, target.point)
 
     attack_parser = CommandLineParser(arguments=(
         SHIP_ID_ARG,
@@ -241,6 +255,7 @@ class CLI(cmd.Cmd):
     do_ls = do_list
     do_sh = do_show
     do_mv = do_move
+    do_vs = do_visit
     do_at = do_attack
     do_wt = do_wait
     do_sm = do_smap
