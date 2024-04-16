@@ -3,10 +3,17 @@ Iterations
 
 ## Iteration 1: Building Blocks
 ```
-[ ] Global simulation class:
-    [ ] single quadrant
-    [ ] quadrant structure
-    [ ] (spaceborne) object storage & retrieval
+[v] spaceborne object base class
+[v] basic ship class
+
+[v] map
+    [v] (spaceborne) object storage
+    [v] distance
+
+[v] Global simulation class
+
+[v] plan more, clearly
+
 ```
 
 
@@ -14,5 +21,12 @@ Iterations
 ## Future Iterations:
 
 ```
-[ ] start ux
+[ ] abstract base ux class
+
+[ ] concrete CLI ux class
+    [ ] cmd
+    [ ] displays for various entities & the map
+    [ ] messaging (basically just logging)
+    [ ] help facility?
+
 ```

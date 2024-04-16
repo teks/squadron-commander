@@ -4,6 +4,7 @@
 
 import typing
 import dataclasses
+import abc
 
 MAX_X = 64
 MAX_Y = 64
@@ -36,6 +37,14 @@ def point(*args, **kwargs):
     p = Point(*args, **kwargs)
     p.validate()
     return p
+
+
+class SpaceborneObject(abc.ABC):
+    pass
+
+
+class Ship(SpaceborneObject):
+    pass
 
 
 class Map:
