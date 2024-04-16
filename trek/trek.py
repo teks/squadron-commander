@@ -79,13 +79,12 @@ class Point(typing.NamedTuple):
         """
         angle = self.bearing_to(other)
         width = 2 * math.pi / direction_count
-        offset = -0.5 * width
+        offset = 0.5 * width
         for i in range(direction_count):
-            start_angle = offset + i * width
-            end_angle = start_angle + width
-            if start_angle <= angle < end_angle:
+            end_angle = i * width + offset
+            if angle < end_angle:
                 return i
-        raise ValueError(f"Failed to find a cardinal direction; this should be impossible")
+        return 0 # handle the case of the southern other half of the eastern wedge
 
     def isclose(self, other):
         """math.isclose for points"""

@@ -167,8 +167,8 @@ class CLI(cmd.Cmd):
     # set short commands (python 3 is just <3)
     do_ls = do_list
     do_mv = do_move
-    do_a = do_attack
-    do_w = do_wait
+    do_at = do_attack
+    do_wt = do_wait
     do_sm = do_smap
     do_r = do_run
 

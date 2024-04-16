@@ -1,8 +1,8 @@
 import string
-
-import pytest
 import random
 import math
+
+import pytest
 
 import trek.cli
 import trek
@@ -37,6 +37,24 @@ def test_point_validate_low():
 def test_point_validate_high():
     with pytest.raises(AttributeError):
         trek.point(65, 5)
+
+@pytest.mark.parametrize('target, expected_bearing', [
+    [(37, 6), 0.031239833430],
+    [(37, 4), 6.251945473749],
+    [(3,  3), 3.926990816987],
+])
+def test_point_bearing_to(target, expected_bearing):
+    self = trek.point(5, 5)
+    assert math.isclose(expected_bearing, self.bearing_to(trek.Point(*target)))
+
+@pytest.mark.parametrize('target, expected_direction', [
+    [(37, 6), 0],
+    [(37, 4), 0],
+    [(3,  3), 5],
+])
+def test_cardinal_direction_to(target, expected_direction):
+    self = trek.point(5, 5)
+    assert expected_direction == self.cardinal_direction_to(trek.Point(*target))
 
 @pytest.mark.parametrize('raw_p, expected_z', [
     [( 3.5, 5.5), (1, 1)],
