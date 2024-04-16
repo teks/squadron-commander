@@ -2,17 +2,24 @@ import pytest
 import trek
 
 @pytest.fixture(params=[
-    ((0, 0), (3, 4), 5),
-    ((2, 0), (5, 4), 5),
-    ((0, 0), (8, 15), 17),
-    ((8, 15), (0, 0), 17),
-    ((0, 0), (0, 4), 4),
-    ((0, 0), (4, 0), 4),
+    ((2, 1), (5, 5), 5),
+    ((1, 1), (9, 16), 17),
+    ((9, 16), (1, 1), 17),
+    ((1, 1), (1, 5), 4),
+    ((1, 1), (5, 1), 4),
 ])
 def distances(request):
     a, b, d = request.param
-    return a, b, d, trek.Point(*a).distance(trek.Point(*b))
+    return a, b, d, trek.point(*a).distance(trek.point(*b))
 
-def test_distance(distances):
+def test_point_distance(distances):
     _, _, expected_distance, actual_distance = distances
     assert expected_distance == actual_distance
+
+def test_point_validate_low():
+    with pytest.raises(AttributeError):
+        trek.point(0, 5)
+
+def test_point_validate_high():
+    with pytest.raises(AttributeError):
+        trek.point(65, 5)
