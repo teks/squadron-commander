@@ -198,7 +198,13 @@ class CLI(cmd.Cmd):
     ))
 
     def do_map(self, arg):
-        """map centerpoint_x centerpoint_y radius=8 scale=1.0"""
+        """map centerpoint_x centerpoint_y radius=8 scale=1.0
+
+        Currently disabled due to bugs.
+        """
+        print("This command has bugs and is disabled for the beta, sorry.")
+        print("See `help sm` for info about the strategic map.")
+        return
         # TODO scale > 1 does strange things eg map 32 32 10 2
         parsed_line = self.map_parser.parse_line(arg)
         if parsed_line is not None:

@@ -1,9 +1,9 @@
 ### i15 fix bugs
+[v] long delay after last wave is defeated, see stash
+[v] turn off `map` command for beta instead of fixing its bugs
 [ ] retreat should alter behavior of retreating enemies;
     they should actually retreat towards their origin direction for a bit
     (it's a way of driving enemies away from a base or target)
-[ ] long delay after last wave is defeated, see stash
-[ ] turn off `map` command for beta instead of fixing its bugs
 
 
 ### i16 make some ship classes and experiment with combat outcomes

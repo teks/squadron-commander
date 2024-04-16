@@ -44,16 +44,11 @@ class WavesOfRaiders(trek.Scenario):
     def __post_init__(self):
         super().__post_init__()
 
-    def wave_generator(self):
-        # four waves of increasing numbers of foes
-        raider_desig_iter = (f'Raider-{x}' for x in string.ascii_uppercase)
-        for cnt in (2, 3, 4, 5):
-            wave = [trek.EnemyShip(next(raider_desig_iter), trek.random_point((1, 1)))
-                    for _ in range(cnt)]
-            for enemy in wave:
-                self.simulation.add_object(enemy)
-                self.enemies.append(enemy)
-            yield True
+    def spawn_enemies(self, enemies):
+        for enemy in enemies:
+            self.simulation.add_object(enemy)
+            self.enemies.append(enemy)
+
 
     def setup(self, initialize_simulation=True):
         # TODO that we're double-tracking objects here and in simulation suggests
@@ -70,27 +65,38 @@ class WavesOfRaiders(trek.Scenario):
         for o in (*self.colonies, *self.friendlies):
             self.simulation.populate(o)
 
-        # set up enemy waves and spawn the first one
         self.enemies = []
         self.ticks_until_spawn = 100
-        self._wave_iter = self.wave_generator()
-        next(self._wave_iter)
+
+        # set up enemy waves and spawn the first one
+        self.enemy_waves = []
+        raider_desig_iter = (f'Raider-{x}' for x in string.ascii_uppercase)
+        for cnt in (2, 3, 4, 5): # four waves of increasing numbers of foes
+            wave = [trek.EnemyShip(next(raider_desig_iter), trek.random_point((1, 1)))
+                    for _ in range(cnt)]
+            self.enemy_waves.append(wave)
+
+        self.spawn_enemies(self.enemy_waves.pop(0)) # spawn the first wave
 
         if initialize_simulation:
             self.simulation.initialize()
 
     def finish_tick(self) -> bool:
+        # game is lost if all colonies lost
         if all(c.is_destroyed() for c in self.colonies):
             self.simulation.message(trek.ScenarioLossMessage())
             return True
+        # game is won if all waves are defeated while any colonies remain
+        if len(self.enemy_waves) == 0 and all(e.is_destroyed() for e in self.enemies):
+            self.simulation.message(trek.ScenarioWinMessage())
+            return True
+        # game is lost if all friendlies lost while any enemies remain
         if all(f.is_destroyed() for f in self.friendlies):
             self.simulation.message(trek.ScenarioLossMessage())
             return True
         self.ticks_until_spawn -= 1
         if self.ticks_until_spawn == 0:
             self.ticks_until_spawn = 100
-            rv = next(self._wave_iter, None)
-            if rv is None and all(e.is_destroyed() for e in self.enemies):
-                self.simulation.message(trek.ScenarioWinMessage())
-                return True
+            if len(self.enemy_waves) > 0:
+                self.spawn_enemies(self.enemy_waves.pop(0))
         return False
