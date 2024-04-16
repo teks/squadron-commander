@@ -166,7 +166,8 @@ def test_CombatSide_retreat_check__even_fight():
     """Shouldn't retreat if the fight is even."""
     fs, es = setup_sides()
     ratio = es.combat_value() / fs.combat_value()
-    retreated = fs.retreat_check(ratio)
+    # unused var retreated = fs.retreat_check(ratio)
+    fs.retreat_check(ratio)
     assert len(fs.retreaters) == 0
 
 def test_CombatSide_retreat_check__hopeless_case():
@@ -260,6 +261,16 @@ def test_Ship_morale_cv_effect():
     s.morale = -9
     low_cv = s.combat_value()
     assert (0.75, 1.25) == (low_cv, high_cv)
+
+@pytest.mark.parametrize('hull_fraction, random_vals, expected_dmg', [
+    [0.7, [0.36], None],  # no damage case
+    [0.7, [0.34, 0.60], 0.18],  # damage damage case
+])
+def test_ArtificialObject_Component_damage_check(hull_fraction, random_vals, expected_dmg):
+    fake_random = lambda: random_vals.pop(0)
+    c = trek.ArtificialObject.Component(random=fake_random)
+    actual_dmg = c.damage_check(hull_fraction)
+    assert {expected_dmg, actual_dmg} == {None} or math.isclose(expected_dmg, actual_dmg)
 
 @pytest.mark.parametrize('group', [
     # for now one obvious test is enough

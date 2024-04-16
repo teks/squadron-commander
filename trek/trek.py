@@ -208,6 +208,33 @@ class ArtificialObject(SpaceborneObject):
     Order = Order
     valid_orders = {Order.IDLE}
 
+    @dataclasses.dataclass
+    class Component:
+        """Parts or Systems on the vessel that can be damaged individually."""
+        _health: float=1.0 # clamped to [0, 1].
+        random: typing.Callable[[float], float]=random.random
+
+        @property
+        def health(self):
+            return self._health
+
+        @health.setter
+        def health(self, new_value: float):
+            self._health = 1.0 if new_value > 1.0 else (0.0 if new_value < 0.0 else new_value)
+
+        def damage_check(self, hull_fraction: float) -> float | None:
+            """Check for damage to the given component.
+
+            The chance of component damage is up to 50%. The amount of
+            component damage is up to 100%. Both values are scaled by the
+            hull damage fraction.
+            """
+            if self.random() > hull_fraction / 2.0:
+                return None
+            dmg_fraction = self.random() * (1 - hull_fraction)
+            self.health -= dmg_fraction
+            return dmg_fraction
+
     def __init__(self, designation: str, point: Point, simulation=None):
         super().__init__(designation, point, simulation)
         self.fought_last_tick = False
@@ -219,6 +246,7 @@ class ArtificialObject(SpaceborneObject):
         self.speed = 0
         # start with neutral morale, worst and best is [-1, 1]
         self._morale = 0.0
+        self.components = dict(shields=self.Component(), tactical=self.Component())
 
     def has_orders(self):
         return self.current_order is not None
@@ -319,7 +347,7 @@ class ArtificialObject(SpaceborneObject):
         # intentionally let it go negative, for how busted up the hulk is I guess
         self.current_hull -= hull_dmg
 
-        sys_dmg = self.system_damage(hull_dmg)
+        sys_dmg = self.system_damage() if hull_dmg > 0.0 else None
 
         # can send message now that changes to self are applied
         if self.current_hull <= 0.0 < self.current_hull + hull_dmg:
@@ -331,12 +359,12 @@ class ArtificialObject(SpaceborneObject):
     def is_destroyed(self):
         return self.current_hull <= 0.0
 
-    def system_damage(self, hull_dmg):
-        if hull_dmg <= 0.0:
-            return None
-        # TODO system damage; I got some ideas written down somewhere I think
-        # hdf = self.hull_damage_fraction()
-        return None
+    def system_damage(self):
+        damage_report = dict()
+        hull_fraction = self.hull_status()
+        for name, component in self.components.items():
+            damage_report[name] = component.damage_check(hull_fraction)
+        return damage_report
 
     def combat(self, report):
         """Notify the ship that it has fought this tick."""
@@ -379,6 +407,7 @@ class Ship(ArtificialObject):
         """Cruising speed is in light year per hour."""
         super().__init__(designation, point, simulation)
         self.speed = self.cruising_speed
+        self.components['drive'] = self.Component()
 
     def displacement(self, destination: Point=None, ticks=1):
         """Where will self be at a future time?
