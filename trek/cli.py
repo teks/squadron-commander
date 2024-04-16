@@ -288,6 +288,9 @@ class CmdUserInterface(trek.UserInterface):
         if not isinstance(obj, trek.ArtificialObject):
             return line
         line += f" W={obj.speed:.2f} CV={obj.combat_value():.2f} {self.hull_and_shield_icon(obj)}"
+        if obj.is_destroyed():
+            return line
+
         order = obj.current_order
         if order == trek.Order.ATTACK:
             t = obj.current_order_params['target']
