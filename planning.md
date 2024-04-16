@@ -34,18 +34,16 @@ fix random stuff, look for TODOs and cleanup:
 ```
 [v] stop using uncommited code as initializer
     [v] it'll need argparse eventually anyway, just do it now
-[ ]
+[v] populate the cui labels at startup (later will need to do it at spawn time)
 [ ]
 [ ]
 [ ]
 ```
 
 ## Future Iterations:
-
 ```
 [ ] concrete CLI ux class
     [v] cmd
     [ ] displays for various entities & the map
     [ ] help facility?
-
 ```

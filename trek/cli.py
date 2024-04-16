@@ -56,19 +56,22 @@ class CmdUserInterface(trek.UserInterface):
         simulation.user_interface = self
         self.cli = CLI()
         self.cli._cmd_ui = self
-        self.designation_prefixes = {
+        self.label_prefixes = {
             trek.Ship: '^',
             # TODO enemies
             # TODO stars
         }
-        # keep track of iteration of spaceborne object designation
-        designator_seq = string.digits + string.ascii_uppercase
-        self.designators = {
-            trek.Ship: iter(designator_seq),
+        # keep track of iteration of spaceborne object label usage
+        label_chars = string.digits + string.ascii_uppercase
+        self.label_iterators = {
+            trek.Ship: iter(label_chars),
             # TODO add in:
-            # '!': iter(designator_seq),
-            # '^': iter(designator_seq),
+            # '!': iter(label_chars),
+            # '^': iter(label_chars),
         }
+        # set labels for the objects in the simulation
+        for o in sorted(simulation.objects(), key=lambda o: o.designation):
+            self.set_ui_label(o)
 
     def start(self):
         return self.cli.cmdloop()
@@ -149,6 +152,12 @@ class CmdUserInterface(trek.UserInterface):
 
         return f'0{ship_cnt}0'
 
+    def set_ui_label(self, obj):
+        """Attach a unique UX label [0-9A-Z] to an object, then return that label."""
+        cls = obj.__class__
+        obj._ui_label = self.label_prefixes[cls] + next(self.label_iterators[cls])
+        return obj._ui_label
+
     def cell_string(self, contents):
         """Emits a string to describe a single grid cell."""
         # TODO Natural phenomena (ie a star) aren't included in the count.
@@ -157,29 +166,17 @@ class CmdUserInterface(trek.UserInterface):
         # :7  multiple contacts; in this case 7 contacts
         if (object_cnt := len(contents)) > 1:
             return f':{object_cnt}'
-        o = contents[0]
-        # persistently attach unique UX designators [0-9A-Z] to the object:
-        # TODO maybe do this on a signal from the game engine (and all at once at the beginning)?
-        if getattr(o, '_cui_designator', None) is None:
-            cls = o.__class__
-            o._cui_designator = self.designation_prefixes[cls] + next(self.designators[cls])
-        return o._cui_designator
+        return contents[0]._ui_label
 
-    def get_object(self, object_desig):
-        """Returns the object with the given designator.
-
-        Designator is first sought in UI assignment eg '^3', then falls back to
-        the object's inherent designation eg 'Enterprise'.
-        """
-        if object_desig is None: # avoid fetching a random thing by accident
-            raise ValueError("'None' is an invalid object designator")
+    def get_object(self, identifying_string):
+        """Returns the object with the given UI label or else the object's designator."""
         for o in self.simulation.objects():
-            if getattr(o, '_cui_designator', None) == object_desig:
+            if o._ui_label == identifying_string:
                 return o
         try:
-            return next(o for o in self.simulation.objects() if o.designation == object_desig)
+            return next(o for o in self.simulation.objects() if o.designation == identifying_string)
         except StopIteration:
-            raise ValueError(f"Object designated '{object_desig}' not found.")
+            raise ValueError(f"Object '{identifying_string}' not found.")
 
     def move_ship(self, ship_desig, destination):
         ship = self.get_object(ship_desig)
