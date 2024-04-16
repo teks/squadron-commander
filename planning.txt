@@ -2,13 +2,9 @@
 continue developing combat
 [v] check for ship destruction and send messages
 [v] add messaging to combat engine
-[ ] make some ship classes and experiment with combat outcomes
-    [ ] corvette
-    [ ] cruiser
 [ ] bring combat to a basic functional state
     [ ] each tick, after movement step, run combat step
     [ ] force movement on retreat
-
 
 
 Future Iterations
@@ -17,6 +13,10 @@ Future Iterations
     https://docs.python.org/3/library/random.html#real-valued-distributions
 
 ### combat
+[ ] make some ship classes and experiment with combat outcomes
+    for now symmetrically:
+    [ ] corvette (enemy: crow) <-- enemies are named after birds I guess
+    [ ] cruiser (enemy: vulture)
 [ ] system damage
     [ ] on hull damage, apply systems damage
     [ ] add systems to ships

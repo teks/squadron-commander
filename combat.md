@@ -9,7 +9,9 @@ destroyed (though there may be survivors and salvage).
 
 Weapons and other tactical capabilities, eg targeting scanners and damage
 control, all lumped together and treated abstractly, as the unit's 'combat
-value.'
+value.' At the moment, weapons can't miss and can't be dodged. This is
+intentional as the ships are presumed to maneuver much worse than high-tech
+weapons' ability to hit their targets.
 
 A ship's warp drive has tactical uses, mostly to retreat. Thus ships have an
 emergency warp value representing its warp drive's acceleration and activation
@@ -39,6 +41,29 @@ Combat Resolution Steps
 All units in the same position automatically take part in combat each tick (the
 two ponts must be exactly equal; the map is in light years). Sort all such
 units into a friendly side and an enemy side.
+
+If floating-point shenanigans prevent exactly-equal positioning, use
+`math.isclose(a, b)`, but need to assemble all the graphs for which
+`math.isclose(a, b)` where a & b are foes.  How to compute this if needed:
+
+```
+ships = {set of all ships on map}
+pairs = set()
+graphs = []
+
+while len(ships) > 0: # first make pairs...
+    s = ships.pop() # lets it go fast
+    near_foes = {t for t in ships if isclose(s, t) and hostile(s, t)}
+    ships -= near_foes # for speed
+    pairs += {{s, t} for t in near_foes}
+
+while len(pairs) > 0: # ...then group them into sets
+    pair = pairs.pop() # again operate destructively to go fast
+    graph = {candidate for candidate in pairs if any(ship in candidate for ship in pair}
+    pairs -= graph # also for speed
+    graph.add(pair)
+    graphs.append(graph)
+```
 
 ### Compute Combat Value
 
@@ -131,4 +156,32 @@ This separation should be enough to force pursuing ships to chase for multiple
 ticks _if_ their speeds are very similar. The distance should be short enough,
 though, that a 'free move' outside of normal movement shouldn't break the
 simulation.
+
+Implications
+------------
+* There's not much difference between one big ship and several small ones,
+    provided the sum of their CVs, shields, and hulls are the same.
+* However, fights with fewer big ships are more swingy than those with
+    many small ships, because more chances for retreat results in a more
+    average performance.
+
+### Value Sculpting & Outcomes
+Garaunteed kill, regardless of side's advantage (double if target is retreating):
+`CV needed >= 4/3 * (target's shields + target's hull)`.
+
+*Ship Designs* will thus need to have CVs that are double a typical (shields +
+hull) for most fights to be over in one tick. Likewise a disadvantaged foe will
+tend to retreat, reducing their own damage.
+
+*Hull* is (or will be) very different from shields:
+* Some vessels may have powerful shields and weak hulls, or more rarely, vice versa.
+* In the field, shields easily recharge, but hull is very difficult to repair.
+* Hull damage will later result in system damage.
+
+### How does the player win a prolonged defense of the sector?
+
+The enemy, being engaged in raids, likely has worse ships than the
+player. Also, the player has access to facilities; the enemy does not.
+If the influx of enemies is paced correctly, the player ought to have
+time to send a ship back for repairs.
 
