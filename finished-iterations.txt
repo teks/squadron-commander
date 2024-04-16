@@ -152,6 +152,7 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
 [v] COMBAT REPORT and `ls` don't show lists of ships in the same order, they should
 
 ### i14 playable scenario
+[v] add `<duration>` arg to `run` cmd (this may've been done even earlier)
 [v] class Scenario; check it for victory conditions each tick
 [v] enemies appear to the left, retreat to the left?
 [v] new ones spawn periodically
@@ -170,4 +171,4 @@ in retrospect this iteration is too big and mixes too many disjoint concerns
     [v] new enemy spawns don't seem to stop the clock:
         100h Object spawned: !4 Raider-E...
         102h>
-
+    [v] `sh` defaulting to showing all units might be nice

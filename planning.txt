@@ -1,18 +1,62 @@
-### i15 fix bugs
+Iterations
+==========
+
+### i15 AT LAST THE MOTHERFUCKING BETA WOOOOOOOO
 [v] long delay after last wave is defeated, see stash
 [v] turn off `map` command for beta instead of fixing its bugs
 [ ] retreat should alter behavior of retreating enemies;
     they should actually retreat towards their origin direction for a bit
     (it's a way of driving enemies away from a base or target)
+[ ] mild typing/UI issue: SpaceColonies have no shield generators, but
+    ArtificialObject mandates they have one. This can result in fictional
+    damage to a nonexistent system:
+    @0 Harmony    (32.00, 32.00) CV=0.99 [## ]
+        Morale: -0.0
+        shields: 83%
+[ ] mull renaming project to 'Squadron Commander' / SQUADCOMM
+[ ] second-to-lastly go over docstrings to Cmd do_foo methods one more time
+[ ] lastly, add a license & push to github
 
 
-### i16 make some ship classes and experiment with combat outcomes
-for now symmetrically:
-[ ] go over numerical balance of ship values; see number-mull
-[ ] corvette (enemy: crow) <-- enemies are named after birds I guess
-[ ] cruiser (enemy: vulture)
+Roadmap
+=======
+### Complete Beta: That which isn't embarrassing to show other people
+* FEATURE FREEZE, BUGFIXES ONLY
+* and only really necessary bug fixes
+* waves-of-raiders scenario considered default for beta
+* remaining beta work is in i15
 
-## ux stuff:
+### Post-beta
+* Decide what to do if anything; possibilities:
+    * Start on GUI via pygame or something?
+    * Continue adding gameplay features & enriching simulation?
+    * halt development for awhile to work on something else?
+
+Backlog
+=======
+### ungroomed
+[ ] in the COMBAT REPORT, displayed hull damage can sometimes exceed remaining
+    hull, it'd surprise the user --vvv
+    LOST     !1 lowragh     1.0    1.3
+    LOST     !2 ukliss      1.0    1.3
+[ ] `follow ^3 ^2` is a 'follow' cmd? how hard would that be?
+
+[ ] blend at and vs together into `intercept`/`it` since combat is automatic?
+
+[ ] `show <unit>` should describe effects of system damage explicitly:
+    !2 ukliss     (32.00, 32.00) W=1.00 CV=0.84 [###]     ATTACKING @1 New Ceylon (32.00, 32.00)
+        Morale:         -0.3
+        Combat Value:    0.84   Tactical systems damaged, efficiency 90%.
+        Shields:         0.00   Shields operating normally.
+        Max Safe Speed:  1.00   FTL Drive operating normally.
+
+[ ] ops: repair & docking
+    dock & undock require 1h to complete
+    let ships dock with facilities (and with each other?)
+    raise morale to 0.0 by docking at a base and staying 24 hours, +0.1 for each 24h after
+    increase repair rate when docked
+
+### UI/UX
 [ ] show light year numbers on top & right of map not just left & bottom
 [ ] distance computing command, `d s1 e0`, dunno what `d s0 s1 e0` would output
 [ ] why do these messages arrive out of order?
@@ -25,49 +69,8 @@ for now symmetrically:
 [ ] squadron grouping?
     [ ] gadd NAME MEMBER...
     [ ] gdel NAME MEMBER...
-
-Roadmap
-=======
-Complete Beta: That which isn't embarrassing to show other people
-(ux improvements as-needed, and):
-[ ] lastly, add a license & push to github
-[ ] second-to-lastly add docstrings to Cmd do_foo methods
-[ ] additional ux as issues reveal themselves
-    [ ] groom this backlog - what *really* needs to be in the beta?
-    [ ] `show` defaulting to showing all units might be nice
-    [ ] in the COMBAT REPORT, displayed hull damage can sometimes exceed remaining
-        hull, it'd surprise the user --vvv
-        LOST     !1 lowragh     1.0    1.3
-        LOST     !2 ukliss      1.0    1.3
-    [ ] mild typing issue: SpaceColonies have no shield generators, but
-        ArtificialObject mandates they have one. This can result in fictional
-        damage to a nonexistent system:
-        @0 Harmony    (32.00, 32.00) CV=0.99 [## ]
-            Morale: -0.0
-            shields: 83%
-    [ ] `show <unit>` should describe effects of system damage explicitly:
-        !2 ukliss     (32.00, 32.00) W=1.00 CV=0.84 [###]     ATTACKING @1 New Ceylon (32.00, 32.00)
-            Morale:         -0.3
-            Combat Value:    0.84   Tactical systems damaged, efficiency 90%.
-            Shields:         0.00   Shields operating normally.
-            Max Safe Speed:  1.00   FTL Drive operating normally.
-
-
-Backlog
-=======
-[ ] `follow ^3 ^2` is a 'follow' cmd? how hard would that be?
-
-[ ] blend at and vs together into `intercept`/`it` since combat is automatic?
-
-### ux & i9 playtesting feedback
-[ ] refine ship's combat value further? (shields down, sys dmg?)
-[ ] interception points:
-    [ ] show interception point in `ls` when ATTACK
-    [ ]? need a "show me the interception point" cmd
-    [ ] show interception point when attack cmd is issued
-[ ] add `<duration>` arg to `run` cmd
-[ ] Message for interception
-[ ] message for tick passage, maybe every 5 or 10? make it configurable
+[ ] when simulation is running, configurable delay & message for message for
+    tick passage. maybe every 5 or 10? make it configurable
 [ ] on each pause, give a report?
 [ ] showing turn or tick number more often eg:
     [ ] show tick in prompt? eg `(+14h) ` or maybe `[0300] ` for 3 AM
@@ -76,10 +79,7 @@ Backlog
 [ ] need a "tell me about the local area" command that
     lists everything in the area and gives status
     maybe a 'sitrep' cmd issues to a ship?
-    this can provide info when units are stacked up eg `:3`
-[ ] how much more time am I going to spend on a console game before switching
-    to pygame or something?
-
+    this can provide info when units are stacked up eg `:A`
 [ ] `map` bugs
     [ ] this command raises due to exceeding map bounds: map 37 16 5 10
         (need zoomable map command for getting a better look at crowded space)
@@ -88,29 +88,39 @@ Backlog
            24 . . . . . . . . . . . . . . . . .
                24  26  26  28  28  30  30  32
 
+### gameplay features
 
-### ops: repair & docking
-[ ] raise morale to 0.0 by docking at a base and staying 24 hours, +0.1 for each 24h after
+[ ] make some ship classes and experiment with combat outcomes; for now symmetrically:
+    [ ] go over numerical balance of ship values; see number-mull
+    [ ] corvette (enemy: crow) <-- enemies are named after birds I guess
+    [ ] cruiser (enemy: vulture)
 
-### misc
-[ ] help facility?
-[ ] `wait <unit> <duration>`  <-- add duration?
+[ ] refine ship's combat value further? (shields down, hull damage?)
+[ ] interception points:
+    [ ] show interception point on `at` cmd
+    [ ] show interception point in `ls` when ATTACK
+    [ ]? need a "show me the interception point" cmd
+    [ ] show interception point when attack cmd is issued
 
 ### low priority
+[ ] spend a day going through code & looking for refactoring oppportunities;
+    there's some cruft piling up
+[ ] `wait <unit> <duration>`  <-- add duration?
 [ ] When arriving at a destination, report on whom else is there:
     21h ARRIVAL: ^1 Defender-2 has arrived at Point(x=32.0, y=11.0). Also present is @1 New Ceylon.
 [ ] morale should affect repair rate
 [ ] auto-retreat button: order that toggles `ship.evasive` & retreat_check checks it
 [ ] ships should be able to exceed cruising speed at risk of drive damage
+    it's an authorization that squadcomm has to give to a ship: "you are cleared for redline maneuvers"
     [ ] maximum speed is . . . ?
-    [ ] command for setting a ship's speed . . . ?
-        feels like a captain concern not a squad commander concern
 [ ] mull a 'maneuverability' value for ships
 [ ] look into non-flat probabilities:
     https://docs.python.org/3/library/random.html#real-valued-distributions
-[ ] raiders sometimes carry off hostages when they raid settlements?
-    have to send ships to get them back? that implies boarding ops
-[ ] attempt to use dataclasses for SpaceborneObject & children
+[ ] support other goals for raiders besides destroying things:
+    * they raid a place to get resources, doing damage in the process
+    * after their holds are full they try to escape the way they came
+    [ ] sometimes carry off hostages when they raid settlements?
+        have to send ships to get them back? that implies boarding ops
 [ ] fancier protection of bases:
     one can already protect bases; that's what interception is for, but maybe
     something more fancy:
