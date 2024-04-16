@@ -4,10 +4,10 @@
     1 units need orders:
     <trek.trek.FriendlyShip alice Point(x=29.740456597169644, y=10.44552372684389)>
 [ ] combat enrichment
-    [ ] morale:
-        [ ] set initial value: self.morale = 0.0 # neutral
-        [ ] depletion & restoration
-        [ ] effect on combat
+    [v] morale:
+        [v] set initial value: self.morale = 0.0 # neutral
+        [v] depletion & restoration
+        [v] effect on combat
     [ ] system damage
         [ ] when there's hull damage, apply systems damage
         [ ] add systems to ships
@@ -43,6 +43,9 @@ Backlog
 [ ] need a "tell me about the local area" command that
     lists everything in the area and gives status
     maybe a 'sitrep' cmd issues to a ship?
+
+### ops: repair & docking
+[ ] raise morale to 0.0 by docking at a base and staying 24 hours, +0.1 for each 24h after
 
 ### combat (descending priority):
 [ ] force movement on retreat

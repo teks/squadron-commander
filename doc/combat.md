@@ -137,7 +137,7 @@ breakdowns, a ship must regularly return to a starbase or similar facility for
 maintenance.
 
 Activities sorted by lowest accumulation to highest:
-1. Docked at a starbase
+1. No wear while docked at a starbase
 2. Idle in space or performing low-intensity ops (in orbit, investigating a nebula)
 3. At warp, cruising speed or less
 4. High warp

@@ -152,8 +152,15 @@ class SpaceborneObject(abc.ABC):
         return self.point.distance(other.point)
 
     def message(self, message):
+        """Send a message to the simulation."""
         if self.simulation is not None:
             self.simulation.message(message)
+
+    # this is class Message but it's further down in the file and I can't be bothered
+    #                           vvv
+    def receive_message(self, message):
+        """Receive a Message, acting on it if needed."""
+        pass # no action in SpaceborneObject
 
 
 class Side(enum.Enum):
@@ -199,7 +206,6 @@ class ArtificialObject(SpaceborneObject):
     valid_orders = {Order.IDLE}
 
     def __init__(self, designation: str, point: Point, simulation=None):
-        """Cruising speed is in light year per hour."""
         super().__init__(designation, point, simulation)
         self.fought_last_tick = False
         self.current_shields = self.max_shields
@@ -208,7 +214,8 @@ class ArtificialObject(SpaceborneObject):
         self.current_order = None # start out with no orders
         self.current_order_params = None
         self.speed = 0
-        self.morale = 0.0
+        # start with neutral morale, worst and best is [-1, 1]
+        self._morale = 0.0
 
     def has_orders(self):
         return self.current_order is not None
@@ -235,9 +242,29 @@ class ArtificialObject(SpaceborneObject):
         else:
             self.current_shields = self.max_shields
 
+    @property
+    def morale(self):
+        """A property representing the crew's morale."""
+        return self._morale
+
+    @morale.setter
+    def morale(self, quantity: float):
+        """Raise or lower morale, capped in the range [-1, 1]."""
+        # it'd be better to have a curve that has horizontal asymptotes at [-1, 1]:
+        # The further from neutral it is, the less it is altered by a given quantity.
+        # self.morale += (1 - abs(self.morale)) * quantity
+        new_value = self._morale + quantity
+        self._morale = 1.0 if new_value > 1.0 else -1.0 if new_value < -1.0 else new_value
+        return self._morale
+
+    MORALE_HULL_DMG_FACTOR = 0.25 # hull damage reduces morale
+    # linearly scale CV and retreat chance by as much as these factors:
+    MORALE_CV_FACTOR = 0.25
+    MORALE_RETREAT_FACTOR = 0.5
+
     def combat_value(self):
-        # TODO add in morale and possibly other factors
-        return self._combat_value
+        # TODO other factors possibly
+        return self._combat_value * (1.0 + self.morale * self.MORALE_CV_FACTOR)
 
     def shields_status(self):
         """Ships's shields as a ratio; 0.8 = shields are at 80%."""
@@ -266,6 +293,8 @@ class ArtificialObject(SpaceborneObject):
         else: # overflow damage to hull
             shield_dmg = self.current_shields
             hull_dmg = quantity - shield_dmg
+            # crew doesn't like getting shot at
+            self.morale -= self.MORALE_HULL_DMG_FACTOR * (hull_dmg / self.max_hull)
 
         self.current_shields -= shield_dmg
         # intentionally let it go negative, for how busted up the hulk is I guess
@@ -290,9 +319,15 @@ class ArtificialObject(SpaceborneObject):
         # hdf = self.hull_damage_fraction()
         return None
 
-    def combat(self):
+    def combat(self, report):
         """Notify the ship that it has fought this tick."""
         self.fought_last_tick = True
+        self.morale -= 0.05 # being in battle at all is bad for morale
+        # but a retreating opponent is good for morale
+        opposing_retreaters = {Side.FRIENDLY: report.enemy_side.retreaters,
+                               Side.ENEMY: report.friendly_side.retreaters,
+                               }[self.side]
+        self.morale += len(opposing_retreaters) * 0.05
 
     # TODO it's odd to have boilerplate like this
     def compute_move(self, ticks=None):
@@ -320,6 +355,7 @@ class SpaceColony(ArtificialObject):
 
 class Ship(ArtificialObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
+    # Cruising speed is in light year per hour.
     cruising_speed = 1 # warp, not newtonian
     acceleration = 0.1 # warp, not newtonian
     side = Side.NEUTRAL
@@ -420,12 +456,12 @@ class Ship(ArtificialObject):
             m, b = 0.35, -0.35
             p = m * side_cv_ratio + b
 
-        # TODO:
         # worse off the ship is, more likely to retreat
+        if self.morale < 0.0: # poor morale
+            p -= self.MORALE_RETREAT_FACTOR * self.morale
+        # TODO
         # p += msf_factor * self.missing_shields_fraction()
         # p += hdf_factor * self.hull_damage_fraction()
-        # worse morale -> greater chance of retreat
-        # p += morale_factor * self.morale
         # if self is a formidable ship, reduced chance of retreat:
         #   ie greater self.combat_value() --> reduced chance of retreat
         return p
@@ -443,6 +479,20 @@ class Ship(ArtificialObject):
         # garaunteed: 0.0 <= random.random() < 1.0
         retreats = self.retreat_chance(side_cv_ratio) > random.random()
         return retreats
+
+    # this is class Message but it's further down in the file and I can't be bothered
+    #                           vvv
+    def receive_message(self, message):
+        """Receive a Message, acting on it if needed."""
+        if isinstance(message, DestroyedObjectMessage):
+            o = message.obj
+            # this is a hack: 1) neglects neutral units and
+            # 2) combat report is less brittle source of battle participation info than proximity
+            if o.side != self.side:
+                # same battle so self just helped destory it, so bonus morale
+                self.morale += 0.2 if self.point.isclose(o.point) else 0.1
+            elif o.side == self.side:
+                self.morale -= 0.2
 
     def compute_move(self, ticks=1):
         if self.current_order == self.Order.MOVE:
@@ -565,6 +615,7 @@ class CombatSide:
             retreats = m.retreats_from(cv_ratio)
             if retreats:
                 self.retreaters.add(m)
+        return self.retreaters
 
     def receive_damage(self, damage):
         self.damage_received = damage
@@ -701,8 +752,6 @@ class Simulation:
         if any(len(s) == 0 for s in (friendly_side, enemy_side)):
             return
 
-        for p in participant_list:
-            p.combat() # notify that they're participating in combat
         CombatSide.assign_cv_modifiers(friendly_side, enemy_side)
 
         # have to compute cv ratio ahead of time because retreat checking may alter ships' CV
@@ -720,13 +769,21 @@ class Simulation:
         report = CombatReport(next(iter(friendly_side.members)).point, friendly_side, enemy_side)
         self.message(report)
 
+        for p in participant_list:
+            p.combat(report) # notify that they were in a fight
+
         return report
 
     def message(self, message):
-        """Send a message to the simulation and the user interface."""
+        """Send a message to the simulation and the user interface.
+
+        The message is also propagated to the simulated objects.
+        """
         message.tick = self.clock
         if self.user_interface is not None:
             self.user_interface.message(message)
+        for o in self.get_objects():
+            o.receive_message(message)
 
     def initialize(self):
         """Perform setup actions.
