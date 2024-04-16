@@ -6,11 +6,24 @@ import argparse
 
 import trek
 
+
+class PointAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, trek.point(*values))
+
+
 class ComandLineParser(argparse.ArgumentParser):
     """Needed because they let an awful glaring bug into a release:
 
     https://github.com/python/cpython/issues/103498
     """
+
+    def __init__(self, *args, **kwargs):
+        arguments = kwargs.pop('arguments')
+        super().__init__(*args, **kwargs)
+        for *args, kwargs in arguments:
+            self.add_argument(*args, **kwargs)
+
     def error(self, message):
         raise ValueError(message)
 
@@ -33,34 +46,32 @@ class CLI(cmd.Cmd):
         import pdb
         pdb.set_trace()
 
-    map_parser = ComandLineParser()
-    map_parser.add_argument('x', type=int)
-    map_parser.add_argument('y', type=int)
-    map_parser.add_argument('radius', nargs='?', type=int, default=8)
+    map_parser = ComandLineParser(arguments=(
+        ['centerpoint', dict(nargs=2, type=int, action=PointAction)],
+        ['radius', dict(nargs='?', type=int, default=8)],
+    ))
 
     def do_map(self, arg):
         parsed_line = self.map_parser.parse_line(arg)
         if parsed_line is not None:
-            center = trek.point(parsed_line.x, parsed_line.y)
-            map_str = self._cmd_ui.short_range_map(center, parsed_line.radius)
+            map_str = self._cmd_ui.short_range_map(parsed_line.centerpoint, parsed_line.radius)
             print(map_str)
 
     def do_aomap(self, arg):
         map_str = self._cmd_ui.long_range_map()
         print(map_str)
 
+    move_parser = ComandLineParser(arguments=(
+        ('ship_id', dict(type=str)),
+        ('destination', dict(nargs=2, type=int, action=PointAction)),
+        ('hypervelocity', dict(nargs='?', type=int, default=None)),
+    ))
+
     def do_move(self, arg):
-        # TODO probably need standard argument parsing function
-        #   that has standard error reporting etc
-        #   ship_desig, destination, speed = self._cmd_ui.parse(arg,
-        #       parse.SHIP_DESIG, parse.POINT, float)
-        try:
-            ship_desig, *rest = arg.split()
-            destination = trek.point(int(rest[0]), int(rest[1]))
-        except Exception as e:
-            print(f"Invalid command: {e}")
-            return
-        self._cmd_ui.move_ship(ship_desig, destination)
+        parsed_line = self.move_parser.parse_line(arg)
+        if parsed_line is not None:
+            # TODO this raises when the ship id isn't found:
+            self._cmd_ui.move_ship(parsed_line.ship_id, parsed_line.destination)
 
     def do_run(self, arg):
         self._cmd_ui.run()
