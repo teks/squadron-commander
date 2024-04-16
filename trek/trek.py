@@ -455,10 +455,11 @@ class Simulation:
         self.clock = clock
         self.objects = {}
         for o in objects:
+            k = (o.type, o.designation)
+            if k in self.objects:
+                raise ValueError(f"Object with duplicate key {k} detected.")
             o.simulation = self
-            self.objects[(o.type, o.designation)] = o
-        if len(objects) != len(self.objects):
-            raise ValueError("Objects with duplicate keys detected.")
+            self.objects[k] = o
 
     def get_objects(self, type=None):
         """Yield objects, optionally by type."""
