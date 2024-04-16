@@ -89,13 +89,7 @@ def zone(*args, **kwargs):
 
 class SpaceborneObject(abc.ABC):
     """All vessels, planets, stations, and other objects."""
-    # TODO may want to scope this by Simulation
-    designations = set()
-
     def __init__(self, designation: str, point: Point):
-        if designation in self.designations:
-            raise ValueError(f"SpaceborneObject designated '{designation}' already exists")
-        self.designations.add(designation)
         self.designation = designation
         self.point = point
 
@@ -172,17 +166,18 @@ class UserInterface:
     pass
 
 
-@dataclasses.dataclass
 class Simulation:
     """Holds all the information necessary for the simulation.
 
     Also can access most of the semantics too.
     """
-    squadron: set = dataclasses.field(default_factory=set)
-    # left None here for bootstrapping porpoises
-    user_interface: UserInterface = None
-    clock: int = 0 # game clock; starts at 0. User will be shown stardate
-    # player's ships:
+    def __init__(self, squadron, user_interface: UserInterface=None, clock: int=0):
+        self.user_interface = user_interface
+        self.clock = clock
+        ships = list(squadron)
+        self.squadron = set(ships)
+        if len(squadron) != len(ships):
+            raise ValueError("Ships with duplicate designations detected.")
 
     def objects(self):
         """Generator for all the objects in the simulation."""
@@ -226,7 +221,6 @@ class Simulation:
 
 
 def default_scenario():
-    SpaceborneObject.designations = set()
     ships = {
         Ship('abel', point(x=5, y=5)),
         Ship('baker', point(35, 30)),
