@@ -404,10 +404,22 @@ class ArtificialObject(SpaceborneObject):
         damaged_components = {n: c for (n, c) in self.components.items()
                               if c.is_damaged()}
         dc_cnt = len(damaged_components)
+
+        # often, no repairs needed, or else can't due to combat
         if self.fought_this_tick or dc_cnt == 0:
             return
+
+        if self.planned_move is not None:
+            modifier = 1.0 # FTL
+        else:
+            modifier = 1.5 # waiting alone
+            locals = self.simulation.colocate_objects()[self.point]
+            friendly_locals, _ = CombatSide.sort_into_sides(*locals)
+            if len(friendly_locals) > 1:
+                modifier = 2.0 # waiting with friends
+
         for c in damaged_components.values():
-            c.health += self.repair_rate / dc_cnt
+            c.health += modifier * self.repair_rate / dc_cnt
 
     def post_action(self):
         self.recharge_shields()
@@ -571,7 +583,7 @@ class Ship(ArtificialObject):
             return self.point + self.displacement(intercept_point, ticks=1)
         return None
 
-    def plan_move(self): # currently simulation param isn't needed
+    def plan_move(self):
         self.planned_move = self.compute_move()
 
     def move(self):

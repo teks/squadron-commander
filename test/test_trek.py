@@ -131,6 +131,9 @@ def friendly_squadron():
 def enemy_squadron():
     return [trek.EnemyShip(d, trek.point(1, 1)) for d in ('x', 'y', 'z')]
 
+def simple_simulation():
+    return trek.Simulation(friendly_squadron() + enemy_squadron())
+
 def combat_sides():
     fs = friendly_squadron()
     es = enemy_squadron()
@@ -275,25 +278,23 @@ class TestArtificialObject:
         actual_dmg = c.damage_check(0.1, hull_fraction, a)
         assert {expected_dmg, actual_dmg} == {None} or math.isclose(expected_dmg, actual_dmg)
 
-    def test_repair__base_case(self):
-        o = trek.ArtificialObject('no name', trek.Point(1, 1))
+    @pytest.mark.parametrize('planned_move, local_friend, fought, expected_health', [
+        (trek.Point(2, 2), False, False, (0.78, 1.00)),  # FTL case; small loss is expected
+        (None,             False, True,  (0.73, 0.97)),  # no repair if fought this tick
+        (None,             True,  False, (0.83, 1.00)),  # nearby friendly; small loss is expected
+    ])
+    def test_repair(self, planned_move, local_friend, fought, expected_health):
+        simulation = simple_simulation()
+        o = next(simulation.get_objects(side=trek.Side.FRIENDLY))
+        if local_friend:
+            simulation.add_object(trek.FriendlyShip('USS Helpful', o.point))
         o.repair_rate = 0.1
+        o.planned_move = planned_move
         o.components['tactical'].health = 0.73
-        o.components['shields'].health = 0.95
+        o.components['shields'].health = 0.97
+        o.fought_this_tick = fought
         o.repair()
-        assert (0.78, 1.0 # <-- small loss of repair capacity is intended outcome
-                ) == (o.components['tactical'].health, o.components['shields'].health)
-
-    def test_repair__combat_tick(self):
-        """No repairs possible during combat."""
-        o = trek.ArtificialObject('no name', trek.Point(1, 1))
-        o.repair_rate = 0.1
-        o.components['tactical'].health = 0.73
-        o.components['shields'].health = 0.95
-        o.fought_this_tick = True
-        o.repair()
-        assert (0.73, 0.95
-                ) == (o.components['tactical'].health, o.components['shields'].health)
+        assert expected_health == (o.components['tactical'].health, o.components['shields'].health)
 
 
 @pytest.mark.parametrize('group', [
