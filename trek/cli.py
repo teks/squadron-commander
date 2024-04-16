@@ -25,6 +25,7 @@ cardinal_to_neighbor = {
 
 @dataclasses.dataclass
 class SimpleTable:
+    # TODO make headers optional then rewrite object_detail_display using SimpleTable
     headers: tuple
     field_templates: tuple
     rows: tuple
@@ -77,7 +78,6 @@ def combat_report_string(combat_report):
                      rows=(*combat_report_row_gen(fs), *combat_report_row_gen(es)))
 
     point = combat_report.point
-    # TODO add in system damage
     return '\n'.join([
         cli_header(5, f'COMBAT REPORT for coordinates ({point.x:.2f}, {point.y:.2f})'),
         indent + f'Friendly CV x{fs.cv_modifier:.2f}, enemy CV x{es.cv_modifier:.2f}\n',
@@ -85,15 +85,22 @@ def combat_report_string(combat_report):
     ])
     return s
 
+def percent_str(v: float):
+    return f'{round(100.0 * v)}%'
+
 def combat_report_row_gen(side):
     for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in side.outcomes.items():
         outcome = ('LOST'    if destroyed else
-                   'SYS-DMG' if sys_dmg else
                    'HUL-DMG' if hull_dmg > 0 else
                    'SHL-HIT' if shield_dmg > 0 else '???')
         unit = getattr(u, '_ui_label', '??') + f' {u.designation}'
-        other = 'RETREATED' if u in side.retreaters else ''
-        yield (outcome, unit, shield_dmg, hull_dmg, other)
+        notes = []
+        if u in side.retreaters:
+            notes.append('RETREATED')
+        sys_dmg_str = ', '.join(f'{n}: {percent_str(-f)}' for n, f in sys_dmg.items() if f is not None)
+        if sys_dmg_str:
+            notes.append(f'SYS-DMG: {sys_dmg_str}')
+        yield (outcome, unit, shield_dmg, hull_dmg, '. '.join(notes))
 
 
 class PointAction(argparse.Action):
@@ -318,7 +325,9 @@ class CmdUserInterface(trek.UserInterface):
             text = '\n'.join([
                 self.single_line_object_display(o),
                 #     Morale: <in-universe statement from the captain here> (n)
-                f"    Morale: {o.morale:.1f}"
+                f"    Morale: {o.morale:.1f}",
+                *(f"    {name}: " + percent_str(component.health)
+                    for name, component in o.components.items())
             ])
             print(text)
             return text

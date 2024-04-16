@@ -12,13 +12,21 @@
         [v] do playtest; fallout:
             [v] in `ls`, CV can have too many digits: CV=0.9875
     [ ] system damage
-        [ ] when there's hull damage, apply systems damage
-        [ ] add systems to ships
+        [v] when there's hull damage, apply systems damage
+            [v] Each system is subjected to a separate roll:
+                * Chance of damage grows with hull damage fraction.
+                * Severity of damage also grows with hull damage fraction.
+                Each system is tracked separately as a fraction (1.0 = undamaged).
+                The fraction tells how much performance is degrading.
+        [ ] List of systems to damage and the effects of damage:
+            [ ] Shields: Damage reduces maximum
+            [ ] Warp Drive: Reduced speed and energy efficiency
+            [ ] Tactical Systems: Reduced combat value
         [ ] write some tests
         [ ] do playtests
-    [ ] refine ship's combat value further? (shields down, sys dmg?)
-[ ] `status <unit>...` to show system damage etc
+[v] `show <unit>...` to show system damage etc
     see `doc/object-detail-view.md`
+[ ] `show <unit>` to show *effects* of system damage
 
 
 Roadmap
@@ -53,6 +61,7 @@ Backlog
 =======
 
 ### ux & i9 playtesting feedback
+[ ] refine ship's combat value further? (shields down, sys dmg?)
 [ ] interception points:
     [ ] show interception point in `ls` when ATTACK
     [ ]? need a "show me the interception point" cmd

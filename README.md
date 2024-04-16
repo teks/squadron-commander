@@ -10,6 +10,7 @@ from trek import cli
 simulation = trek.default_scenario(enemies=True, space_colonies=True)
 ui = cli.CmdUserInterface(simulation)
 print(ui.short_range_map(trek.point(32, 32), radius=32, scale=0.5))
+simulation.initialize()
 ui.start()
 ```
 

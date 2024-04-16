@@ -222,14 +222,14 @@ class ArtificialObject(SpaceborneObject):
         def health(self, new_value: float):
             self._health = 1.0 if new_value > 1.0 else (0.0 if new_value < 0.0 else new_value)
 
-        def damage_check(self, hull_fraction: float) -> float | None:
-            """Check for damage to the given component.
+        def damage_check(self, hull_damage: float, hull_fraction: float) -> float | None:
+            """Check for damage to the given component if there has been hull damage.
 
             The chance of component damage is up to 50%. The amount of
             component damage is up to 100%. Both values are scaled by the
             hull damage fraction.
             """
-            if self.random() > hull_fraction / 2.0:
+            if hull_damage <= 0.0 or self.random() > hull_fraction / 2.0:
                 return None
             dmg_fraction = self.random() * (1 - hull_fraction)
             self.health -= dmg_fraction
@@ -347,7 +347,7 @@ class ArtificialObject(SpaceborneObject):
         # intentionally let it go negative, for how busted up the hulk is I guess
         self.current_hull -= hull_dmg
 
-        sys_dmg = self.system_damage() if hull_dmg > 0.0 else None
+        sys_dmg = self.system_damage(hull_dmg)
 
         # can send message now that changes to self are applied
         if self.current_hull <= 0.0 < self.current_hull + hull_dmg:
@@ -359,11 +359,11 @@ class ArtificialObject(SpaceborneObject):
     def is_destroyed(self):
         return self.current_hull <= 0.0
 
-    def system_damage(self):
+    def system_damage(self, hull_dmg: float):
         damage_report = dict()
         hull_fraction = self.hull_status()
         for name, component in self.components.items():
-            damage_report[name] = component.damage_check(hull_fraction)
+            damage_report[name] = component.damage_check(hull_dmg, hull_fraction)
         return damage_report
 
     def combat(self, report):

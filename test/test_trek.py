@@ -269,7 +269,7 @@ def test_Ship_morale_cv_effect():
 def test_ArtificialObject_Component_damage_check(hull_fraction, random_vals, expected_dmg):
     fake_random = lambda: random_vals.pop(0)
     c = trek.ArtificialObject.Component(random=fake_random)
-    actual_dmg = c.damage_check(hull_fraction)
+    actual_dmg = c.damage_check(0.1, hull_fraction)
     assert {expected_dmg, actual_dmg} == {None} or math.isclose(expected_dmg, actual_dmg)
 
 @pytest.mark.parametrize('group', [
