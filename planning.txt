@@ -11,7 +11,7 @@ Iterations
     so rejigger so they have shields (easier than removoing the Component).
 [ ] mull renaming project to 'Squadron Commander' / SQUADCOM
     [v] rename trek module to 'engine'
-    [ ] rename trek package
+    [v] rename trek package
     [ ] rename pytrek.py
     [ ] rename test_trek.py
     [ ] change README.md

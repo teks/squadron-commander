@@ -2,8 +2,8 @@
 
 import argparse
 
-import trek
-from trek import cli
+import squadcom
+from squadcom import cli
 
 raise Exception("This isn't ready; try waves-of-raiders.py")
 

@@ -8,7 +8,7 @@ import argparse
 import itertools
 import textwrap
 
-import trek
+import squadcom
 
 MOVEMENT_MARKER_CHAR = '+'
 class UI_LABEL_PREFIXES:
@@ -26,14 +26,14 @@ class UI_LABEL_PREFIXES:
 # class EightCardinalDirections(enum.Enum):
 #     EAST = 0 # but also stringifies to 'East'
 cardinal_to_neighbor = {
-    0: trek.Point(1, 0), # E
-    1: trek.Point(1, 1), # NE
-    2: trek.Point(0, 1), # N
-    3: trek.Point(-1, 1), # NW
-    4: trek.Point(-1, 0), # W
-    5: trek.Point(-1, -1), # SW
-    6: trek.Point(0, -1), # S
-    7: trek.Point(1, -1), # SE
+    0: squadcom.Point(1, 0), # E
+    1: squadcom.Point(1, 1), # NE
+    2: squadcom.Point(0, 1), # N
+    3: squadcom.Point(-1, 1), # NW
+    4: squadcom.Point(-1, 0), # W
+    5: squadcom.Point(-1, -1), # SW
+    6: squadcom.Point(0, -1), # S
+    7: squadcom.Point(1, -1), # SE
 }
 
 
@@ -119,7 +119,7 @@ def combat_report_row_gen(side):
 
 class PointAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        setattr(namespace, self.dest, trek.point(*values))
+        setattr(namespace, self.dest, squadcom.point(*values))
 
 # TODO it's an object_id or unit_id really, not just ships
 SHIP_ID_ARG = ('ship_id', dict(type=str))
@@ -212,7 +212,7 @@ class CLI(cmd.Cmd):
 
     def do_sm(self, _):
         """`sm` shows the strategic map, which is the entire field of play."""
-        map_str = self._cmd_ui.short_range_map(trek.point(32, 32), 32, 0.5)
+        map_str = self._cmd_ui.short_range_map(squadcom.point(32, 32), 32, 0.5)
         print(map_str)
 
     # not needed given smap --^ resurrect later if there's a use for it
@@ -359,7 +359,7 @@ class CLI(cmd.Cmd):
         return True
 
 
-class CmdUserInterface(trek.UserInterface):
+class CmdUserInterface(squadcom.UserInterface):
     """UI for trek based on simple cmd.Cmd CLI."""
     class LabelIterators:
         def __init__(self):
@@ -405,20 +405,20 @@ class CmdUserInterface(trek.UserInterface):
     def single_line_object_display(self, obj):
         # TODO rewrite in terms of SimpleTable?
         line = f"{obj._ui_label} {obj.designation:10} {self.point_str(obj.point)}"
-        if not isinstance(obj, trek.ArtificialObject):
+        if not isinstance(obj, squadcom.ArtificialObject):
             return line
         line += f" W={obj.speed:.2f} CV={obj.combat_value():.2f} {self.hull_and_shield_icon(obj)}"
         if obj.is_destroyed():
             return line
 
         order = obj.current_order
-        if order == trek.Order.ATTACK:
+        if order == squadcom.Order.ATTACK:
             t = obj.current_order_params['target']
             line += f" ATTACKING {t._ui_label} {t.designation} {self.point_str(t.point)}"
-        elif order == trek.Order.MOVE:
+        elif order == squadcom.Order.MOVE:
             line += " MOVING to " + self.point_str(obj.current_order_params['destination'])
-        elif order == trek.Order.IDLE:
-            line += '' if isinstance(obj, trek.SpaceColony) else " WAITING"
+        elif order == squadcom.Order.IDLE:
+            line += '' if isinstance(obj, squadcom.SpaceColony) else " WAITING"
         elif order is None:
             line += ' NO ORDERS'
         else:
@@ -494,10 +494,10 @@ class CmdUserInterface(trek.UserInterface):
             self.add_movement_markers(hud_layer, o, scale)
         # set bounding box including bounds-check for attempting to show territory outside the map
         scaled_ceil = lambda v: math.ceil(scale * v)
-        lower_left = trek.point(max(1, scaled_ceil(center_point.x - radius)),
-                                max(1, scaled_ceil(center_point.y - radius)))
-        upper_right = trek.point(min(trek.MAX_X, scaled_ceil(center_point.x + radius)),
-                                 min(trek.MAX_Y, scaled_ceil(center_point.y + radius)))
+        lower_left = squadcom.point(max(1, scaled_ceil(center_point.x - radius)),
+                                    max(1, scaled_ceil(center_point.y - radius)))
+        upper_right = squadcom.point(min(squadcom.MAX_X, scaled_ceil(center_point.x + radius)),
+                                     min(squadcom.MAX_Y, scaled_ceil(center_point.y + radius)))
         rows = []
         group_label_iter = itertools.chain(iter(string.ascii_uppercase), itertools.repeat('?'))
         groups = [] # list of (label string, contents)
@@ -506,7 +506,7 @@ class CmdUserInterface(trek.UserInterface):
 
             # set the display string for each cell in the row
             for x in range(lower_left.x, upper_right.x + 1):
-                p = trek.point(x, y)
+                p = squadcom.point(x, y)
                 cell_contents = obj_layer[p]
                 if len(cell_contents) == 1:
                     row += cell_contents[0]._ui_label
@@ -569,7 +569,7 @@ class CmdUserInterface(trek.UserInterface):
         ship_cnt = 0
         for o in contents:
             match o.side:
-                case trek.Side.FRIENDLY:
+                case squadcom.Side.FRIENDLY:
                     ship_cnt += 1
                 case _:
                     raise ValueError(f"Type for {o} isn't supported.")
@@ -578,17 +578,17 @@ class CmdUserInterface(trek.UserInterface):
 
     def set_ui_label(self, obj):
         """Attach a unique UX label [0-9A-Z] to an object, then return that label."""
-        if isinstance(obj, trek.Ship):
+        if isinstance(obj, squadcom.Ship):
             match (obj.side, obj.controller):
-                case (trek.Side.FRIENDLY, trek.Controller.PLAYER):
+                case (squadcom.Side.FRIENDLY, squadcom.Controller.PLAYER):
                     obj._ui_label = UI_LABEL_PREFIXES.friendly_controlled_ship + next(
                         self.label_iterators.squadron)
-                case (trek.Side.ENEMY, _):
+                case (squadcom.Side.ENEMY, _):
                     obj._ui_label = UI_LABEL_PREFIXES.enemy + next(self.label_iterators.raiders)
                 case _:
                     raise ValueError(
                         f"{obj} has unexpected (side, controller) of {obj.side, obj.controller}")
-        elif isinstance(obj, trek.SpaceColony) and obj.side == trek.Side.FRIENDLY:
+        elif isinstance(obj, squadcom.SpaceColony) and obj.side == squadcom.Side.FRIENDLY:
             obj._ui_label = UI_LABEL_PREFIXES.friendly_space_colony + next(self.label_iterators.colonies)
         else:
             raise ValueError(f"Couldn't assign UI label to {obj}")
@@ -611,34 +611,34 @@ class CmdUserInterface(trek.UserInterface):
 
     def move_ship(self, destination, *ship_id_pile):
         for ship_id in ship_id_pile:
-            ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
+            ship = self.get_object(ship_id, controller=squadcom.Controller.PLAYER)
             if ship is not None:
-                ship.order(trek.Order.MOVE, destination=destination)
+                ship.order(squadcom.Order.MOVE, destination=destination)
         self.check_orders()
 
     def attack(self, target_id: str, *ship_id_pile: tuple[str]):
-        target = self.get_object(target_id, side=trek.Side.ENEMY)
+        target = self.get_object(target_id, side=squadcom.Side.ENEMY)
         if target is None:
             return
         for ship_id in ship_id_pile:
-            ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
+            ship = self.get_object(ship_id, controller=squadcom.Controller.PLAYER)
             if ship is not None:
-                ship.order(trek.Order.ATTACK, target=target)
+                ship.order(squadcom.Order.ATTACK, target=target)
         self.check_orders()
 
     def wait(self, *ship_id_pile: tuple[str]):
         if len(ship_id_pile) == 0:
-            ships = self.simulation.objects_without_orders(controller=trek.Controller.PLAYER)
+            ships = self.simulation.objects_without_orders(controller=squadcom.Controller.PLAYER)
         else:
-            ships = (self.get_object(sid, controller=trek.Controller.PLAYER) for sid in ship_id_pile)
+            ships = (self.get_object(sid, controller=squadcom.Controller.PLAYER) for sid in ship_id_pile)
         for ship in ships:
             if ship is not None:
-                ship.order(trek.Order.IDLE)
+                ship.order(squadcom.Order.IDLE)
         self.check_orders()
 
     def check_orders(self):
         """Confirm player-controlled vessels have orders."""
-        units = self.simulation.objects_without_orders(trek.Side.FRIENDLY)
+        units = self.simulation.objects_without_orders(squadcom.Side.FRIENDLY)
         if len(units) == 0:
             print("All units have orders.")
         else:
@@ -650,13 +650,13 @@ class CmdUserInterface(trek.UserInterface):
         m = f"{message.tick}h "
         match message:
             # not a real instantiation; the match syntax is gross:
-            case trek.ArriveMessage():
+            case squadcom.ArriveMessage():
                 s = message.ship
                 m += f"ARRIVAL: {s._ui_label} {s.designation} has arrived at {s.point}."
-            case trek.SpawnMessage():
+            case squadcom.SpawnMessage():
                 self.set_ui_label(message.obj)
                 m += "Object spawned: " + self.single_line_object_display(message.obj)
-            case trek.CombatReport():
+            case squadcom.CombatReport():
                 m += combat_report_string(message)
             case _:
                 m += f"Received message: {message}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import trek
-from trek import cli, scenarios
+import squadcom
+from squadcom import cli, scenarios
 
 scenario = scenarios.WavesOfRaiders()
 scenario.setup()
