@@ -1,6 +1,4 @@
-"""Probably the whole dang game engine is gonna go in here.
-
-"""
+"""The game engine is implemented here."""
 import collections
 import itertools
 import sys
@@ -13,8 +11,11 @@ import operator
 import random
 
 # min x & y are both 1, not 0, for both spaces and zones
+# TODO should be settings on Simulation not globals
 MAX_X = 64
 MAX_Y = 64
+
+# TODO these aren't used because the concept of a 'long range map' went away
 # size of a zone (a sort of grid laid over the individual spaces).
 # Zones are represented as Point instances.
 ZONE_SIZE_X = 8
@@ -125,6 +126,11 @@ def point(*args, **kwargs):
     p = Point(*args, **kwargs)
     p.validate()
     return p
+
+def random_point(x_range=(1, MAX_X), y_range=(1, MAX_Y), rand_type=int):
+    if rand_type != int: # implement floats later
+        raise NotImplementedError()
+    return point(random.randint(*x_range), random.randint(*y_range))
 
 def zone(*args, **kwargs):
     """Factory for points that represent one zone."""
@@ -768,6 +774,16 @@ class CompletedRepairsMessage(Message):
     obj: ArtificialObject
 
 
+@dataclasses.dataclass
+class ScenarioWinMessage(Message):
+    pass
+
+
+@dataclasses.dataclass
+class ScenarioLossMessage(Message):
+    pass
+
+
 class UserInterface:
     pass
 
@@ -780,8 +796,7 @@ class Scenario(abc.ABC):
     def __post_init__(self):
         if self.simulation is None:
             # this kind of double-linking feels awkward
-            self.simulation = Simulation()
-        self.simulation.scenario = self
+            self.simulation = Simulation(scenario=self)
 
     def setup(self, initialize_simulation=True):
         """Called once to add content to self.simulation.
