@@ -3,7 +3,7 @@
 [v] simplest AI for raiders: they attack nearest settlement
     AI action selection is last in the tick so the user can be aware of headings
 [v] damage system for space stations; crib from Ship
-[ ] automated testing of i9 diff
+[v] automated testing of i9 diff
 [ ] playtesting
 
 

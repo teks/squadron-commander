@@ -249,3 +249,22 @@ def test_Simulation_colocate_objects(indiv_positions, group_count):
                           for p in indiv_positions)
     groups = sim.colocate_objects()
     assert group_count == len(groups)
+
+def test_ai_target_selection():
+    s = trek.default_scenario(enemies=True, space_colonies=True)
+
+    actual = {}
+    for r in s.get_objects(controller=trek.Controller.ENEMY_AI):
+        r.post_action()
+        actual[r.designation] = (r.current_order, r.current_order_params)
+
+    new_ceylon = s.get_object(trek.Side.FRIENDLY, 'New Ceylon')
+    harmony = s.get_object(trek.Side.FRIENDLY, 'Harmony')
+
+    A = trek.Order.ATTACK
+    expected = {'klaybeq': (A, {'target': new_ceylon}),
+                'ukliss':  (A, {'target': new_ceylon}),
+                'lowragh': (A, {'target': harmony}),
+                }
+
+    assert expected == actual

@@ -113,6 +113,9 @@ class SpaceborneObject(abc.ABC):
         fq_name = self.__class__.__module__ + '.' + self.__class__.__qualname__
         return f"<{fq_name} {self.designation} {self.point}>"
 
+    def distance(self, other):
+        return self.point.distance(other.point)
+
     def message(self, message):
         if self.simulation is not None:
             self.simulation.message(message)
@@ -434,12 +437,12 @@ class EnemyShip(Ship):
         min_distance = MAX_X + MAX_Y
         candidates = set()
         for o in targets:
-            d = self.point.distance(o)
+            d = self.distance(o)
             if d == min_distance:
                 candidates.add(o)
             elif d < min_distance:
                 min_distance, candidates = d, {o}
-        return random.choice(candidates)
+        return random.choice(list(candidates)) # sets aren't sequences
 
     def choose_target(self):
         """Chooses a target to attack."""
@@ -567,11 +570,7 @@ class Simulation:
         self.clock = clock
         self.objects = {}
         for o in objects:
-            k = (o.side, o.designation)
-            if k in self.objects:
-                raise ValueError(f"Object with duplicate key {k} detected.")
-            o.simulation = self
-            self.objects[k] = o
+            self.add_object(o)
 
     def get_objects(self, side=None, controller=None):
         """Yield objects, with optional filtering."""
@@ -590,6 +589,7 @@ class Simulation:
         k = (obj.side, obj.designation)
         if k in self.objects:
             raise ValueError(f"Object with key {k} already found: {self.objects[k]}")
+        obj.simulation = self
         self.objects[k] = obj
         self.message(SpawnMessage(obj))
 
@@ -703,7 +703,7 @@ class Simulation:
                 break
 
 
-def default_scenario(enemies=False):
+def default_scenario(enemies=False, space_colonies=False):
     ships = {
         FriendlyShip('abel', point(x=5, y=5)),
         FriendlyShip('baker', point(35, 30)),
@@ -717,4 +717,8 @@ def default_scenario(enemies=False):
                        ('klaybeq', point(32, 32)),
                        ('lowragh', point(60, 53))):
             s.add_object(EnemyShip(d, p))
+    if space_colonies:
+        for (d, p) in (('New Ceylon', point(40, 12)),
+                       ('Harmony',    point(28, 56))):
+            s.add_object(SpaceColony(d, p))
     return s
