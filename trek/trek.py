@@ -18,11 +18,10 @@ class Point(typing.NamedTuple):
         return d
 
 
-class Quadrant:
-    """Represents one quadrant, an 8x8 grid of sectors.
+class Map:
+    """Area of operations for a playthrough.
 
-    Each sector is in turn a single location for an object.
-    Objects exclude each other; there is no stacking.
+    Spaceborne objects may stack, because it's space.
     """
     def __init__(self):
         self.contents = dict() # tuple location -> spaceborne object
