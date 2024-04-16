@@ -112,13 +112,11 @@ class PointAction(argparse.Action):
 SHIP_ID_ARG = ('ship_id', dict(type=str))
 
 class CommandLineParser(argparse.ArgumentParser):
-    """Needed because they let an awful glaring bug into a release:
+    """Needed because they let a bug into a release:
 
     https://github.com/python/cpython/issues/103498
     """
-
-    def __init__(self, *args, **kwargs):
-        arguments = kwargs.pop('arguments')
+    def __init__(self, arguments, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for *args, kwargs in arguments:
             self.add_argument(*args, **kwargs)
