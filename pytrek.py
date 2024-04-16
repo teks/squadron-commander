@@ -5,6 +5,8 @@ import argparse
 import trek
 from trek import cli
 
+raise Exception("This isn't ready; try waves-of-raiders.py")
+
 parser = argparse.ArgumentParser(
     description="PYTREK, a lo-fi turn based strategy game.",
 )
