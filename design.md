@@ -120,7 +120,7 @@ possibly showing a vector and status (ie vessel type and any known damage).
 
 Time & Timing
 -------------
-The simulation runs at 1 tick = 1 hour. This means combat is sometimes
+The simulation runs at 1 tick = 1 hour. This means combat is often
 resolved in a single tick.
 
 It's simple event-based timing, and runs until it needs to pause. These events

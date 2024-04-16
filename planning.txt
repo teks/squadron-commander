@@ -24,6 +24,7 @@ Future Iterations
 [ ] morale: depletion, restoration, and effect on combat
     set initial value: self.morale = 0.0 # neutral
 [ ] refine ship's combat value (shields down, morale, etc)
+[ ] order that toggles `ship.evasive` & retreat_check checks it
 
 ### misc
 [ ] enemy ships:
@@ -31,6 +32,5 @@ Future Iterations
     enemies assign orders to themselves over time
 [ ] attempt to use dataclasses for SpaceborneObject & children
 [ ] concrete CLI ux class
-    [v] cmd
     [ ] displays for various entities & the map
     [ ] help facility?

@@ -1,33 +1,49 @@
 Combat
 ======
-Mostly follow the trappings of Star Trek: Energy shields, beam weapons,
-torpedoes. Each vessel has systems that can be damaged.
+A unit is any object that can be damaged by combat; in this file often 'ship' is used
+but starbases, space colonies, and even planetary settlements are treated similarly.
 
+Units have shields and hull values, which are both treated as hit points;
+damage drains shields first. `hull = 0` indicates the unit is functionally
+destroyed (though there may be survivors and salvage).
+
+Weapons and other tactical capabilities, eg targeting scanners and damage
+control, all lumped together and treated abstractly, as the unit's 'combat
+value.'
+
+A ship's warp drive has tactical uses, mostly to retreat. Thus ships have an
+emergency warp value representing its warp drive's acceleration and activation
+latency.
+
+Mechanics
+---------
 Combat is resolved automatically as the player has no direct control over a
 ship's moment-to-moment operations.  Combat is fast enough that it often
 resolves in a single tick (in 1 hour).
 
 The squadron commander can issue these combat orders to a ship:
-* Attack an enemy (this will cause interception as needed).
-* Attempt escape from combat (this will likely cause pursuit).
+* Toggle `evasive` boolean: if True, and it has a warp drive, the unit
+  automatically retreats from fights.
+* Attack an enemy. This will cause movement and interception as needed.
+  While the enemy is in combat with the ship, the ship will ignore `evasive`.
 
-Mechanics
----------
 Combat is implemented in steps each tick, based on these factors:
 
 * Each side has its set of vessels, each having its properties & state
 * Nearby static units, including friendly bases and settlements
 
-### Compute Combat Value
-Each ship has a base combat value (CV), reflecting its firepower and other
-strengths. This value is modified by damage, morale, and the state of its
-shields (shields are restored after combat, unless they're damaged).
+Combat Resolution Steps
+-----------------------
+### Assemble Sides
 
-```
-def cv(self):
-    """Compute the unit's combat value."""
-    return f(self.base_cv(), self.damage, self.morale, self.shields)
-```
+All units in the same position automatically take part in combat each tick (the
+two ponts must be exactly equal; the map is in light years). Sort all such
+units into a friendly side and an enemy side.
+
+### Compute Combat Value
+
+A unit's base combat value is modified by damage, morale, and the state of its
+shields (shields are restored after combat, unless they're damaged).
 
 Compute a CV for each side; for now just sum the units' CVs.
 
@@ -43,33 +59,35 @@ gain an advantage over the other. There's an equal chance of each:
 If a side has the advantage, its combat rating increases 25%; the opposing side
 loses 25%.
 
+If crews are ever given variability, better crews would increase the chance to
+gain the advantage.
+
 ### Retreat Checks
 
-The inferior side may choose to retreat if the ratio between the two sides'
-CVs is very unfavorable. The chance of retreat grows as the ratio worsens.
-
-A ship may decide to retreat even though its allies don't, so also perform a
-similar retreat check for each individual ship on both sides.
+A ship retreats if its `evasive` flag is set. Otherwise, it may choose to
+retreat if the ratio between the two sides' CVs is unfavorable. The chance of
+retreat grows as the ratio worsens.
 
 The chance of retreat is affected by eg morale; other specific influences may be
-added, such as hull damage or shield depletion.
+added, such as hull damage or shield depletion. If a ship is protecting a base or
+settlement, chance of retreat likewise declines.
 
 Note which ships have retreated as they will inflict and receive reduced damage.
 
 ### Assign Damage
 
-Each ship is damaged; retreating ships receive less. Damage effects are applied
-simultaneously so there's no need for an initiative system.
+Damage effects are applied simultaneously so there's no need for an initiative
+system:
 
 1. Compute the total damage dealt to each side:
     * Each ship's damage dealt is equal to its CV * adjustment. Adjustment
-      equals the first that applies:
-        * 0.5 if the ship is retreating
-        * 0.75 if ship has disadvantage
-        * 1.25 if ship has advantage
-    * Sum the damage from each ship and apply to the other side.
-1. Compute the damage received to each unit:
-    * Divide the side's damage received equally among its units.
+      equals:
+        * 0.5 if the ship is retreating, or else:
+            * 0.75 if ship has disadvantage
+            * 1.25 if ship has advantage
+    * Sum the damage from each side and apply it to its opponent.
+1. Compute the damage received by each ship:
+    * Divide the side's received damage equally among its units.
     * Any ships that are retreating receive 50% damage.
 
 If ships get a maneuverability or sublight speed value, then slower ships will
@@ -83,9 +101,9 @@ Once the shields are down, mostly, you're fucked.
 Damage is first applied to shields, then to the ship's systems; for ideas, cf
 "Damage to specific systems" in `ega-trek-design-notes.md`.
 
-Damage is applied as a single number. It will first ablate the shields. Any
-leftover is applied to the ship's hull. Once the hull is reduced to 0,
-the ship is destroyed.
+Whenever Damage is applied, first shields are reduced by that quantity. Any
+leftover is applied to the ship's hull. Once the hull is reduced to 0, the ship
+is destroyed.
 
 Also, any time the hull is damaged, crew morale is harmed as well.
 
@@ -106,8 +124,8 @@ List of systems to damage and the effects of damage:
 ### Perform retreat movement
 
 Any surviving ships that are retreating are moved a short direction and
-distance away from the battle; distance is adjusted by the ship's emergency
-speed value. Ships from a side tend to retreat in the same direction.
+distance away from the battle, proportional to its emergency warp value.  Ships
+from a side tend to retreat in the same direction.
 
 This separation should be enough to force pursuing ships to chase for multiple
 ticks _if_ their speeds are very similar. The distance should be short enough,
