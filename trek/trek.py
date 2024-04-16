@@ -52,6 +52,42 @@ class Point(typing.NamedTuple):
     def __sub__(self, other):
         return self.binary_operator(other, operator.sub)
 
+    def grid_cell(self, scale=1.0):
+        """Place this point into the nearest grid cell.
+
+        Grid cells are assumed to be labelled with whole numbers.
+        The grid may have a different resolution, so scale first.
+        """
+        # conveniently, round() returns an integer
+        return self.__class__(x=round(self.x * scale), y=round(self.y * scale))
+
+    def bearing_to(self, other):
+        """In radians.
+
+        0 is East, pi is West, 1.5 * pi is South.
+        """
+        delta = self - other
+        # ensure angular range is 0 to 2*pi -----v
+        return math.atan2(delta.y, delta.x) + math.pi
+
+    def cardinal_direction_to(self, other, direction_count=8):
+        """Returns 1-n where 1 is east, 2 is north of east, etc.
+
+        East is assumed to be 0 degrees == 0 radians. Each direction
+        is 360 degrees / `direction_count` wide. So if
+        direction_count == 8, East is -22.5deg to +22.5deg.
+        """
+        print(f"CDT: {self}, {other}, {direction_count}")
+        angle = self.bearing_to(other)
+        width = 2 * math.pi / direction_count
+        offset = -0.5 * width
+        for i in range(direction_count):
+            start_angle = offset + i * width
+            end_angle = start_angle + width
+            if start_angle <= angle < end_angle:
+                return i
+        raise ValueError(f"Failed to find a cardinal direction; this should be impossible")
+
     def isclose(self, other):
         """math.isclose for points"""
         # math.isclose defaults a relative tolerance, so the tolerance varies
@@ -260,6 +296,9 @@ class ArtificialObject(SpaceborneObject):
         self.fought_last_tick = True
 
     # TODO it's odd to have boilerplate like this
+    def compute_move(self, ticks=None):
+        return self.point
+
     def plan_move(self):
         pass
 
@@ -406,14 +445,17 @@ class Ship(ArtificialObject):
         retreats = self.retreat_chance(side_cv_ratio) > random.random()
         return retreats
 
-    def plan_move(self): # currently simulation param isn't needed
-        self.planned_move = None
+    def compute_move(self, ticks=1):
         if self.current_order == self.Order.MOVE:
-            self.planned_move = self.point + self.displacement()
+            return self.point + self.displacement(ticks=ticks)
         elif self.current_order == self.Order.ATTACK:
             (intercepted_before_destination, intercept_point, ticks_to_intercept
                 )= self.intercept_point(self.current_order_params['target'])
-            self.planned_move = self.point + self.displacement(intercept_point)
+            return self.point + self.displacement(intercept_point, ticks=1)
+        return None
+
+    def plan_move(self): # currently simulation param isn't needed
+        self.planned_move = self.compute_move()
 
     def move(self):
         """Perform one tick of movement."""

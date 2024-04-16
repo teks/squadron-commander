@@ -7,6 +7,21 @@ import argparse
 
 import trek
 
+# TODO enum?
+# class EightCardinalDirections(enum.Enum):
+#     EAST = 0 # but also stringifies to 'East'
+cardinal_to_neighbor = {
+    0: trek.Point(1, 0), # E
+    1: trek.Point(1, 1), # NE
+    2: trek.Point(0, 1), # N
+    3: trek.Point(-1, 1), # NW
+    4: trek.Point(-1, 0), # W
+    5: trek.Point(-1, -1), # SW
+    6: trek.Point(0, -1), # S
+    7: trek.Point(1, -1), # SE
+}
+
+
 def cli_header(blazon_count, text, blazon='=', newline=True):
     """eg "===[ Combat Report ]===\n" """
     blazons = blazon * blazon_count
@@ -166,6 +181,9 @@ class CLI(cmd.Cmd):
         return True
 
 
+MOVEMENT_MARKER_CHAR = '+'
+
+
 class CmdUserInterface(trek.UserInterface):
     """UI for trek based on simple cmd.Cmd CLI."""
     class LabelIterators:
@@ -237,13 +255,29 @@ class CmdUserInterface(trek.UserInterface):
 
         return f"[{hull_str}]{shield_str} "
 
+    def add_movement_markers(self, layer, obj, scale):
+        a, b = [obj.compute_move(ticks=n) for n in (1, 2)]
+        if obj.point == a: # no movement, so no movement marker
+            return
+        # garauntee that the first marker doesn't overlap the object:
+        if a is not None:
+            rel_neighbor = cardinal_to_neighbor[obj.point.cardinal_direction_to(a)]
+            cell = obj.point.grid_cell(scale) + rel_neighbor
+            layer[cell].append(MOVEMENT_MARKER_CHAR)
+
+        # for now the second marker goes wherever it goes
+        # TODO this doesn't align with a in all cases
+        # if b is not None:
+        #     layer[b.grid_cell(scale)].append('x')
+
     def short_range_map(self, center_point, radius=8, scale=1.0):
         """Returns the map for a given bounding box."""
-        cells = collections.defaultdict(list)
+        obj_layer = collections.defaultdict(list)
+        # for "graphics" that add info rather than show objects
+        hud_layer = collections.defaultdict(list)
         for o in self.simulation.get_objects():
-            # conveniently, round() returns an integer
-            grid_point = trek.point(round(o.point.x * scale), round(o.point.y * scale))
-            cells[grid_point].append(o)
+            obj_layer[o.point.grid_cell(scale)].append(o)
+            self.add_movement_markers(hud_layer, o, scale)
         s = ''
         # set bounding box including bounds-check for attempting to show territory outside the map
         scaled_ceil = lambda v: math.ceil(scale * v)
@@ -256,10 +290,7 @@ class CmdUserInterface(trek.UserInterface):
             row = f'{round(y / scale):2} ' if y % 2 == 0 else '   ' # label every other row
             for x in range(lower_left.x, upper_right.x + 1):
                 current_point = trek.point(x, y)
-                if current_point in cells:
-                    row += self.cell_string(cells[current_point])
-                else:
-                    row += '. '
+                row += self.cell_string(current_point, obj_layer, hud_layer)
             rows.append(row)
         s += '\n'.join(reversed(rows))
         # column labels in bottom row, but need to be spaced out
@@ -328,15 +359,19 @@ class CmdUserInterface(trek.UserInterface):
 
         return obj._ui_label
 
-    def cell_string(self, contents):
-        """Emits a string to describe a single grid cell."""
+    def cell_string(self, point, obj_layer, hud_layer):
+        """Emits a string for a single grid cell in the short range map."""
         # TODO Natural phenomena (ie a star) aren't included in the count.
         #   so if only one artificial object is present, its shown as eg ^T.
         #   perhaps ';' for multiple contacts which includes natural phenomena eg: ;7
-        # :7  multiple contacts; in this case 7 contacts
-        if (object_cnt := len(contents)) > 1:
-            return f':{object_cnt}'
-        return contents[0]._ui_label
+        if contents := obj_layer.get(point, None):
+            if (object_cnt := len(contents)) > 1: # :7  multiple contacts; in this case 7 contacts
+                return f':{object_cnt}'
+            return contents[0]._ui_label
+        elif contents := hud_layer.get(point, None):
+            if MOVEMENT_MARKER_CHAR in contents: # so far the only official HUD item
+                return MOVEMENT_MARKER_CHAR + ' '
+        return '. ' # empty cells get a dot as a kind of spatial grid marker
 
     def get_object(self, identifying_string, side=None, controller=None):
         """Returns the object with the given UI label or else the object's designator."""

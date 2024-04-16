@@ -9,7 +9,7 @@
 ## iteration 10
 [v] why are enemies off the map?
 [v] `status` command: by default show status of all units
-[ ] add movement prediction markers to short range map
+[v] add movement prediction markers to short range map
 [ ] pause simulation after each combat
 [ ] revise combat report; it's hard to read
 
