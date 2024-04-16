@@ -4,8 +4,11 @@
     AI action selection is last in the tick so the user can be aware of headings
 [v] damage system for space stations; crib from Ship
 [v] automated testing of i9 diff
-[ ] playtesting
+[v] playtesting
 
+## iteration 10
+[ ] why are enemies off the map?
+	This is induced after running simulation for awhile; need better UX to observe problem
 
 Future Iterations
 =================

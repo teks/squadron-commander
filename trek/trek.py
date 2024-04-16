@@ -237,6 +237,10 @@ class ArtificialObject(SpaceborneObject):
 
         sys_dmg = self.system_damage(hull_dmg)
 
+        # can send message now that changes to self are applied
+        if self.current_hull <= 0.0 < self.current_hull + hull_dmg:
+            self.message(DestroyedObjectMessage(self))
+
         return (self.is_destroyed(), shield_dmg, hull_dmg, sys_dmg)
 
     # TODO Hulk instance for wreckage? maybe raiders scavenge it
@@ -476,6 +480,7 @@ class EnemyShip(Ship):
             target = self.choose_closest(priority_targets)
             if target is not None:
                 self.order(Order.ATTACK, target=target)
+                self.message(ChosenNewTarget(self, target))
 
     def post_action(self):
         super().post_action()
@@ -543,12 +548,25 @@ class Message:
     """Used for sending and receiving signals resulting from game events."""
 
 @dataclasses.dataclass
+class PausedSimulation(Message):
+    tick: int
+
+@dataclasses.dataclass
 class ArriveMessage(Message):
     ship: Ship
 
 @dataclasses.dataclass
 class SpawnMessage(Message):
     obj: SpaceborneObject
+
+@dataclasses.dataclass
+class DestroyedObjectMessage(Message):
+    obj: SpaceborneObject
+
+@dataclasses.dataclass
+class ChosenNewTarget(Message):
+    obj: Ship
+    target: ArtificialObject
 
 @dataclasses.dataclass
 class CombatReport(Message):
@@ -717,6 +735,7 @@ class Simulation:
                 s.post_action()
 
             if self.should_pause():
+                self.message(PausedSimulation(self.clock))
                 break
 
 
