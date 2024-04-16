@@ -61,8 +61,34 @@ add new SBO type: enemy
 [v] poke around for other bits
 ```
 
+## iteration 7
+combat engine MVP; no encounters yet just mechanics + tests
+```
+[ ] entry point for 1 tick of combat is simulation.combat(units)
+[ ] Step 1: assign base_combat_value to each ship
+[ ] Step 2:
+    * Compute side CV
+    * choose superior & inferior side; find CV_ratio
+    * CRT & simulation.roll_crt()
+    * note retreated ships
+[ ] Step 3: Compute damage from side CV, applying CRT results
+[ ] Step 4:
+    * Apply damage to shields then hull
+    * check for DESTRUCTION and send message if needed
+```
+
 ## Future Iterations:
 ```
+[ ] combat
+    [ ] shield recharge; see stash
+    [ ] Step 2: individual ship retreat
+    [ ] system damage
+        [ ] add systems to ships
+        [ ] on hull damage, apply systems damage
+    [ ] mull a 'maneuverability' value for ships
+    [ ] morale: depletion, restoration, and effect on combat
+    [ ] refine ship's combat value (shields down, morale, etc)
+    [ ] Step 5: retreat movement
 [ ] enemy ships:
     AI-driven enemy vessels' class should be child of Ship;
     enemies assign orders to themselves over time
