@@ -10,6 +10,13 @@ Iterations
 [v] issue: SpaceColonies have 0 max shields but still have a shields Component
     so rejigger so they have shields (easier than removoing the Component).
 [ ] mull renaming project to 'Squadron Commander' / SQUADCOM
+    [v] rename trek module to 'engine'
+    [ ] rename trek package
+    [ ] rename pytrek.py
+    [ ] rename test_trek.py
+    [ ] change README.md
+    [ ] change HOWTOPLAY.md
+    [ ] search for remaining textual uses of 'trek'
 [v] second-to-lastly go over docstrings to Cmd do_foo methods one more time
 [ ] lastly, add a license & push to github
 
