@@ -1,8 +1,14 @@
 ### i12 - remaining game engine work
 [ ] ship repairs - see doc/design.md Ship Engineering & Repair
+    [ ] basic repair: each ship gets a repair rate & repairs a bit each tick
+    [ ] no progress on a combat tick
+    [ ] x1.0 FTL
+    [ ] x1.5 waiting alone
+    [ ] x2.0 waiting with a friendly (n friendlies together means x2.0 for each of them)
     [ ] pause simulation when a ship is waiting and repairs are complete
         Order.REPAIR?
     [ ] show estimated time to fix
+    [ ] morale should affect repair rate
 [ ] retreat should alter behavior of retreating enemies;
     they should actually change their destination for a bit
 

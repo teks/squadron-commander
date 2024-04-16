@@ -395,7 +395,6 @@ class ArtificialObject(SpaceborneObject):
         pass
 
     def post_action(self):
-        assert self.current_order == Order.IDLE
         self.recharge_shields()
 
 
@@ -795,7 +794,7 @@ class Simulation:
         no co-belligerents among the participants.
         """
         # TODO should this method be a class method in CombatSide()?
-        participant_list = list(participants) # might be an iterator so save its contents
+        participant_list = list(p for p in participants if not p.is_destroyed())
         # split participants into sides
         friendly_side, enemy_side = CombatSide.sort_into_sides(*participant_list)
         # if either side is empty, just give up
@@ -877,19 +876,20 @@ class Simulation:
         stop_time = self.clock + duration
         while self.clock < stop_time:
             self.clock += 1
-            # because there's no initiative, keep events effectively simultaneous
+            # because there's no initiative, keep events effectively simultaneous:
+            # first, everybody moves
             for s in self.get_objects():
                 s.move()
 
-            # combat step
+            # second, combat (based on present locations)
             post_combat_pause = False
             for place, participants in self.colocate_objects().items():
-                report = self.combat(p for p in participants if not p.is_destroyed())
+                report = self.combat(participants)
                 post_combat_pause = post_combat_pause or report is not None
 
+            # third, post-combat activity
             for s in self.get_objects():
                 s.post_action()
-
             for o in self.get_objects():
                 o.plan_move()
 
