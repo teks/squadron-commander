@@ -100,7 +100,6 @@ def zone(*args, **kwargs):
 
 class SpaceborneObject(abc.ABC):
     """All vessels, planets, stations, and other objects."""
-    type = None # for organizing spaceborne objects by category
 
     def __init__(self, designation: str, point: Point, simulation=None):
         self.designation = designation
@@ -218,10 +217,16 @@ class ArtificialObject(SpaceborneObject):
         self.recharge_shields()
 
 
+class SpaceColony(ArtificialObject):
+    """Orbital and deep-space habitats."""
+    side = 'friendly'
+
+
 class Ship(ArtificialObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
     cruising_speed = 1 # warp, not newtonian
     acceleration = 0.1 # warp, not newtonian
+    side = 'neutral'
 
     def __init__(self, designation: str, point: Point, simulation=None):
         """Cruising speed is in light year per hour."""
@@ -395,12 +400,12 @@ class Ship(ArtificialObject):
 
 
 class FriendlyShip(Ship):
-    type = 'friendly'
+    side = 'friendly'
     max_shields = 1
 
 
 class EnemyShip(Ship):
-    type = 'enemy'
+    side = 'enemy'
     max_shields = 1
 
     def act(self, simulation):
@@ -419,8 +424,8 @@ class CombatSide:
     def sort_into_sides(cls, *participants):
         friendly_side, enemy_side = CombatSide(), CombatSide()
         for p in participants:
-            {FriendlyShip.type: friendly_side.members,
-             EnemyShip.type: enemy_side.members}[p.type].add(p)
+            {FriendlyShip.side: friendly_side.members,
+             EnemyShip.side: enemy_side.members}[p.side].add(p)
         return friendly_side, enemy_side
 
     def __len__(self):
@@ -508,22 +513,22 @@ class Simulation:
         self.clock = clock
         self.objects = {}
         for o in objects:
-            k = (o.type, o.designation)
+            k = (o.side, o.designation)
             if k in self.objects:
                 raise ValueError(f"Object with duplicate key {k} detected.")
             o.simulation = self
             self.objects[k] = o
 
-    def get_objects(self, type=None):
-        """Yield objects, optionally by type."""
-        yield from (self.objects.values() if type is None else
-                    (o for (t, _), o in self.objects.items() if t == type))
+    def get_objects(self, side=None):
+        """Yield objects, optionally by side."""
+        yield from (self.objects.values() if side is None else
+                    (o for (s, _), o in self.objects.items() if s == side))
 
-    def get_object(self, type, designation):
-        return self.objects[(type, designation)]
+    def get_object(self, side, designation):
+        return self.objects[(side, designation)]
 
     def add_object(self, obj):
-        k = (obj.type, obj.designation)
+        k = (obj.side, obj.designation)
         if k in self.objects:
             raise ValueError(f"Object with key {k} already found: {self.objects[k]}")
         self.objects[k] = obj
@@ -599,7 +604,7 @@ class Simulation:
 
     def idle_ships(self):
         """Returns a set of idle friendly vessels."""
-        return set(s for s in self.get_objects(FriendlyShip.type) if not s.has_orders())
+        return set(s for s in self.get_objects(FriendlyShip.side) if not s.has_orders())
 
     def should_pause(self):
         if not self.ready_to_run():

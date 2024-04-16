@@ -155,15 +155,15 @@ class CmdUserInterface(trek.UserInterface):
         self.cli = CLI()
         self.cli._cmd_ui = self
         self.label_prefixes = {
-            trek.FriendlyShip.type: '^',
-            trek.EnemyShip.type: '!',
+            trek.FriendlyShip.side: '^',
+            trek.EnemyShip.side: '!',
             # TODO stars
         }
         # keep track of iteration of spaceborne object label usage
         label_chars = string.digits + string.ascii_uppercase
         self.label_iterators = {
-            trek.FriendlyShip.type: iter(label_chars),
-            trek.EnemyShip.type: iter(label_chars),
+            trek.FriendlyShip.side: iter(label_chars),
+            trek.EnemyShip.side: iter(label_chars),
         }
         # set labels for the objects in the simulation
         for o in sorted(simulation.get_objects(), key=lambda o: o.designation):
@@ -246,8 +246,8 @@ class CmdUserInterface(trek.UserInterface):
         """
         ship_cnt = 0
         for o in contents:
-            match o.type:
-                case trek.FriendlyShip.type:
+            match o.side:
+                case trek.FriendlyShip.side:
                     ship_cnt += 1
                 case _:
                     raise ValueError(f"Type for {o} isn't supported.")
@@ -256,7 +256,7 @@ class CmdUserInterface(trek.UserInterface):
 
     def set_ui_label(self, obj):
         """Attach a unique UX label [0-9A-Z] to an object, then return that label."""
-        obj._ui_label = self.label_prefixes[obj.type] + next(self.label_iterators[obj.type])
+        obj._ui_label = self.label_prefixes[obj.side] + next(self.label_iterators[obj.side])
         return obj._ui_label
 
     def cell_string(self, contents):

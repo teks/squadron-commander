@@ -29,7 +29,7 @@ if __name__ == '__main__':
         raise NotImplementedError(f"Unknown scenario '{s}'")
 
     simulation = trek.default_scenario()
-    for ship in simulation.get_objects(trek.FriendlyShip.type):
+    for ship in simulation.get_objects(trek.FriendlyShip.side):
         ship.order(ship.Order.MOVE, destination=trek.point(32, 32))
     ui = cli.CmdUserInterface(simulation)
     print(ui.short_range_map(trek.point(60, 60)))

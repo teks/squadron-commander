@@ -66,7 +66,7 @@ def test_simulation_run_not_ready():
 @pytest.fixture
 def ready_simulation():
     simulation = trek.default_scenario()
-    for s in simulation.get_objects(trek.FriendlyShip.type):
+    for s in simulation.get_objects(trek.FriendlyShip.side):
         # everyone meet in the middle
         s.order(trek.FriendlyShip.Order.MOVE, destination=trek.point(32, 32))
     return simulation
@@ -113,8 +113,8 @@ def combat_sides():
 
 def test_CombatSide_sort_into_sides():
     friendly_side, enemy_side = combat_sides()
-    assert (all(m.type == trek.FriendlyShip.type for m in friendly_side.members)
-        and all(m.type == trek.EnemyShip.type for m in enemy_side.members))
+    assert (all(m.side == trek.FriendlyShip.side for m in friendly_side.members)
+            and all(m.side == trek.EnemyShip.side for m in enemy_side.members))
 
 def setup_sides():
     sides = combat_sides()
