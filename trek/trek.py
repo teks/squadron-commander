@@ -131,6 +131,7 @@ class Ship(SpaceborneObject):
     class Order(enum.Enum):
         MOVE = 'move'
         ATTACK = 'attack'
+        IDLE = 'idle'
 
         def is_movement_order(self):
             # have to delay evaluating eg self.MOVE to give time for Enum magic
@@ -171,7 +172,7 @@ class Ship(SpaceborneObject):
                      y=(relative_dest.y * distance_ratio))
 
     def destination(self, pos_if_none=True):
-        if self.current_order.is_movement_order():
+        if self.has_orders() and self.current_order.is_movement_order():
             return self.current_order_params['destination']
         return self.point if pos_if_none else None
 
@@ -310,6 +311,8 @@ class Ship(SpaceborneObject):
         self.recharge_shields()
         # TODO set this up so there's no need to add to it with every new order
         match self.current_order:
+            case None | self.Order.IDLE:
+                pass
             case self.Order.MOVE:
                 self.point += self.displacement()
                 if self.point == self.destination():
