@@ -40,9 +40,11 @@ def point(*args, **kwargs):
 
 
 class SpaceborneObject(abc.ABC):
-    pass
+    """All vessels, planets, stations, and other objects."""
+    position: Point
 
 
+@dataclasses.dataclass
 class Ship(SpaceborneObject):
     pass
 
@@ -55,7 +57,7 @@ class Map:
     def __init__(self, contents=None):
         if contents is None:
             contents = dict()
-        self.contents = contents # tuple location -> spaceborne object
+        self.contents = contents # set or list most likely
 
 
 class UserInterface:
@@ -68,6 +70,7 @@ class Simulation:
 
     Also can access most of the semantics too.
     """
-    user_interface: UserInterface
     map: Map
+    # left None here for bootstrapping porpoises
+    user_interface: UserInterface = None
     clock: int = 0 # game clock; starts at 0. User will be shown stardate
