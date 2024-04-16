@@ -52,7 +52,6 @@ class WavesOfRaiders(trek.Scenario):
                     for _ in range(cnt)]
             for enemy in wave:
                 self.simulation.add_object(enemy)
-                trek.SpawnMessage(enemy)
                 self.enemies.append(enemy)
             yield True
 

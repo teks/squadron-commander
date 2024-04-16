@@ -10,8 +10,9 @@
          4   8
 [ ] complete a few playthroughs, notes here:
     [v] need `mv ^3 @1`
-    [ ] When arriving at a destination, report on whom else is there:
-        21h ARRIVAL: ^1 Defender-2 has arrived at Point(x=32.0, y=11.0). Also present is @1 New Ceylon.
+    [ ] hahaha fuck! newly spawned enemies jam the simulation:
+        Not ready to run; 3 unit(s) need orders:
+        !4 Raider-E   ( 1.00, 26.00) W=1.00 CV=1.00 [###])))  NO ORDERS
 [ ] retreat should alter behavior of retreating enemies;
     they should actually retreat towards their origin direction for a bit
     (it's a way of driving enemies away from a base or target)
@@ -23,6 +24,7 @@ for now symmetrically:
 [ ] cruiser (enemy: vulture)
 ## ux stuff:
 [ ] this command raises due to exceeding map bounds: map 37 16 5 10
+    (need zoomable map command for getting a better look at crowded space)
 
 Roadmap
 =======
@@ -85,6 +87,8 @@ Backlog
 [ ] `wait <unit> <duration>`  <-- add duration?
 
 ### low priority
+[ ] When arriving at a destination, report on whom else is there:
+    21h ARRIVAL: ^1 Defender-2 has arrived at Point(x=32.0, y=11.0). Also present is @1 New Ceylon.
 [ ] morale should affect repair rate
 [ ] auto-retreat button: order that toggles `ship.evasive` & retreat_check checks it
 [ ] ships should be able to exceed cruising speed at risk of drive damage

@@ -171,6 +171,9 @@ class SpaceborneObject(abc.ABC):
         """Receive a Message, acting on it if needed."""
         pass # no action in SpaceborneObject
 
+    def initialize(self, simulation):
+        self.simulation = simulation
+
 
 class Side(enum.Enum):
     """When it comes to fights and other interactions, what side is this object on?"""
@@ -670,9 +673,13 @@ class EnemyShip(Ship):
 
     def post_action(self):
         super().post_action()
-        # Not clear if AI action assignment should happen during post_action
-        # or or in its own tick step.
         self.choose_target()
+
+    def initialize(self, simulation):
+        super().initialize(simulation)
+        self.choose_target()
+        self.plan_move()
+
 
 @dataclasses.dataclass
 class CombatSide:
@@ -854,13 +861,24 @@ class Simulation:
         """Get a single object by side and object's designation."""
         return self.objects[(side, designation)]
 
-    def add_object(self, obj):
+    def add_object_helper(self, obj: SpaceborneObject):
         k = (obj.side, obj.designation)
         if k in self.objects:
             raise ValueError(f"Object with key {k} already found: {self.objects[k]}")
-        obj.simulation = self
         self.objects[k] = obj
+
+    def add_object(self, obj: SpaceborneObject):
+        """Add the given object to the simulation and initialize it."""
+        self.add_object_helper(obj)
+        obj.initialize(self)
         self.message(SpawnMessage(obj))
+
+    def populate(self, *objects):
+        """Add the given objects to the simulation, but don't initialize them.
+
+        Suitable for setting up a new simulation.
+        """
+        [self.add_object_helper(o) for o in objects]
 
     def destroy_object(self, obj):
         if not obj.is_destroyed(): # destroy it if it's not already
@@ -944,7 +962,7 @@ class Simulation:
     def initialize(self):
         """Perform setup actions.
 
-        Can't do this until the user's finished adding objects.
+        Best not do this until the user's finished adding objects.
         """
         for o in self.get_objects(controller=Controller.ENEMY_AI):
             o.choose_target()
