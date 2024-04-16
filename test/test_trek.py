@@ -189,3 +189,22 @@ def test_Simulation_combat__damage(mocker, retreat, advantage, fs, fh, es, eh):
         and all(math.isclose(es, u.current_shields) for u in em)
         and all(math.isclose(eh, u.current_hull   ) for u in em)
     )
+
+@pytest.mark.parametrize(
+    'i_coord, i_speed, e_early, e_time, e_coord', [ # <-- e is for expectations
+    [(20.0, 40.0), 1.0, True,  15, (30.606601718, 30.606601718)], # base case, easy intercept
+    [(20.0, 40.0), 1.5, True,  10, (27.071067812, 27.071067812)], # fast interceptor case
+    [(20.0, 40.0), 0.5, False, 40, (40.0, 40.0)], # kinda slow interceptor case
+    [(19.0, 20.0), 1.0, False, 29, (40.0, 40.0)], # chase case
+    [(19.0, 20.0), 1.5, True,   2, (21.414213562, 21.414213562)], # chase + fast interceptor case
+])
+def test_Simulation_intercept_point(i_coord, i_speed, e_early, e_time, e_coord):
+    """Go through various scenarios and confirm interception works"""
+    target = trek.Ship('target', trek.point(20.0, 20.0))
+    target.order(trek.Ship.Order.MOVE, destination=trek.point(40.0, 40.0))
+    interceptor = trek.Ship('interceptor', trek.point(*i_coord))
+    interceptor.speed = i_speed
+
+    early, point, time = interceptor.intercept_point(target)
+
+    assert (e_early, e_time) == (early, time) and trek.point(*e_coord).isclose(point)

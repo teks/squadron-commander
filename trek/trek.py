@@ -2,6 +2,7 @@
 
 """
 
+import sys
 import math
 import typing
 import dataclasses
@@ -49,6 +50,10 @@ class Point(typing.NamedTuple):
 
     def __sub__(self, other):
         return self.binary_operator(other, operator.sub)
+
+    def isclose(self, other):
+        """math.isclose for points"""
+        return math.isclose(self.x, other.x) and math.isclose(self.y, other.y)
 
     def delta_to(self, other):
         """Return the relative position of other wrt self.
@@ -169,6 +174,46 @@ class Ship(SpaceborneObject):
         if self.current_order.is_movement_order():
             return self.current_order_params['destination']
         return self.point if pos_if_none else None
+
+    def intercept_point(self, target) -> (bool, Point, int):
+        """Return the earliest time & place at which self can intercept the target.
+
+        It's an estimatd solution, but should always be accurate enough given
+        quantization of time into ticks.  Returns a tuple:
+            (intercepted_before_destination, intercept_point, ticks_to_intercept)
+        """
+        # I figured out an equation for this but I couldn't solve it, hence estimation
+        ### set constants
+        t_one_tick_disp = target.displacement(ticks=1)
+        # helps detect meet-at-destination case
+        t_dest = target.destination()
+        t_max_travel_dist = target.point.distance(t_dest)
+
+        ### initial values
+        d_last = sys.float_info.max # helps check for impossible interception
+        elapsed_time = 0
+        t_pos  = target.point
+        t_travel_dist = 0
+
+        ### walk along the target's travel path, trying to find an intercept point
+        while True:
+            elapsed_time += 1
+            t_travel_dist += target.speed
+
+            if t_travel_dist >= t_max_travel_dist:
+                t_pos = t_dest # lastly, check destination
+            else:
+                t_pos += t_one_tick_disp
+
+            d = self.point.distance(t_pos)
+            if d <= elapsed_time * self.speed:
+                return True, t_pos, elapsed_time # found intercept point
+
+            # distance to target should shrink each tick;
+            # if it stalls or starts growing, give up and meet at the destination
+            if d >= d_last:
+                return False, t_dest, self.point.distance(t_dest) / self.speed
+            d_last = d
 
     def recharge_shields(self):
         if self.fought_last_tick:
