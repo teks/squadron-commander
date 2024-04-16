@@ -32,7 +32,8 @@ Iterations
 ## Iteration 4
 fix random stuff, look for TODOs and cleanup:
 ```
-[ ]
+[ ] stop using uncommited code as initializer
+    [ ] it'll need argparse eventually anyway, just do it now
 [ ]
 [ ]
 [ ]
