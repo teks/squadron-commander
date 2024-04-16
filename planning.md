@@ -20,7 +20,7 @@ Iterations
 
 ## Iteration 3: Timekeeping + Friendly ship movement
 ```
-[ ] move a ship instantly
+[v] move a ship instantly, disregarding velocity
 [ ] design FTL system; probably linear hyperspace speed in squares/day
 [ ] basic timekeeping, CF `design.md`, Time & Timing
     [ ] after each order to a ship:

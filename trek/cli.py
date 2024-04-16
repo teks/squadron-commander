@@ -16,6 +16,10 @@ class CLI(cmd.Cmd):
         map_str = self._cmd_ui.long_range_map()
         print(map_str)
 
+    def do_move(self, arg):
+        ship_desig, x, y = arg.split()
+        self._cmd_ui.move_ship(ship_desig, trek.point(int(x), int(y)))
+
     def do_EOF(self, _):
         print()
         return self.do_quit(_)
@@ -136,6 +140,19 @@ class CmdUserInterface(trek.UserInterface):
             o._cui_designator = self.designation_prefixes[cls] + next(self.designators[cls])
         return o._cui_designator
 
+    def get_object(self, object_desig):
+        """Returns the object with the given designator."""
+        if object_desig is None: # avoid fetching a random thing by accident
+            raise ValueError("'None' is an invalid object designator")
+        for o in self.simulation.map.contents:
+            if getattr(o, '_cui_designator', None) == object_desig:
+                return o
+        raise ValueError(f"Object designated '{object_desig}' not found.")
+
+    def move_ship(self, ship_desig, destination):
+        ship = self.get_object(ship_desig)
+        ship.point = destination
+        print("SHIP", ship, "MOVED TO", destination)
 
 # maybe not here in the long run
 if __name__ == '__main__':
