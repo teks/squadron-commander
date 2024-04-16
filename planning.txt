@@ -19,7 +19,12 @@ Iterations
     [v] search for remaining textual uses of 'trek'
 [v] second-to-lastly go over docstrings to Cmd do_foo methods one more time
 [v] lastly, add a license
+[v] it needs to know its own version
 [ ] also lastly, push to github
+    [ ] scrub real name from git commits godammit
+    [ ] configure github ssh key
+    [ ] set repo to public
+    [ ] git push -u origin main
 
 
 Roadmap

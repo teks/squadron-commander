@@ -10,6 +10,8 @@ import enum
 import operator
 import random
 
+VERSION = '0.1.0-beta'
+
 # min x & y are both 1, not 0, for both spaces and zones
 # TODO should be settings on Simulation not globals
 MAX_X = 64

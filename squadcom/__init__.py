@@ -1,4 +1,5 @@
 from .engine import (
+    VERSION,
     MAX_X, MAX_Y, # constants that should be settings
     Point, point, # geometry
     SpaceborneObject, ArtificialObject, # base classes for objects floating in space

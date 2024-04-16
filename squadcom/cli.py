@@ -177,7 +177,8 @@ class CLI(cmd.Cmd):
     intro = (
         "Squadron Commander: A 2D interstellar wargame.\n"
         "   Inspired by the 'trek' games of the 70s and 80s\n"
-        "   'help' or '?' to get started; try 'sm' to view the field of play."
+        "   'help' or '?' to get started; try 'sm' to view the field of play.\n"
+        "   Release version: " + squadcom.VERSION
     )
 
     doc_header = "Commands (type help <command>)"
