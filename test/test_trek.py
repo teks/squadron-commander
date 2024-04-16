@@ -98,3 +98,62 @@ def test_simulation_run(ready_simulation):
     }
     actual_positions = {s.designation: s.point for s in ready_simulation.get_objects()}
     assert expected_positions == actual_positions
+
+def friendly_squadron():
+    return [trek.FriendlyShip(d, trek.point(1, 1)) for d in ('a', 'b', 'c')]
+
+def enemy_squadron():
+    return [trek.EnemyShip(d, trek.point(1, 1)) for d in ('x', 'y', 'z')]
+
+def combat_sides():
+    fs = friendly_squadron()
+    es = enemy_squadron()
+    return trek.CombatSide.sort_into_sides(*fs, *es)
+
+def test_CombatSide_sort_into_sides():
+    friendly_side, enemy_side = combat_sides()
+    assert (all(m.type == trek.FriendlyShip.type for m in friendly_side.members)
+        and all(m.type == trek.EnemyShip.type for m in enemy_side.members))
+
+def setup_sides():
+    sides = combat_sides()
+    for s in sides:
+        s.cv_modifier = 1
+    return sides
+
+def test_CombatSide_retreat_chance__even_fight():
+    """should not retreat when odds are even"""
+    fs, es = setup_sides()
+    assert 0.0 == fs.retreat_chance(es)
+
+def test_CombatSide_retreat_chance__1v2():
+    """should not retreat when odds are even"""
+    fs, es = setup_sides()
+    for s in fs.members:
+        s._combat_value = 1.0
+    for s in es.members:
+        s._combat_value = 2.0
+    assert 0.35 == fs.retreat_chance(es)
+
+def test_CombatSide_retreat_chance__2v1():
+    """should not retreat when odds are even"""
+    fs, es = setup_sides()
+    for s in fs.members:
+        s._combat_value = 2.0
+    for s in es.members:
+        s._combat_value = 1.0
+    assert 0.0 == fs.retreat_chance(es)
+
+def test_CombatSide_retreats_from__even_fight():
+    """Shouldn't retreat if the fight is even."""
+    fs, es = setup_sides()
+    retreated = fs.retreats_from(es, 0.0)
+    assert not retreated and len(fs.retreaters) == 0
+
+def test_CombatSide_retreats_from__hopeless_case():
+    """Should always retreat when the fight is hopeless."""
+    fs, es = setup_sides()
+    for s in es.members:
+        s._combat_value = 9001
+    retreated = fs.retreats_from(es, 0.999)
+    assert retreated and len(fs.retreaters) == 3

@@ -248,7 +248,7 @@ class CombatSide:
         self.retreaters = set()
 
     @classmethod
-    def sort_into_sides(cls, participants):
+    def sort_into_sides(cls, *participants):
         friendly_side, enemy_side = CombatSide(), CombatSide()
         for p in participants:
             {FriendlyShip.type: friendly_side.members,
@@ -263,17 +263,25 @@ class CombatSide:
         rcv = self.RETREAT_MODIFIER * sum(s.combat_value() for s in self.retreaters)
         return cv + rcv
 
-    def retreats_from(self, other_side):
-        """Does this side choose to retreat?"""
+    def retreat_chance(self, other_side):
+        """What is the chance of this side retreating?"""
         ratio = other_side.combat_value() / self.combat_value()
-        if ratio <= 1:
-            return False
+        if ratio <= 1: # self never retreats if it has the upper hand
+            return 0.0
         # set up so P(retreat) = 0 if ratio == 1, and P(retreat) = 0.7 if ratio == 3
         # TODO if ratio == 2 then P(retreat) = 0.35 which feels a bit low
         m, b = 0.35, -0.35
-        retreats = m * ratio + b < random.random() # 0.0 <= X < 1.0
+        return m * ratio + b
+
+    # I don't want to open the mocking can of worms, just being lazy:
+    #                                   vvvvvvvvvvvvvvv
+    def retreats_from(self, other_side, rand_value=None):
+        """Does this side choose to retreat?"""
+        # garaunteed: 0.0 <= random.random() < 1.0
+        retreats = self.retreat_chance(other_side) > (
+            random.random() if rand_value is None else rand_value)
         if retreats:
-            self.retreaters += self.members
+            self.retreaters |= self.members
         return retreats
 
     def receive_damage(self, damage):
@@ -341,7 +349,7 @@ class Simulation:
         # split participants into sides
         for p in participants:
             p.combat() # notify that they're participating in combat
-        friendly_side, enemy_side = CombatSide.sort_into_sides(participants)
+        friendly_side, enemy_side = CombatSide.sort_into_sides(*participants)
         CombatSide.assign_cv_modifiers(friendly_side, enemy_side)
 
         friendly_side.retreats_from(enemy_side)
