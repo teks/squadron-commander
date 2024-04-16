@@ -134,6 +134,7 @@ class Controller(enum.Enum):
     ENEMY_AI = 'enemy_ai'
 
 
+# TODO validate order params (consider changing to a conventional class to carry the payload)
 class Order(enum.Enum):
     """Controllable objects in the simulation need to be given orders."""
     MOVE = 'move'
@@ -171,6 +172,7 @@ class ArtificialObject(SpaceborneObject):
         self.planned_move = None
         self.current_order = None # start out with no orders
         self.current_order_params = None
+        self.speed = 0
 
     def has_orders(self):
         return self.current_order is not None
@@ -264,10 +266,13 @@ class ArtificialObject(SpaceborneObject):
         self.recharge_shields()
 
 
-# TODO space colonies are friendly for battle purposes but aren't controllable by the player
 class SpaceColony(ArtificialObject):
     """Orbital and deep-space habitats."""
     side = Side.FRIENDLY
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.current_order = Order.IDLE
 
 
 class Ship(ArtificialObject):
@@ -299,9 +304,15 @@ class Ship(ArtificialObject):
                      y=(relative_dest.y * distance_ratio))
 
     def destination(self):
-        if self.has_orders() and self.current_order.is_movement_order():
-            return self.current_order_params['destination']
-        return self.point
+        match self.current_order:
+            case None | Order.IDLE:
+                return self.point
+            case Order.MOVE:
+                return self.current_order_params['destination']
+            case Order.ATTACK:
+                t = self.current_order_params['target']
+                return self.intercept_point(t)[1]
+        raise ValueError(f"Can't find the destination for {self}")
 
     def intercept_point(self, target) -> (bool, Point, int):
         """Return the earliest time & place at which self can intercept the target.
@@ -326,6 +337,9 @@ class Ship(ArtificialObject):
         ### walk along the target's travel path, trying to find an intercept point
         while True:
             elapsed_time += 1
+            # TODO stop using obj.speed; instead call obj.velocity() which respects the current Order:
+            # if the target is IDLE and thus not moving, it's odd to add speed here.
+            # but t_max_travel_dist would be 0 in that case, and save us.
             t_travel_dist += target.speed
 
             if t_travel_dist >= t_max_travel_dist:
@@ -413,7 +427,6 @@ class Ship(ArtificialObject):
                 t = self.current_order_params['target']
                 if t.is_destroyed():
                     self.reset_order()
-                    self.message(TargetDestroyed(self, t))
             case self.Order.IDLE:
                 pass
             case None:
@@ -438,35 +451,37 @@ class EnemyShip(Ship):
         candidates = set()
         for o in targets:
             d = self.distance(o)
-            if d == min_distance:
-                candidates.add(o)
-            elif d < min_distance:
+            if d < min_distance:
                 min_distance, candidates = d, {o}
+            elif d == min_distance:
+                candidates.add(o)
+        if not candidates:
+            return None
         return random.choice(list(candidates)) # sets aren't sequences
 
     def choose_target(self):
-        """Chooses a target to attack."""
-        priority_targets, targets = set(), set()
-        for o in self.simulation.get_objects(Side.FRIENDLY):
-            (priority_targets if isinstance(o, SpaceColony) else targets).add(o)
-        if priority_targets:
-            return self.choose_closest(priority_targets)
-        if targets:
-            return self.choose_closest(targets)
-        return None
+        """Chose a target based on priority.
 
+        Priorities are:
+            1) the nearest FRIENDLY SpaceColony or settlement
+            TODO 2) the nearest FRIENDLY Starbase
+        """
+        if self.current_order is None:
+            self.order(Order.IDLE)
+            priority_targets, targets = set(), set()
+            for o in self.simulation.get_objects(Side.FRIENDLY):
+                (priority_targets if isinstance(o, SpaceColony) else targets).add(o)
+            # unsolved circular pursuit case:
+            # target = self.choose_closest(priority_targets if priority_targets else targets)
+            target = self.choose_closest(priority_targets)
+            if target is not None:
+                self.order(Order.ATTACK, target=target)
 
     def post_action(self):
         super().post_action()
-        # Not clear if AI action assignment should happen here or in its own tick step.
-        # Prioritize targets:
-        #   1) vulnerable targets: SpaceColony, settlements
-        #   2) any friendly
-        if self.current_order is None:
-            self.order(Order.IDLE)
-            target = self.choose_target()
-            if target:
-                self.order(Order.ATTACK, target=target)
+        # Not clear if AI action assignment should happen during post_action
+        # or or in its own tick step.
+        self.choose_target()
 
 @dataclasses.dataclass
 class CombatSide:
@@ -534,11 +549,6 @@ class ArriveMessage(Message):
 @dataclasses.dataclass
 class SpawnMessage(Message):
     obj: SpaceborneObject
-
-@dataclasses.dataclass
-class TargetDestroyed(Message):
-    attacker: Ship
-    defender: SpaceborneObject
 
 @dataclasses.dataclass
 class CombatReport(Message):
@@ -655,12 +665,20 @@ class Simulation:
         if self.user_interface is not None:
             self.user_interface.message(message)
 
-    def ready_to_run(self):
+    def initialize(self):
+        """Perform setup actions."""
+        for o in self.get_objects(controller=Controller.ENEMY_AI):
+            o.choose_target()
+
+    def ready_to_run(self, raise_exception=False):
         """Report whether the simulation is ready to run.
 
         Any idle friendly ships prevent the simulation from running.
         """
-        return len(self.objects_without_orders()) == 0
+        owo = self.objects_without_orders()
+        if raise_exception and owo:
+            raise self.NotReadyToRun(owo)
+        return not owo
 
     def objects_without_orders(self, side=None):
         """Returns a set of idle friendly vessels."""
@@ -676,12 +694,11 @@ class Simulation:
 
         return False
 
-    class NotReadyToRun(ValueError):
+    class NotReadyToRun(Exception):
         pass
 
     def run(self, duration=24):
-        if not self.ready_to_run():
-            raise self.NotReadyToRun()
+        self.ready_to_run(raise_exception=True)
         stop_time = self.clock + duration
         while self.clock < stop_time:
             self.clock += 1
@@ -721,4 +738,5 @@ def default_scenario(enemies=False, space_colonies=False):
         for (d, p) in (('New Ceylon', point(40, 12)),
                        ('Harmony',    point(28, 56))):
             s.add_object(SpaceColony(d, p))
+    s.initialize()
     return s

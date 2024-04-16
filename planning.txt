@@ -13,6 +13,15 @@ Future Iterations
   lists everything in the area and gives status
   maybe a 'sitrep' cmd issues to a ship?
 
+### i9 playtesting feedback
+[ ] `status` command: by default show status of all units
+    [ ] `status <unit>...` to show status of chosen units
+[ ] `wait <unit>` command that assigns IDLE
+[ ] Message when a raider chooses a new target
+[ ] Message for interception
+[ ] message for tick passage
+[ ] pause simulation after each combat
+
 ### combat
 [ ] force movement on retreat
   [ ] retreat moves using EMERGENCY SPEED

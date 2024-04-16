@@ -47,6 +47,7 @@ class PointAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, trek.point(*values))
 
+SHIP_ID_ARG = ('ship_id', dict(type=str))
 
 class CommandLineParser(argparse.ArgumentParser):
     """Needed because they let an awful glaring bug into a release:
@@ -87,6 +88,7 @@ class CLI(cmd.Cmd):
         ['radius', dict(nargs='?', type=int, default=8)],
     ))
 
+    # TODO commands are looking boilerplate-y, consider a callback or similar
     def do_map(self, arg):
         parsed_line = self.map_parser.parse_line(arg)
         if parsed_line is not None:
@@ -103,8 +105,11 @@ class CLI(cmd.Cmd):
     #     map_str = self._cmd_ui.long_range_map()
     #     print(map_str)
 
+    def do_list(self, _):
+        self._cmd_ui.object_catalog()
+
     move_parser = CommandLineParser(arguments=(
-        ('ship_id', dict(type=str)),
+        SHIP_ID_ARG,
         ('destination', dict(nargs=2, type=int, action=PointAction)),
         # TODO add speed setting to move & attack cmd?
         # ('speed', dict(nargs='?', type=int, default=None)),
@@ -117,7 +122,7 @@ class CLI(cmd.Cmd):
             self._cmd_ui.move_ship(parsed_line.ship_id, parsed_line.destination)
 
     attack_parser = CommandLineParser(arguments=(
-        ('ship_id', dict(type=str)),
+        SHIP_ID_ARG,
         ('target_id', dict(type=str)),
     ))
 
@@ -127,12 +132,24 @@ class CLI(cmd.Cmd):
             self._cmd_ui.attack(
                 parsed_line.ship_id, parsed_line.target_id)
 
+    wait_parser = CommandLineParser(arguments=(
+        SHIP_ID_ARG,
+        # TODO support timeouts in Order.IDLE params: ('duration', dict(type=int)),
+    ))
+
+    def do_wait(self, arg):
+        parsed_line = self.wait_parser.parse_line(arg)
+        if parsed_line is not None:
+            self._cmd_ui.wait(parsed_line.ship_id)
+
     def do_run(self, arg):
         self._cmd_ui.run()
 
     # set short commands (python 3 is just <3)
+    do_ls = do_list
     do_mv = do_move
-    do_at = do_attack
+    do_a = do_attack
+    do_w = do_wait
     do_sm = do_smap
     do_r = do_run
 
@@ -169,11 +186,21 @@ class CmdUserInterface(trek.UserInterface):
     def start(self):
         return self.cli.cmdloop()
 
+    def point_str(self, point):
+        return f"({point.x:5.2f}, {point.y:5.2f})"
+
     def run(self, duration=24):
         try:
             self.simulation.run(duration)
         except self.simulation.NotReadyToRun as e:
-            print("Not ready to run; do all ships have orders?")
+            print("Not ready to run; vessels needing orders:")
+            [print(o._ui_label, o.designation, self.point_str(o.point)) for o in e.args[0]]
+
+    def object_catalog(self):
+        lines = []
+        for obj in self.simulation.get_objects():
+            lines.append(f"{obj._ui_label} {obj.designation:10} {self.point_str(obj.point)} {obj}")
+        print('\n'.join(sorted(lines)))
 
     def short_range_map(self, center_point, radius=8, scale=1.0):
         """Returns the map for a given bounding box."""
@@ -183,10 +210,6 @@ class CmdUserInterface(trek.UserInterface):
             grid_point = trek.point(round(o.point.x * scale), round(o.point.y * scale))
             cells[grid_point].append(o)
         s = ''
-        # debugging output
-        for cell, occupants in cells.items():
-            for obj in occupants:
-                s += f"{obj._ui_label} : {cell} : {obj}\n"
         # set bounding box including bounds-check for attempting to show territory outside the map
         scaled_ceil = lambda v: math.ceil(scale * v)
         lower_left = trek.point(max(1, scaled_ceil(center_point.x - radius)),
@@ -295,7 +318,7 @@ class CmdUserInterface(trek.UserInterface):
             return None
 
     def move_ship(self, ship_id, destination):
-        ship = self.get_object(ship_id, trek.Controller.PLAYER)
+        ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
         if ship is not None:
             ship.order(trek.Order.MOVE, destination=destination)
             self.check_orders()
@@ -307,10 +330,16 @@ class CmdUserInterface(trek.UserInterface):
             ship.order(trek.Order.ATTACK, target=target)
             self.check_orders()
 
+    def wait(self, ship_id: str):
+        ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
+        if ship is not None:
+            ship.order(trek.Order.IDLE)
+            self.check_orders()
+
     def check_orders(self):
         """Confirm player-controlled vessels have orders."""
         ships = self.simulation.objects_without_orders(trek.Side.FRIENDLY)
-        if ships:
+        if len(ships) == 0:
             print("All units have their orders.")
         else:
             print(f"{len(ships)} units need orders:")
@@ -321,7 +350,8 @@ class CmdUserInterface(trek.UserInterface):
         match message:
             # not a real instantiation; the match syntax is gross:
             case trek.ArriveMessage():
-                m = f"ARRIVAL: {message.ship.designation} has arrived at {message.ship.point}."
+                s = message.ship
+                m = f"ARRIVAL: {s._ui_label} {s.designation} has arrived at {s.point}."
             case trek.SpawnMessage():
                 m = (f"Object spawned: {message.obj}; "
                      f"assigned label {self.set_ui_label(message.obj)}")
