@@ -475,7 +475,8 @@ class EnemyShip(Ship):
             self.order(Order.IDLE)
             priority_targets, targets = set(), set()
             for o in self.simulation.get_objects(Side.FRIENDLY):
-                (priority_targets if isinstance(o, SpaceColony) else targets).add(o)
+                (priority_targets if isinstance(o, SpaceColony) and not o.is_destroyed()
+                 else targets).add(o)
             # unsolved circular pursuit case:
             # target = self.choose_closest(priority_targets if priority_targets else targets)
             target = self.choose_closest(priority_targets)
@@ -729,8 +730,8 @@ class Simulation:
                 s.move()
 
             # combat step
-            reports = [self.combat(participants)
-                       for place, participants in self.colocate_objects().items()]
+            for place, participants in self.colocate_objects().items():
+                report = self.combat(p for p in participants if not p.is_destroyed())
 
             for s in self.get_objects():
                 s.post_action()
