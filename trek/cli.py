@@ -81,11 +81,11 @@ class CmdUserInterface(trek.UserInterface):
 
     def short_range_map(self, center_point, radius=8):
         """Returns the map for a given bounding box."""
-        # TODO now that position is a float, is better UX needed to report
-        #   position to the player?
-        #   ^^^ another map that's even finer-grained to let the player visually resolve these cases?
         cells = collections.defaultdict(list)
-        [cells[o.point].append(o) for o in self.simulation.objects()]
+        for o in self.simulation.objects():
+            # conveniently, round() returns an integer
+            grid_point = trek.point(round(o.point.x), round(o.point.y))
+            cells[grid_point].append(o)
         s = pprint.pformat(cells) + '\n' # debugging output
         # set bounding box including bounds-check for attempting to show territory outside the map
         lower_left = trek.point(max(1, center_point.x - radius), max(1, center_point.y - radius))
