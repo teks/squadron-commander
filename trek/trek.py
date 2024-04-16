@@ -688,9 +688,14 @@ class Simulation:
             self.user_interface.message(message)
 
     def initialize(self):
-        """Perform setup actions."""
+        """Perform setup actions.
+
+        Can't do this until the user's finished adding objects.
+        """
         for o in self.get_objects(controller=Controller.ENEMY_AI):
             o.choose_target()
+        for o in self.get_objects():
+            o.plan_move()
 
     def ready_to_run(self, raise_exception=False):
         """Report whether the simulation is ready to run.
@@ -726,9 +731,6 @@ class Simulation:
             self.clock += 1
             # because there's no initiative, keep events effectively simultaneous
             for s in self.get_objects():
-                s.plan_move()
-
-            for s in self.get_objects():
                 s.move()
 
             # combat step
@@ -737,6 +739,9 @@ class Simulation:
 
             for s in self.get_objects():
                 s.post_action()
+
+            for o in self.get_objects():
+                o.plan_move()
 
             if self.should_pause():
                 self.message(PausedSimulation())
