@@ -244,7 +244,8 @@ class Simulation:
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""
-        self.user_interface.message(message)
+        if self.user_interface is not None:
+            self.user_interface.message(message)
 
     def ready_to_run(self):
         """Report whether the simulation is ready to run.
