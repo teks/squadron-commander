@@ -7,9 +7,6 @@
     [v] x2.0 waiting with a friendly (n friendlies together means x2.0 for each of them)
     [v] pause simulation when a friendly ship's repairs are complete
     [v] show estimated time to fix
-[ ] retreat should alter behavior of retreating enemies;
-    they should actually change their destination for a bit
-    (it's a way of driving enemies away from a base or target)
 
 Roadmap
 =======
@@ -24,6 +21,9 @@ Complete Beta: That which isn't embarrassing to show other people
 [ ] playable scenario:
     [ ] enemies appear to the left, retreat to the left?
     [ ] new ones spawn periodically
+    [ ] retreat should alter behavior of retreating enemies;
+        they should actually retreat towards their origin direction for a bit
+        (it's a way of driving enemies away from a base or target)
 [ ] additional ux as issues reveal themselves
     [ ] groom this backlog - what *really* needs to be in the beta?
     [ ] `ls a b c d` isn't an error
