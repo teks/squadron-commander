@@ -9,6 +9,18 @@ import itertools
 
 import trek
 
+MOVEMENT_MARKER_CHAR = '+'
+class UI_LABEL_PREFIXES:
+    friendly_controlled_ship = 's'
+    enemy = 'e'
+    friendly_space_colony = 'c'
+    # TODO support a setting to control how it's visualized:
+    #   (these labels are the originals: easier to view, harder to type)
+    # friendly_controlled_ship = '^'
+    # enemy = '!'
+    # friendly_space_colony = '@'
+
+
 # TODO enum?
 # class EightCardinalDirections(enum.Enum):
 #     EAST = 0 # but also stringifies to 'East'
@@ -270,9 +282,6 @@ class CLI(cmd.Cmd):
         return True
 
 
-MOVEMENT_MARKER_CHAR = '+'
-
-
 class CmdUserInterface(trek.UserInterface):
     """UI for trek based on simple cmd.Cmd CLI."""
     class LabelIterators:
@@ -492,14 +501,15 @@ class CmdUserInterface(trek.UserInterface):
         if isinstance(obj, trek.Ship):
             match (obj.side, obj.controller):
                 case (trek.Side.FRIENDLY, trek.Controller.PLAYER):
-                    obj._ui_label = '^' + next(self.label_iterators.squadron)
+                    obj._ui_label = UI_LABEL_PREFIXES.friendly_controlled_ship + next(
+                        self.label_iterators.squadron)
                 case (trek.Side.ENEMY, _):
-                    obj._ui_label = '!' + next(self.label_iterators.raiders)
+                    obj._ui_label = UI_LABEL_PREFIXES.enemy + next(self.label_iterators.raiders)
                 case _:
                     raise ValueError(
                         f"{obj} has unexpected (side, controller) of {obj.side, obj.controller}")
         elif isinstance(obj, trek.SpaceColony) and obj.side == trek.Side.FRIENDLY:
-            obj._ui_label = '@' + next(self.label_iterators.colonies)
+            obj._ui_label = UI_LABEL_PREFIXES.friendly_space_colony + next(self.label_iterators.colonies)
         else:
             raise ValueError(f"Couldn't assign UI label to {obj}")
 
