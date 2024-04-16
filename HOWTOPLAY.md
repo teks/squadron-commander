@@ -20,7 +20,7 @@ management commands:
 * `debug` drops into a pdb debug session.
 * `r N` runs the simulation for N ticks, defaulting to 24. See Not Turn-Based below.
 
-Other commands are for gameplay itself. For these, ships and other vessels are
+Other commands are for gameplay itself. For these, ships and other objects are
 identified by a short unique label, which are used in information displays and
 in the commands you enter. Each label is a two-character code such as `e5`:
 
@@ -57,32 +57,25 @@ Not Turn-Based, Not Real-Time, but Event-Based
 
 The simulation starts out paused. Any time the simulation is paused, you can
 use the command line to examine the strategic situation, and issue orders to
-your ships, including repeatedly replacing existing orders with new ones.
+your ships, including replacing existing orders with new ones.
 
 Once all your ships have orders, you can start the simulation running with `r`.
-It will simulate 24 hours of in-game time then pause again. Use eg `r 16` to
-run for 16 hours instead. You can't pause the simulation while it's running,
-but it will decide to pause on its own if anything important happens, such as:
+You can't pause the simulation nor enter any commands while it's running, but
+it will decide to pause on its own if anything important happens, such as:
 
 * Combat has occurred.
 * A ship has no orders, most likely because it completed its current orders. (If
   you need a ship to remain stationary, order it to wait with `wt`.)
 * The scenario's victory or defeat conditions have been met. You are returned
   to the command line so you can examine the final simulation state.
+* It also pauses after 24 in-game hours have elapsed.
 
-In this way, the decision-free parts of the simulation can be computed
-instantly, but you'll be free to make unhurried command decisions when needed.
+In this way, usually whenever it's time for you to make command decisions, the
+game pauses on its own and asks for your input. For more control, you can also
+use a custom timeout with `r`, say `r 5` for five hours.
 
-This timing system, which I call 'event-based,' was needed to avoid painful
-design compromises. Mostly games are implemented monotonically. In turn-based
-games, for instance, each turn represents an equal time interval. But in naval
-warfare, upon which starship combat is generally based, long periods of time
-pass without any meaningful strategic decisions. So a conventional design would
-result in significant 'dead' play time.
-
-Event-based timing instead lets players run large or small blocks of simulation
-time as they wish, say `r 5` or `r 25` as needed, yet be safe from unpleasant
-surprises thanks to the game's event-based pausing.
+This timing system, which I call 'event-based,' hopefully keeps the advantages
+of turn-based play while achieving the granularity of a real-time game.
 
 Simulation Fundamentals
 -----------------------
