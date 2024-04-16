@@ -66,29 +66,29 @@ combat engine MVP; no encounters yet just mechanics + tests
 ```
 [v] prep Ship for combat (hull, shields, shield recharge
 [v] entry point for 1 tick of combat is simulation.combat(units)
-[v] Step 1: assign base_combat_value to each ship
-[ ] Step 2:
-    [v] Compute side CV, choose superior & inferior side; find CV_ratio
-    [ ] CRT & simulation.roll_crt()
-    [ ] track retreated ships
-[ ] Step 3: Compute damage from side CV, applying CRT results
-[ ] Step 4:
-    [ ] Apply damage to shields then hull
-    [ ] check for DESTRUCTION and send messages
-[ ] make some ship classes and experiment with combat outcomes
+[v] assign base_combat_value to each ship
+[v] Compute side CV, adjust by random advantage; find side CV ratio
+[v] retreat check
+[v] track retreated ships
+[v] Apply damage to shields then hull
+[ ] test & revise
 ```
 
 ## Future Iterations:
 ```
+[ ] look into non-flat probabilities:
+    https://docs.python.org/3/library/random.html#real-valued-distributions
 [ ] combat
-    [ ] Step 2: individual ship retreat
+    [ ] check for ship destruction and send messages
+    [ ] make some ship classes and experiment with combat outcomes
+    [ ] individual ship retreat
     [ ] system damage
-        [ ] add systems to ships
         [ ] on hull damage, apply systems damage
+        [ ] add systems to ships
     [ ] mull a 'maneuverability' value for ships
     [ ] morale: depletion, restoration, and effect on combat
     [ ] refine ship's combat value (shields down, morale, etc)
-    [ ] Step 5: retreat movement
+    [ ] retreat movement
 [ ] enemy ships:
     AI-driven enemy vessels' class should be child of Ship;
     enemies assign orders to themselves over time

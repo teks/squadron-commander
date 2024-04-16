@@ -8,6 +8,7 @@ import dataclasses
 import abc
 import enum
 import operator
+import random
 
 # min x & y are both 1, not 0, for both spaces and zones
 MAX_X = 64
@@ -107,7 +108,7 @@ class Ship(SpaceborneObject):
     """Mobile spaceborne object. Issue orders to have it move and take other actions."""
     max_hull = 1
     max_shields = 0
-    combat_value = 1
+    _combat_value = 1
 
     def __init__(self, designation: str, point: Point, cruising_speed: float=1.0):
         """Cruising speed is in light year per hour."""
@@ -117,6 +118,7 @@ class Ship(SpaceborneObject):
         self.current_order = None # start out with no orders
         self.fought_last_tick = False
         self.current_shields = self.max_shields
+        self.current_hull = self.max_hull
 
     class Order(enum.Enum):
         MOVE = 'move'
@@ -155,6 +157,64 @@ class Ship(SpaceborneObject):
         else:
             self.current_shields = self.max_shields
 
+    def combat_value(self):
+        # TODO add in morale and possibly other factors
+        return self._combat_value
+
+    def missing_shields_fraction(self):
+        """Ships's shields as a ratio; 0.2 = 20% of the shields are gone."""
+        return 1 - self.current_shields / self.max_shields
+
+    def hull_damage_fraction(self):
+        """Hull damage as a ratio; 0.3 = 30% of the hull is gone."""
+        return 1 - self.current_hull / self.max_hull
+
+    def retreats_from(self, own_side, other_side):
+        """Randomly determines if a ship retreats from battle.
+
+        Examples of probability of retreat:
+            * medium: badly outnumbered
+            * medium: shields low
+            * high: both --^
+            * high: shields down
+            * high: significant hull damage
+        """
+        # TODO:
+        # p = 0.0 # 0% chance of retreating as a base
+        #
+        # # if ratio == 2, then enemy is twice as scary as us
+        # battle_cv_ratio = other_side.combat_value() / own_side.combat_value()
+        # p += somehow(battle_cv_ratio)
+        #
+        # # worse off the ship is, more likely to retreat
+        # p += msf_factor * self.missing_shields_fraction()
+        # p += hdf_factor * self.hull_damage_fraction()
+        # retreats = p < random.random()
+
+        retreats = False # MAMA DIDN RAISE NO QUITTER
+        if retreats:
+            own_side.retreaters += self
+        return retreats
+
+    def receive_damage(self, damage_qty: float):
+        """Damage shields the given amount, applying overflow to hull.
+
+        If damage is dealt to the hull, it may result in system damage.
+        """
+        self.current_shields -= damage_qty
+        if self.current_shields >= 0.0: # is there overflow damage?
+            return
+        # TODO message here about shields being down
+        hull_damage = -1 * self.current_shields
+        self.current_shields = 0.0
+        self.current_hull -= hull_damage
+        # TODO self.system_damage()
+        # TODO check for destruction
+
+    # TODO
+    # def system_damage(self):
+    #     hdf = self.hull_damage_fraction()
+
     def combat(self):
         """Notify the ship that it has fought this tick."""
         self.fought_last_tick = True
@@ -179,6 +239,60 @@ class EnemyShip(Ship):
 
     def act(self, simulation):
         pass # stub for now
+
+@dataclasses.dataclass
+class CombatSide:
+    """Represents one side of a combat encounter."""
+    def __init__(self, *members):
+        self.members = set(*members)
+        self.retreaters = set()
+
+    @classmethod
+    def sort_into_sides(cls, participants):
+        friendly_side, enemy_side = CombatSide(), CombatSide()
+        for p in participants:
+            {FriendlyShip.type: friendly_side.members,
+             EnemyShip.type: enemy_side.members}[p.type].add(p)
+        return friendly_side, enemy_side
+
+    RETREAT_MODIFIER = 0.5
+
+    def combat_value(self):
+        cv = self.cv_modifier * sum(s.combat_value()
+                                    for s in self.members - self.retreaters)
+        rcv = self.RETREAT_MODIFIER * sum(s.combat_value() for s in self.retreaters)
+        return cv + rcv
+
+    def retreats_from(self, other_side):
+        """Does this side choose to retreat?"""
+        ratio = other_side.combat_value() / self.combat_value()
+        if ratio <= 1:
+            return False
+        # set up so P(retreat) = 0 if ratio == 1, and P(retreat) = 0.7 if ratio == 3
+        # TODO if ratio == 2 then P(retreat) = 0.35 which feels a bit low
+        m, b = 0.35, -0.35
+        retreats = m * ratio + b < random.random() # 0.0 <= X < 1.0
+        if retreats:
+            self.retreaters += self.members
+        return retreats
+
+    def receive_damage(self, damage):
+        damage_per_unit = damage / len(self.members)
+        for s in self.retreaters:
+            s.receive_damage(damage_per_unit * self.RETREAT_MODIFIER)
+        for s in self.members - self.retreaters:
+            s.receive_damage(damage_per_unit)
+
+    CV_MODIFIERS = (
+        (1.25, 0.75),
+        (1.00, 1.00),
+        (0.75, 1.25),
+    )
+
+    @classmethod
+    def assign_cv_modifiers(cls, side_a, side_b):
+        """Assigns a CV modifier to each side via `side.cv_modifier`."""
+        side_a.cv_modifier, side_b.cv_modifier = random.choice(cls.CV_MODIFIERS)
 
 
 class Message:
@@ -223,21 +337,24 @@ class Simulation:
         self.objects[k] = obj
         self.message(SpawnMessage(obj))
 
-    def side_combat_value(self, side):
-        return sum(s.combat_value for s in side)
-
     def combat(self, *participants):
-        friendly_side, enemy_side = set(), set()
+        # split participants into sides
         for p in participants:
-            p.combat()
-            {FriendlyShip.type: friendly_side,
-             EnemyShip.type:    enemy_side}[p.type].add(p)
+            p.combat() # notify that they're participating in combat
+        friendly_side, enemy_side = CombatSide.sort_into_sides(participants)
+        CombatSide.assign_cv_modifiers(friendly_side, enemy_side)
 
-        friendly_cv = self.side_combat_value(friendly_side)
-        enemy_cv = self.side_combat_value(enemy_side)
+        friendly_side.retreats_from(enemy_side)
+        enemy_side.retreats_from(friendly_side)
 
-        outnumbered = enemy_cv > friendly_cv
-        cv_ratio = friendly_cv / enemy_cv
+        # TODO check each ship for retreat
+
+        friendly_side.receive_damage(enemy_side.combat_value())
+        enemy_side.receive_damage(friendly_side.combat_value())
+
+        # TODO here down:
+        #   add in notifications & messages
+        #   retreat movement; see combat.md
 
         # report outcomes; effectively each battle is exactly 1 tick
         # self.combat_outcome_message(self, friendly_side, enemy_side)
