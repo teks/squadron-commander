@@ -118,7 +118,6 @@ class SpaceborneObject(abc.ABC):
             self.simulation.message(message)
 
 
-# TODO replace `o.side == FriendlyShip.side` with o.side == Side.FRIENDLY`
 class Side(enum.Enum):
     """When it comes to fights and other interactions, what side is this object on?"""
     FRIENDLY = 'friendly'
@@ -479,8 +478,8 @@ class CombatSide:
     def sort_into_sides(cls, *participants):
         friendly_side, enemy_side = CombatSide(), CombatSide()
         for p in participants:
-            {FriendlyShip.side: friendly_side.members,
-             EnemyShip.side: enemy_side.members}[p.side].add(p)
+            {Side.FRIENDLY: friendly_side.members,
+             Side.ENEMY: enemy_side.members}[p.side].add(p)
         return friendly_side, enemy_side
 
     def __len__(self):

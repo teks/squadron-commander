@@ -66,9 +66,9 @@ def test_simulation_run_not_ready():
 @pytest.fixture
 def ready_simulation():
     simulation = trek.default_scenario()
-    for s in simulation.get_objects(trek.FriendlyShip.side):
+    for s in simulation.get_objects(trek.Side.FRIENDLY):
         # everyone meet in the middle
-        s.order(trek.FriendlyShip.Order.MOVE, destination=trek.point(32, 32))
+        s.order(trek.Order.MOVE, destination=trek.point(32, 32))
     return simulation
 
 # TODO writing the algorithm a second time does not a good test make
@@ -113,8 +113,8 @@ def combat_sides():
 
 def test_CombatSide_sort_into_sides():
     friendly_side, enemy_side = combat_sides()
-    assert (all(m.side == trek.FriendlyShip.side for m in friendly_side.members)
-            and all(m.side == trek.EnemyShip.side for m in enemy_side.members))
+    assert (all(m.side == trek.Side.FRIENDLY for m in friendly_side.members)
+            and all(m.side == trek.Side.ENEMY for m in enemy_side.members))
 
 def setup_sides():
     sides = combat_sides()
@@ -203,7 +203,7 @@ def test_Simulation_combat__damage(mocker, retreat, advantage, fs, fh, es, eh):
 def test_Ship_intercept_point(i_coord, i_speed, e_early, e_time, e_coord):
     """Go through various scenarios and confirm interception works"""
     target = trek.Ship('target', trek.point(20.0, 20.0))
-    target.order(trek.Ship.Order.MOVE, destination=trek.point(40.0, 40.0))
+    target.order(trek.Order.MOVE, destination=trek.point(40.0, 40.0))
     interceptor = trek.Ship('interceptor', trek.point(*i_coord))
     interceptor.speed = i_speed
 

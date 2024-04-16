@@ -245,7 +245,7 @@ class CmdUserInterface(trek.UserInterface):
         ship_cnt = 0
         for o in contents:
             match o.side:
-                case trek.FriendlyShip.side:
+                case trek.Side.FRIENDLY:
                     ship_cnt += 1
                 case _:
                     raise ValueError(f"Type for {o} isn't supported.")
@@ -304,7 +304,7 @@ class CmdUserInterface(trek.UserInterface):
         ship = self.get_object(ship_id, controller=trek.Controller.PLAYER)
         target = self.get_object(target_id, side=trek.Side.ENEMY)
         if None not in (ship, target):
-            ship.order(trek.FriendlyShip.Order.ATTACK, target=target)
+            ship.order(trek.Order.ATTACK, target=target)
             self.check_orders()
 
     def check_orders(self):
