@@ -1,3 +1,4 @@
+import dataclasses
 import math
 import cmd
 import pprint
@@ -22,40 +23,77 @@ cardinal_to_neighbor = {
 }
 
 
-def cli_header(blazon_count, text, blazon='=', newline=True):
+@dataclasses.dataclass
+class SimpleTable:
+    headers: tuple
+    field_templates: tuple
+    rows: tuple
+    column_separator = '  '
+    header_separator = '-'
+
+    def validate(self):
+        w = len(self.headers)
+        if w != len(self.field_templates) or any(w != len(r) for r in self.rows):
+            raise ValueError("Inconsistent table width")
+
+    def render_fields(self):
+        rows = []
+        for row in self.rows:
+            rendered_row = tuple(self.field_templates[i].format(field_data)
+                                 for (i, field_data) in enumerate(row))
+            rows.append(rendered_row)
+        return tuple(rows)
+
+    def find_column_widths(self, rendered_fields):
+        for i in range(len(self.headers)): # for each column
+            max_field_width = max(len(row[i]) for row in rendered_fields)
+            yield max(len(self.headers[i]), max_field_width)
+
+    def render(self):
+        """Yields each row of the table as a string in turn."""
+        self.validate()
+        rf = self.render_fields()
+        column_widths = tuple(self.find_column_widths(rf))
+        # format_spec can be specified dynamically:
+        yield self.column_separator.join(
+            '{:{w}}'.format(h, w=w) for (h, w) in zip(self.headers, column_widths))
+        yield self.column_separator.join('{:{w}}'.format(self.header_separator * len(h), w=w)
+                                         for (h, w) in zip(self.headers, column_widths))
+        for row in rf:
+            yield self.column_separator.join('{:{w}}'.format(field, w=w)
+                                             for (field, w) in zip(row, column_widths))
+
+
+def cli_header(blazon_count, text, blazon='='):
     """eg "===[ Combat Report ]===\n" """
     blazons = blazon * blazon_count
-    return blazons + '[ ' + text + ' ]' + blazons + '\n' if newline else ''
+    return blazons + '[ ' + text + ' ]' + blazons
 
 def combat_report_string(combat_report):
-    # TODO python table formatting somehow?
+    indent = '  '
     fs, es = combat_report.friendly_side, combat_report.enemy_side
-    # no way to specify f-string here than interpolate later
+    st = SimpleTable(headers=('Outcome', 'Unit', 'S-Dmg', 'H-Dmg', ''),
+                     field_templates=('{}', '{}', '{:.1f}', '{:.1f}', '{}'),
+                     rows=(*combat_report_row_gen(fs), *combat_report_row_gen(es)))
 
     point = combat_report.point
     # TODO add in system damage
-    s = cli_header(5, f'COMBAT REPORT for coordinates ({point.x:.2f}, {point.y:.2f})')
-    s += 'FRIENDLY FORCES\n'
-    s += combat_report_side_string(fs)
-    s += '\nENEMY FORCES\n'
-    s += combat_report_side_string(es)
+    return '\n'.join([
+        cli_header(5, f'COMBAT REPORT for coordinates ({point.x:.2f}, {point.y:.2f})'),
+        indent + f'Friendly CV x{fs.cv_modifier:.2f}, enemy CV x{es.cv_modifier:.2f}\n',
+        indent + f'\n{indent}'.join(st.render()) + '\n'
+    ])
     return s
 
-def combat_report_side_string(side):
-    indent = '  '
-    s = f'Combat Value multiplier: x{side.cv_modifier:.2f}\n'
+def combat_report_row_gen(side):
     for u, (destroyed, shield_dmg, hull_dmg, sys_dmg) in side.outcomes.items():
-        s += getattr(u, '_ui_label', '--') + f' {u.designation}\n'
-        s += indent + f'SHIELDS: {shield_dmg:.1f} damage, {u.current_shields:.1f}/{u.max_shields:.1f} remaining\n'
-        s += indent + f'   HULL: {  hull_dmg:.1f} damage, {u.current_hull:.1f}/{u.max_hull:.1f} remaining\n'
-        retreated = u in side.retreaters
-        if destroyed and retreated:
-            s += indent + ('Vessel attempted to retreat, but was lost.\n')
-        elif destroyed:
-            s += indent + "Vessel was lost.\n"
-        elif retreated:
-            s += indent + 'Vessel retreated.\n'
-    return s
+        outcome = ('LOST'    if destroyed else
+                   'SYS-DMG' if sys_dmg else
+                   'HUL-DMG' if hull_dmg > 0 else
+                   'SHL-HIT' if shield_dmg > 0 else '???')
+        unit = getattr(u, '_ui_label', '??') + f' {u.designation}'
+        other = 'RETREATED' if u in side.retreaters else ''
+        yield (outcome, unit, shield_dmg, hull_dmg, other)
 
 
 class PointAction(argparse.Action):

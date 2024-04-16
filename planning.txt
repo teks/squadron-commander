@@ -11,7 +11,7 @@
 [v] `status` command: by default show status of all units
 [v] add movement prediction markers to short range map
 [v] pause simulation after each combat
-[ ] revise combat report; it's hard to read
+[v] revise combat report; it's hard to read
 
 Future Iterations
 =================
