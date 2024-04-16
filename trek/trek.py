@@ -137,7 +137,7 @@ class Ship(SpaceborneObject):
 
     def message(self, message):
         if self.simulation is not None:
-            self.message(message)
+            self.simulation.message(message)
 
     def move(self, destination):
         """Perform 1 tick of movement."""
@@ -221,14 +221,13 @@ class Ship(SpaceborneObject):
         self.current_shields -= damage_qty
         if self.current_shields >= 0.0: # is there overflow damage?
             return
-        # TODO message here about shields being down
         hull_damage = -1 * self.current_shields
         self.current_shields = 0.0
         self.current_hull -= hull_damage
         # TODO self.system_damage()
-        # TODO check for destruction & send message:
-        # if self.current_hull <= 0.0:
-        #     self.simulation
+        # check for destruction & send message:
+        if self.current_hull <= 0.0:
+            self.message(ShipDestruction(self))
 
     # TODO
     # def system_damage(self):
@@ -319,6 +318,21 @@ class ArriveMessage(Message):
 class SpawnMessage(Message):
     obj: SpaceborneObject
 
+@dataclasses.dataclass
+class CombatReport(Message):
+    """Report outcome of 1 tick of combat.
+
+    Each CombatSide keeps a record of events for more information:
+    * Who participated
+    * Who retreated
+    * Damage & Destruction:
+        * each ship's damage to shields, hull, and systems
+        * Which ships where destroyed
+    """
+    friendly_side: CombatSide
+    enemy_side: CombatSide
+
+
 class UserInterface:
     pass
 
@@ -354,6 +368,7 @@ class Simulation:
         self.message(SpawnMessage(obj))
 
     def combat(self, participants):
+        """Compute and apply 1 tick of combat effects."""
         # TODO should this method be a class method in CombatSide()?
         participant_list = list(participants) # might be an iterator so save its contents
         for p in participant_list:
@@ -365,6 +380,7 @@ class Simulation:
         # have to compute cv ratio ahead of time because retreat checking may alter ships' CV
         cv_ratio = enemy_side.combat_value() / friendly_side.combat_value()
 
+        # TODO more intuitive if the ratio is us-to-them
         friendly_side.retreat_check(cv_ratio)
         enemy_side.retreat_check(1 / cv_ratio)
 
@@ -372,12 +388,11 @@ class Simulation:
         friendly_side.receive_damage(enemy_side.combat_value())
         enemy_side.receive_damage(friendly_side.combat_value())
 
-        # TODO here down:
-        #   add in notifications & messages
-        #   retreat movement; see combat.md
+        # report outcomes for this tick of combat:
+        self.message(CombatReport(friendly_side, enemy_side))
 
-        # report outcomes; effectively each battle is exactly 1 tick
-        # self.combat_outcome_message(self, friendly_side, enemy_side)
+        # TODO here down:
+        #   retreat movement; see combat.md
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""

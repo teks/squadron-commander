@@ -1,7 +1,7 @@
 ## iteration 8
 continue developing combat
-[ ] check for ship destruction and send message
-[ ] add messaging to combate engine
+[v] check for ship destruction and send messages
+[v] add messaging to combat engine
 [ ] make some ship classes and experiment with combat outcomes
     [ ] corvette
     [ ] cruiser
