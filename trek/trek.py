@@ -20,10 +20,12 @@ MAX_ZONE_X = math.ceil(MAX_X / ZONE_SIZE_X)
 MAX_ZONE_Y = math.ceil(MAX_Y / ZONE_SIZE_Y)
 
 
-# TODO point validation vs. the map is not appropriate in all cases:
-#   what if it's a relative point ie (+7, -5)?
 class Point(typing.NamedTuple):
-    """Bounds are from (1, 1) to (MAX_X, MAX_Y), inclusive."""
+    """Bounds are from (1, 1) to (MAX_X, MAX_Y), inclusive.
+
+    Neither NamedTuple's __init__ nor __new__ can be overridden, so use
+    the factory functions below for validation.
+    """
     x: float
     y: float
 
@@ -54,7 +56,6 @@ class Point(typing.NamedTuple):
         """
         return other - self
 
-    # TODO use this  ----vvvvvvvvv
     def validate(self, is_zone=False):
         """Perform safety checks on self."""
         max_x, max_y = MAX_X, MAX_Y
@@ -63,27 +64,26 @@ class Point(typing.NamedTuple):
         if not (0 < self.x <= max_x) or not (0 < self.y <= max_y):
             raise AttributeError(f"{self} is outside the map bounds")
 
+    def validate_as_zone(self):
+        return self.validate(is_zone=True)
+
     def zone(self):
         """Determine which zone the current point is in."""
-        return self.__class__(x=1 + (self.x - 0.5) // ZONE_SIZE_X,
-                              y=1 + (self.y - 0.5) // ZONE_SIZE_Y)
+        return zone(x=1 + (self.x - 0.5) // ZONE_SIZE_X,
+                    y=1 + (self.y - 0.5) // ZONE_SIZE_Y)
 
 
 def point(*args, **kwargs):
-    """Factory for Points.
-
-    Needed for validating at instantiation time,
-    but NamedTuple doesn't let you override the constructor.
-    """
+    """Factory for Points that represent an aboslute map cell."""
     p = Point(*args, **kwargs)
     p.validate()
     return p
 
 
 def zone(*args, **kwargs):
-    """Factor for zones, which are points with different validation."""
+    """Factory for points that represent one zone."""
     p = Point(*args, **kwargs)
-    p.validate_zone()
+    p.validate_as_zone()
     return p
 
 
