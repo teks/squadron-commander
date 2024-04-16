@@ -248,14 +248,12 @@ class ArtificialObject(SpaceborneObject):
         return self._morale
 
     @morale.setter
-    def morale(self, quantity: float):
+    def morale(self, new_value: float):
         """Raise or lower morale, capped in the range [-1, 1]."""
         # it'd be better to have a curve that has horizontal asymptotes at [-1, 1]:
         # The further from neutral it is, the less it is altered by a given quantity.
         # self.morale += (1 - abs(self.morale)) * quantity
-        new_value = self._morale + quantity
         self._morale = 1.0 if new_value > 1.0 else -1.0 if new_value < -1.0 else new_value
-        return self._morale
 
     MORALE_HULL_DMG_FACTOR = 0.25 # hull damage reduces morale
     # linearly scale CV and retreat chance by as much as these factors:

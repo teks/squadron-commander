@@ -236,11 +236,30 @@ def test_Ship_intercept_point(i_coord, i_speed, e_early, e_time, e_coord):
 
     assert (e_early, e_time) == (early, time) and trek.point(*e_coord).isclose(point)
 
-def test_same_place_intercept():
+def test_Ship_same_place_intercept():
     e = trek.EnemyShip('e', trek.point(40, 12))
     c = trek.SpaceColony('c', trek.point(40, 12))
     _, actual_ip, _ = e.intercept_point(c)
     assert (40, 12) == actual_ip
+
+def test_Ship_morale():
+    s = trek.FriendlyShip('Lollipop', trek.point(1, 1))
+    initial = s.morale
+    s.morale += 0.2
+    first = s.morale
+    s.morale += 0.2
+    second = s.morale
+    s.morale += 99
+    third = s.morale
+    assert (0.0, 0.2, 0.4, 1.0) == (initial, first, second, third)
+
+def test_Ship_morale_cv_effect():
+    s = trek.FriendlyShip('Lollipop', trek.point(1, 1))
+    s.morale = 9
+    high_cv = s.combat_value()
+    s.morale = -9
+    low_cv = s.combat_value()
+    assert (0.75, 1.25) == (low_cv, high_cv)
 
 @pytest.mark.parametrize('group', [
     # for now one obvious test is enough
