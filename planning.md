@@ -21,12 +21,12 @@ Iterations
 ## Iteration 3: Timekeeping + Friendly ship movement
 ```
 [v] move a ship instantly, disregarding velocity
-[ ] design FTL system; probably linear hyperspace speed in squares/day
-[ ] basic timekeeping, CF `design.md`, Time & Timing
-    [ ] after each order to a ship:
-        [ ] if untasked ships, list them
-        [ ] otherwise, emit clock start message & run clock
-    [ ] basic UX messaging: simulation emits messages consumed by UX object
+[v] design FTL system; probably linear hyperspace speed in squares/day
+[v] basic UX messaging: simulation emits messages consumed by UX object
+[ ] basic simulation ticking
+[ ] after each order to a ship:
+    [ ] if untasked ships, list them
+    [ ] otherwise, emit clock start message & run clock
 [ ] move a ship within the simulation's timekeeping
 ```
 

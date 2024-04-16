@@ -95,6 +95,9 @@ class Ship(SpaceborneObject):
     class Order(enum.Enum):
         MOVE = 'move'
 
+    def has_orders(self):
+        return self.current_order is not None
+
     def order(self, order: Order, **kwargs):
         if order not in self.Order:
             raise ValueError(f"'{order}' is not a valid order")
@@ -132,6 +135,32 @@ class Simulation:
     def message(self, type, text, **details):
         """Cause the simulation to emit a message to the user interface."""
         self.user_interface.message(type, text, **details)
+
+    def ready_to_run(self):
+        return all(s.has_orders() for s in self.squadron)
+
+    def should_pause(self):
+        if not self.ready_to_run():
+            return True
+
+        # there will be more checks here for other events
+        # (likely these events will be detected by message()
+        # and saved, and should be cleared here)
+
+        return False
+
+    class NotReadyToRun(ValueError):
+        pass
+
+    def run(self, force=False):
+        if not force and not self.ready_to_run():
+            raise self.NotReadyToRun()
+        while True:
+            self.clock += 1
+            for s in self.squadron:
+                s.act()
+            if self.should_pause():
+                break
 
 
 def default_scenario():
