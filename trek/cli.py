@@ -48,7 +48,7 @@ class PointAction(argparse.Action):
         setattr(namespace, self.dest, trek.point(*values))
 
 
-class ComandLineParser(argparse.ArgumentParser):
+class CommandLineParser(argparse.ArgumentParser):
     """Needed because they let an awful glaring bug into a release:
 
     https://github.com/python/cpython/issues/103498
@@ -82,7 +82,7 @@ class CLI(cmd.Cmd):
         import pdb
         pdb.set_trace()
 
-    map_parser = ComandLineParser(arguments=(
+    map_parser = CommandLineParser(arguments=(
         ['centerpoint', dict(nargs=2, type=int, action=PointAction)],
         ['radius', dict(nargs='?', type=int, default=8)],
     ))
@@ -103,19 +103,38 @@ class CLI(cmd.Cmd):
     #     map_str = self._cmd_ui.long_range_map()
     #     print(map_str)
 
-    move_parser = ComandLineParser(arguments=(
+    move_parser = CommandLineParser(arguments=(
         ('ship_id', dict(type=str)),
         ('destination', dict(nargs=2, type=int, action=PointAction)),
-        ('hypervelocity', dict(nargs='?', type=int, default=None)),
+        # TODO add speed setting to move & attack cmd?
+        # ('speed', dict(nargs='?', type=int, default=None)),
     ))
 
     def do_move(self, arg):
         parsed_line = self.move_parser.parse_line(arg)
         if parsed_line is not None:
+            # TODO hypervelocity goes in (also call it 'warpspeed'?)
             self._cmd_ui.move_ship(parsed_line.ship_id, parsed_line.destination)
+
+    attack_parser = CommandLineParser(arguments=(
+        ('ship_id', dict(type=str)),
+        ('target_id', dict(type=str)),
+    ))
+
+    def do_attack(self, arg):
+        parsed_line = self.attack_parser.parse_line(arg)
+        if parsed_line is not None:
+            self._cmd_ui.attack(
+                parsed_line.ship_id, parsed_line.target_id)
 
     def do_run(self, arg):
         self._cmd_ui.run()
+
+    # set short commands (python 3 is just <3)
+    do_mv = do_move
+    do_at = do_attack
+    do_sm = do_smap
+    do_rn = do_run
 
     def do_EOF(self, _):
         print()
@@ -265,6 +284,13 @@ class CmdUserInterface(trek.UserInterface):
         ship = self.get_object(ship_id)
         if ship is not None:
             ship.order(trek.FriendlyShip.Order.MOVE, destination=destination)
+            self.idle_ship_check()
+
+    def attack(self, ship_id: str, target_id: str):
+        ship = self.get_object(ship_id)
+        target = self.get_object(target_id)
+        if None not in (ship, target):
+            ship.order(trek.FriendlyShip.Order.ATTACK, target=target)
             self.idle_ship_check()
 
     def idle_ship_check(self):

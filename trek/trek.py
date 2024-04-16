@@ -123,6 +123,7 @@ class Ship(SpaceborneObject):
 
     class Order(enum.Enum):
         MOVE = 'move'
+        ATTACK = 'attack'
 
     def has_orders(self):
         return self.current_order is not None
@@ -250,9 +251,12 @@ class Ship(SpaceborneObject):
         """Perform one tick of simulation."""
         self.recharge_shields()
         order, params = self.current_order
+        # TODO set this up so there's no need to add to it with every new order
         match order:
             case self.Order.MOVE:
-                self.move(params['destination'])
+                self.move(**params)
+            case self.Order.ATTACK:
+                self.attack(**params)
             case _:
                 raise ValueError(f"Invalid order {self.current_order}")
 
