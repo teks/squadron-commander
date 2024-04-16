@@ -20,9 +20,11 @@
         probably stop displaying a count of units; instead display a letter,
         eg :A and then below show below:
             Point A: Multiple contacts near (13, 17): ^1 ^2 ^3 !1 !4 @0
-[ ] `ls a b c d` isn't an error
-[ ] `run 3` isn't an error but does NOT wait 3h and pause
-[ ] COMBAT REPORT and `ls` don't show lists of ships in the same order, they should
+[v] `ls a b c d` isn't an error
+[v] `run 3` isn't an error but does NOT wait 3h and pause
+[x] `ls --help` shows the help for the parser, heh
+    I've decided this is a feature
+[v] COMBAT REPORT and `ls` don't show lists of ships in the same order, they should
 
 ### i14 playable scenario
 [ ] class Scenario; check it for victory conditions each tick

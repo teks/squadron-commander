@@ -110,6 +110,7 @@ class PointAction(argparse.Action):
 
 # TODO it's an object_id or unit_id really, not just ships
 SHIP_ID_ARG = ('ship_id', dict(type=str))
+MULTI_OBJECT_ID_ARG = ('object_id_list', dict(type=str, nargs='*'))
 
 class CommandLineParser(argparse.ArgumentParser):
     """Needed because they let a bug into a release:
@@ -171,17 +172,17 @@ class CLI(cmd.Cmd):
     #     map_str = self._cmd_ui.long_range_map()
     #     print(map_str)
 
-    def do_list(self, _):
-        self._cmd_ui.object_catalog()
+    object_id_list_parser = CommandLineParser(arguments=(MULTI_OBJECT_ID_ARG,))
 
-    status_parser = CommandLineParser(arguments=(
-        SHIP_ID_ARG,
-    ))
+    def do_list(self, arg):
+        parsed_line = self.object_id_list_parser.parse_line(arg)
+        if parsed_line is not None:
+            self._cmd_ui.object_catalog(*parsed_line.object_id_list)
 
     def do_show(self, arg):
-        parsed_line = self.status_parser.parse_line(arg)
-        if parsed_line is not None :
-            self._cmd_ui.object_detail_display(parsed_line.ship_id)
+        parsed_line = self.object_id_list_parser.parse_line(arg)
+        if parsed_line is not None:
+            self._cmd_ui.object_detail_display(*parsed_line.object_id_list)
 
     move_parser = CommandLineParser(arguments=(
         SHIP_ID_ARG,
@@ -220,9 +221,21 @@ class CLI(cmd.Cmd):
     def set_prompt(self):
         self.prompt = f'{self._cmd_ui.simulation.clock}h> '
 
+    @staticmethod
+    def positive_int(s):
+        if (i := int(s)) < 1:
+            raise ValueError("Positive integers only")
+        return i
+
+    run_parser = CommandLineParser(arguments=(
+        ('hour_count', dict(type=positive_int, nargs='?', default=24)),
+    ))
+
     def do_run(self, arg):
-        self._cmd_ui.run()
-        self.set_prompt()
+        parsed_line = self.run_parser.parse_line(arg)
+        if parsed_line is not None:
+            self._cmd_ui.run(parsed_line.hour_count)
+            self.set_prompt()
 
     # set short commands (python 3 is just <3)
     do_ls = do_list
@@ -280,12 +293,12 @@ class CmdUserInterface(trek.UserInterface):
             print(f"Not ready to run; {len(e.args[0])} unit(s) need orders:")
             print('\n'.join(self.single_line_object_display(o) for o in e.args[0]))
 
-    def object_catalog(self):
+    def object_catalog(self, *object_id_pile):
         lines = []
-        for obj in self.simulation.get_objects():
+        for obj in self.object_generator(*object_id_pile):
             line = self.single_line_object_display(obj)
             lines.append(line)
-        print('\n'.join(sorted(lines)))
+        print('\n'.join(lines))
 
     def single_line_object_display(self, obj):
         # TODO rewrite in terms of SimpleTable?
@@ -326,8 +339,19 @@ class CmdUserInterface(trek.UserInterface):
 
         return f"[{hull_str}]{shield_str} "
 
-    def object_detail_display(self, object_id):
-        o = self.get_object(object_id)
+    # do_list should use this:
+    def object_generator(self, *id_pile):
+        """Yields each ID's object, or else all object if none specified."""
+        if len(id_pile) > 0:
+            yield from (self.get_object(o_id) for o_id in id_pile)
+        else:
+            yield from sorted(self.simulation.get_objects(), key=lambda o: o._ui_label)
+
+    def object_detail_display(self, *object_id_pile):
+        for o_id in self.object_generator(*object_id_pile):
+            self.single_object_detail_display(o_id)
+
+    def single_object_detail_display(self, o):
         if o is not None:
             text = '\n'.join([
                 self.single_line_object_display(o),
