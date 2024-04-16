@@ -68,14 +68,14 @@ combat engine MVP; no encounters yet just mechanics + tests
 [v] entry point for 1 tick of combat is simulation.combat(units)
 [v] Step 1: assign base_combat_value to each ship
 [ ] Step 2:
-    * Compute side CV
-    * choose superior & inferior side; find CV_ratio
-    * CRT & simulation.roll_crt()
-    * note retreated ships
+    [v] Compute side CV, choose superior & inferior side; find CV_ratio
+    [ ] CRT & simulation.roll_crt()
+    [ ] track retreated ships
 [ ] Step 3: Compute damage from side CV, applying CRT results
 [ ] Step 4:
-    * Apply damage to shields then hull
-    * check for DESTRUCTION and send message if needed
+    [ ] Apply damage to shields then hull
+    [ ] check for DESTRUCTION and send messages
+[ ] make some ship classes and experiment with combat outcomes
 ```
 
 ## Future Iterations:

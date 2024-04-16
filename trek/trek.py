@@ -223,9 +223,24 @@ class Simulation:
         self.objects[k] = obj
         self.message(SpawnMessage(obj))
 
+    def side_combat_value(self, side):
+        return sum(s.combat_value for s in side)
+
     def combat(self, *participants):
+        friendly_side, enemy_side = set(), set()
         for p in participants:
             p.combat()
+            {FriendlyShip.type: friendly_side,
+             EnemyShip.type:    enemy_side}[p.type].add(p)
+
+        friendly_cv = self.side_combat_value(friendly_side)
+        enemy_cv = self.side_combat_value(enemy_side)
+
+        outnumbered = enemy_cv > friendly_cv
+        cv_ratio = friendly_cv / enemy_cv
+
+        # report outcomes; effectively each battle is exactly 1 tick
+        # self.combat_outcome_message(self, friendly_side, enemy_side)
 
     def message(self, message):
         """Send a message to the simulation and the user interface."""
