@@ -108,11 +108,10 @@ the worst case would have an effective tolerance smaller than `1e-8`.
 
 Interstellar Navigation
 -----------------------
-Keep basic scale of 64 x 64 grid of space locations. Permit stacking of all
-spaceborne objects, except if some exceptional phenomena is encountered (black
-hole?).
+Area of operations is 64 x 64 light years; later this will be configurable.
+Permit stacking of all spaceborne objects, except if some exceptional phenomena
+is encountered (black hole?).
 
-The 64x64 area is the area of operations; later this will be configurable.
 Space is 'smooth'; movement is always calculated as movement between
 coordinates. Warp travel is *always* required to move 1+ spaces; impulse drive
 is used to improve combat maneuvering and is necessary for orbiting and
@@ -123,12 +122,11 @@ strategic one.
 
 Warp travel isn't instantaneous. Friendly and enemy ships may be in motion
 while other events occur. However, ships can intercept each other, resulting in
-fighting at warp. For simplicity, fighting at warp is the same as at sublight
-speeds.
+fighting at warp; see `combat.md`.
 
 Scale & Distance
 ----------------
-Light years for all distances; 1 ly/cell.
+Distances are in light years.
 
 In the default scenario, density of natural phenomena and bases is ~1.2
 per zone, for a total of about 65-100 immobile objects.
