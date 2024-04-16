@@ -6,6 +6,12 @@ import string
 import trek
 
 class CLI(cmd.Cmd):
+    _cmd_ui = None # set later; just doing this to make pycharm less wrong
+
+    def do_debug(self, _):
+        import pdb
+        pdb.set_trace()
+
     def do_map(self, arg):
         x, y = arg.split()
         center = trek.point(int(x), int(y))
@@ -28,6 +34,9 @@ class CLI(cmd.Cmd):
             print(f"Invalid command: {e}")
             return
         self._cmd_ui.move_ship(ship_desig, destination)
+
+    def do_run(self, arg):
+        self._cmd_ui.run()
 
     def do_EOF(self, _):
         print()
@@ -64,8 +73,17 @@ class CmdUserInterface(trek.UserInterface):
     def start(self):
         return self.cli.cmdloop()
 
+    def run(self, duration=24):
+        try:
+            self.simulation.run(duration)
+        except self.simulation.NotReadyToRun as e:
+            print("Not ready to run; do all ships have orders?")
+
     def short_range_map(self, center_point, radius=8):
         """Returns the map for a given bounding box."""
+        # TODO now that position is a float, is better UX needed to report
+        #   position to the player?
+        #   ^^^ another map that's even finer-grained to let the player visually resolve these cases?
         cells = collections.defaultdict(list)
         [cells[o.point].append(o) for o in self.simulation.objects()]
         s = pprint.pformat(cells) + '\n' # debugging output

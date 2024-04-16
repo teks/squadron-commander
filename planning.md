@@ -23,11 +23,10 @@ Iterations
 [v] move a ship instantly, disregarding velocity
 [v] design FTL system; probably linear hyperspace speed in squares/day
 [v] basic UX messaging: simulation emits messages consumed by UX object
-[ ] basic simulation ticking
-[ ] after each order to a ship:
-    [v] if untasked ships, list them
-    [ ] otherwise, emit clock start message & run clock
-[ ] move a ship within the simulation's timekeeping
+[v] basic simulation ticking
+[v] after each order to a ship, if untasked ships, list them
+[v] move a ship within the simulation's timekeeping
+[ ] 'run' command with default tick count of 24h = 24 ticks
 ```
 
 ## Iteration 4

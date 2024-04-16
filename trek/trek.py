@@ -24,8 +24,8 @@ MAX_ZONE_Y = math.ceil(MAX_Y / ZONE_SIZE_Y)
 #   what if it's a relative point ie (+7, -5)?
 class Point(typing.NamedTuple):
     """Bounds are from (1, 1) to (MAX_X, MAX_Y), inclusive."""
-    x: int
-    y: int
+    x: float
+    y: float
 
     def distance(self, other):
         """Computes the distance between a and b."""
@@ -115,6 +115,7 @@ class Ship(SpaceborneObject):
         # TODO did I discover that a dataclass doesn't inherit right?
         super().__init__(designation, point)
         self.cruising_speed = cruising_speed
+        self.speed = self.cruising_speed
         self.current_order = None # start out with no orders
 
     class Order(enum.Enum):
@@ -128,10 +129,27 @@ class Ship(SpaceborneObject):
             raise ValueError(f"'{order}' is not a valid order")
         self.current_order = order, kwargs
 
-    def move(self, destination, ticks=1):
-        """Relocate the ship towards the given destination."""
-        print(f"{self} is MOVIN")
-        # TODO MATH
+    def reset_order(self):
+        self.current_order = None
+
+    def move(self, destination):
+        """Perform 1 tick of movement."""
+        print(f"{self} is MOVIN to {destination}")
+        distance_to_dest = self.point.distance(destination)
+        travel_distance = min(self.speed, distance_to_dest)
+        assert travel_distance > 0, "Unexpectedly arrived at destination"
+
+        relative_dest = self.point.delta_to(destination)
+        distance_ratio = travel_distance / distance_to_dest
+        self.point += Point(x=(relative_dest.x * distance_ratio),
+                            y=(relative_dest.y * distance_ratio))
+
+        if distance_to_dest - travel_distance <= 0.0:
+            self.reset_order()
+            self.simulation.message(
+                self.simulation.ARRIVE, f"{self} arrived at {destination}.",
+                ship=self, destination=destination)
+            return
 
     def act(self):
         order, params = self.current_order
@@ -175,7 +193,7 @@ class Simulation:
         self.user_interface.message(type, text, **details)
 
     def ready_to_run(self):
-        return any(not s.has_orders() for s in self.squadron)
+        return all(s.has_orders() for s in self.squadron)
 
     def idle_ships(self):
         """Returns a set of idle friendly vessels."""
@@ -194,12 +212,15 @@ class Simulation:
     class NotReadyToRun(ValueError):
         pass
 
-    def run(self, force=False):
-        if not force and not self.ready_to_run():
+    def run(self, duration=24):
+        if not self.ready_to_run():
             raise self.NotReadyToRun()
-        while True:
+        stop_time = self.clock + duration
+        while self.clock < stop_time:
             self.clock += 1
             for s in self.squadron:
+                # TODO receive messages here instead of self.simulation?
+                #   can self.simulation be removed?
                 s.act()
             if self.should_pause():
                 break
