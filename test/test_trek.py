@@ -42,3 +42,46 @@ def test_simulation_objects():
     objects = list(simulation.objects())
     # import pdb; pdb.set_trace()
     assert len(objects) == 5
+
+def test_simulation_run_not_ready():
+    """Confirm simulation won't run if ships have no orders."""
+    simulation = trek.default_scenario()
+    with pytest.raises(trek.Simulation.NotReadyToRun):
+        simulation.run()
+
+@pytest.fixture
+def ready_simulation():
+    simulation = trek.default_scenario()
+    for s in simulation.squadron:
+        # everyone meet in the middle
+        s.order(trek.Ship.Order.MOVE, destination=trek.point(32, 32))
+    return simulation
+
+# TODO writing the algorithm a second time does not a good test make
+def one_tick_dest(start, dest, speed=1):
+    """Return new location for the given parameters:
+
+    From the start position, make progress towards the given
+    destination, assuming 1 tick of time has passed.
+    """
+    relative_dest = dest - start
+    distance = start.distance(dest)
+    travel_dist = min(distance, speed)
+    travel_fraction = travel_dist / distance
+    return start + trek.Point(relative_dest.x * travel_fraction,
+                              relative_dest.y * travel_fraction)
+
+def test_simulation_run(ready_simulation):
+    """Confirm ships fly around as they should and time is kept."""
+    ready_simulation.run(1)
+    from trek import point
+    dest = point(32, 32)
+    expected_positions = {
+        'abel': one_tick_dest(point(x=5, y=5), dest),
+        'alice': one_tick_dest(point(x=7, y=7), dest),
+        'baker': one_tick_dest(point(x=35, y=30), dest),
+        'charlie': one_tick_dest(point(x=60, y=60), dest),
+        'doug': one_tick_dest(point(x=4, y=58), dest),
+    }
+    actual_positions = {s.designation: s.point for s in ready_simulation.squadron}
+    assert expected_positions == actual_positions

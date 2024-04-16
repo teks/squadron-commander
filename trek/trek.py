@@ -227,6 +227,7 @@ class Simulation:
 
 
 def default_scenario():
+    SpaceborneObject.designations = set()
     ships = {
         Ship('abel', point(x=5, y=5)),
         Ship('baker', point(35, 30)),
