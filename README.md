@@ -1,3 +1,15 @@
-Basically just the old 'trek' game for Unix & DOS.
+Basically just the old 'trek' game for Unix & DOS, but with multiple ships
+under your command.
 
-Might try to make it more interesting as I go.
+There's no useful entry point atm; use a script eg:
+
+```
+import trek
+from trek import cli
+
+simulation = trek.default_scenario()
+ui = cli.CmdUserInterface(simulation)
+print(ui.short_range_map(trek.point(60, 60)))
+ui.start()
+```
+

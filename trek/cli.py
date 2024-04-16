@@ -195,10 +195,3 @@ class CmdUserInterface(trek.UserInterface):
 
     def message(self, type, text, **details):
         print(f"{type}: {text}; details: {details}")
-
-# maybe not here in the long run
-if __name__ == '__main__':
-    simulation = trek.default_scenario()
-    ui = CmdUserInterface(simulation)
-    print(ui.short_range_map(trek.point(60, 60)))
-    ui.start()
