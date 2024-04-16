@@ -6,6 +6,7 @@ import collections
 import string
 import argparse
 import itertools
+import textwrap
 
 import trek
 
@@ -151,6 +152,24 @@ class CommandLineParser(argparse.ArgumentParser):
         except Exception as e:
             print(e)
 
+def generate_help_function(title, text):
+    def f(_): # _ is cmd obj, see below
+        print(title)
+        print('=' * len(title))
+        # for line in textwrap.fill(text): # <-- fill() does weird things for some reason
+        for line in textwrap.wrap(text.strip()):
+            print(line)
+
+    return f
+
+# TODO how to have multiple paragraphs? concatenates the two paras here:
+OVERVIEW_TEXT = """
+The game simulates a 2D version of spaceborne warfare on an interstellar scale,
+similarly to Star Trek and other sci-fi. You are the commander of a squadron of
+armed starships, tasked with achieving an objective based on the chosen scenario.
+
+This text is a demo of the inline help system.
+"""
 
 class CLI(cmd.Cmd):
     _cmd_ui = None # set later; just doing this to make pycharm less wrong
@@ -162,6 +181,8 @@ class CLI(cmd.Cmd):
 
     doc_header = "Commands (type help <command>)"
     misc_header = "Other Help Topics (type help <topic>)"
+
+    help_overview = generate_help_function("Overview", OVERVIEW_TEXT)
 
     def do_debug(self, _):
         """Drop into a pdb session."""
