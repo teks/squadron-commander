@@ -5,8 +5,7 @@
     [v] x1.0 FTL
     [v] x1.5 waiting alone
     [v] x2.0 waiting with a friendly (n friendlies together means x2.0 for each of them)
-    [ ] pause simulation when a ship is waiting and repairs are complete
-        Order.REPAIR?
+    [v] pause simulation when a friendly ship's repairs are complete
     [ ] show estimated time to fix
     [ ] morale should affect repair rate
 [ ] retreat should alter behavior of retreating enemies;

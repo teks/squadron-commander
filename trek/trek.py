@@ -421,6 +421,9 @@ class ArtificialObject(SpaceborneObject):
         for c in damaged_components.values():
             c.health += modifier * self.repair_rate / dc_cnt
 
+        if not any(c.is_damaged() for c in damaged_components.values()):
+            self.message(CompletedRepairsMessage(self))
+
     def post_action(self):
         self.recharge_shields()
         self.repair()
@@ -757,6 +760,11 @@ class CombatReport(Message):
     point: Point
     friendly_side: CombatSide
     enemy_side: CombatSide
+
+
+@dataclasses.dataclass
+class CompletedRepairsMessage(Message):
+    obj: ArtificialObject
 
 
 class UserInterface:
