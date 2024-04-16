@@ -43,6 +43,16 @@ fix random stuff, look for TODOs and cleanup:
 [v] implement arg parsing for CLI based on ---^
 ```
 
+## Iteration 5
+going to do another random fixup iteration
+```
+[v] fix uncaught exception in do_move
+[ ]
+[ ]
+[ ]
+[ ]
+```
+
 ## Future Iterations:
 ```
 [ ] concrete CLI ux class

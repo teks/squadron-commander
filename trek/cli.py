@@ -70,7 +70,6 @@ class CLI(cmd.Cmd):
     def do_move(self, arg):
         parsed_line = self.move_parser.parse_line(arg)
         if parsed_line is not None:
-            # TODO this raises when the ship id isn't found:
             self._cmd_ui.move_ship(parsed_line.ship_id, parsed_line.destination)
 
     def do_run(self, arg):
@@ -214,12 +213,14 @@ class CmdUserInterface(trek.UserInterface):
         try:
             return next(o for o in self.simulation.objects() if o.designation == identifying_string)
         except StopIteration:
-            raise ValueError(f"Object '{identifying_string}' not found.")
+            print(f"Object '{identifying_string}' not found.")
+            return None
 
-    def move_ship(self, ship_desig, destination):
-        ship = self.get_object(ship_desig)
-        ship.order(trek.Ship.Order.MOVE, destination=destination)
-        self.idle_ship_check()
+    def move_ship(self, ship_id, destination):
+        ship = self.get_object(ship_id)
+        if ship is not None:
+            ship.order(trek.Ship.Order.MOVE, destination=destination)
+            self.idle_ship_check()
 
     def idle_ship_check(self):
         idle_ships = self.simulation.idle_ships()
