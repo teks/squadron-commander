@@ -117,13 +117,20 @@ class Ship(SpaceborneObject):
         super().__init__(designation, point, simulation)
         self.speed = self.cruising_speed
         self.current_order = None # start out with no orders
+        self.current_order_params = None
         self.fought_last_tick = False
         self.current_shields = self.max_shields
         self.current_hull = self.max_hull
 
+    # not sure python enums are worth it, but here it is:
     class Order(enum.Enum):
         MOVE = 'move'
         ATTACK = 'attack'
+
+        def is_movement_order(self):
+            # have to delay evaluating eg self.MOVE to give time for Enum magic
+            # to change the strings into Order instances:
+            return self in (self.MOVE, self.ATTACK)
 
     def has_orders(self):
         return self.current_order is not None
@@ -131,31 +138,37 @@ class Ship(SpaceborneObject):
     def order(self, order: Order, **kwargs):
         if order not in self.Order:
             raise ValueError(f"'{order}' is not a valid order")
-        self.current_order = order, kwargs
+        self.current_order = order
+        self.current_order_params = kwargs
 
     def reset_order(self):
         self.current_order = None
+        self.current_order_params = None
 
     def message(self, message):
         if self.simulation is not None:
             self.simulation.message(message)
 
-    def move(self, destination):
-        """Perform 1 tick of movement."""
-        self.point = self.future_position(destination, ticks=1)
-        if self.point == destination:
-            self.reset_order()
-            self.message(ArriveMessage(self))
+    def displacement(self, destination: Point=None, ticks=1):
+        """Where will self be at a future time?
 
-    def future_position(self, destination: Point, ticks):
-        if self.point == destination:
+        Returns a relative point giving the displacement after the given number
+        of ticks.
+        """
+        d = self.destination() if destination is None else destination
+        if self.point == d:
             return self.point
-        distance_to_dest = self.point.distance(destination)
+        distance_to_dest = self.point.distance(d)
         travel_distance = min(ticks * self.speed, distance_to_dest)
-        relative_dest = self.point.delta_to(destination)
+        relative_dest = self.point.delta_to(d)
         distance_ratio = travel_distance / distance_to_dest
-        return self.point + Point(x=(relative_dest.x * distance_ratio),
-                                  y=(relative_dest.y * distance_ratio))
+        return Point(x=(relative_dest.x * distance_ratio),
+                     y=(relative_dest.y * distance_ratio))
+
+    def destination(self, pos_if_none=True):
+        if self.current_order.is_movement_order():
+            return self.current_order_params['destination']
+        return self.point if pos_if_none else None
 
     def recharge_shields(self):
         if self.fought_last_tick:
@@ -250,13 +263,15 @@ class Ship(SpaceborneObject):
     def act(self, simulation):
         """Perform one tick of simulation."""
         self.recharge_shields()
-        order, params = self.current_order
         # TODO set this up so there's no need to add to it with every new order
-        match order:
+        match self.current_order:
             case self.Order.MOVE:
-                self.move(**params)
+                self.point += self.displacement()
+                if self.point == self.destination():
+                    self.reset_order()
+                    self.message(ArriveMessage(self))
             case self.Order.ATTACK:
-                self.attack(**params)
+                self.attack(**self.current_order_params)
             case _:
                 raise ValueError(f"Invalid order {self.current_order}")
 
