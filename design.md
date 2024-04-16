@@ -101,18 +101,21 @@ will move on to another.
 
 Detection
 ---------
-For now, starbases, ships, and colonies have a simple binary detection radius.
-Enemies are either detected or hidden.
+Assume good sensors permit the entire area of operations to be perfectly
+visible at all times.
+
+Later, consider adding in sensor ranges, detection, and stealth. So, starbases,
+ships, and colonies would have a simple binary detection radius.  Enemies are
+either detected or hidden.
 
 When an enemy vessel becomes hidden, its last known position will be retained,
-possibly showing a vector.
+possibly showing a vector and status (ie vessel type and any known damage).
 
 Time & Timing
 -------------
 It's simple event-based timing, and runs until it needs to pause. These events
 generate a pause:
 
-* Friendly unit sights a previously hidden enemy
 * A unit arrives somewhere (friendly or enemy)
 * A ship's orders expire: It destroys its target, finishes repairs, etc.
 * Others as-needed

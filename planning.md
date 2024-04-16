@@ -5,28 +5,35 @@ Iterations
 ```
 [v] spaceborne object base class
 [v] basic ship class
-
 [v] map
     [v] (spaceborne) object storage
-    [v] distance
-
+    [v] distance function
 [v] Global simulation class
-
 [v] plan more, clearly
-
 ```
 
+## Iteration 2: ???
+```
+[ ] local map command: map <x> <y>
+[ ] move a ship instantly
+[ ] design FTL system; probably linear hyperspace speed in squares/day
+[ ] basic timekeeping, CF `design.md`, Time & Timing
+    [ ] after each order to a ship:
+        [ ] if untasked ships, list them
+        [ ] otherwise, emit clock start message & run clock
+    [ ] basic UX messaging: simulation emits messages consumed by UX object
+[ ] move a ship within the simulation's timekeeping
+```
 
 
 ## Future Iterations:
 
 ```
-[ ] abstract base ux class
+[v] abstract base ux class
 
 [ ] concrete CLI ux class
-    [ ] cmd
+    [v] cmd
     [ ] displays for various entities & the map
-    [ ] messaging (basically just logging)
     [ ] help facility?
 
 ```
