@@ -618,6 +618,7 @@ class FriendlyShip(Ship):
     side = Side.FRIENDLY
     controller = Controller.PLAYER
     max_shields = 1
+    repair_rate = 0.01
 
 
 class EnemyShip(Ship):

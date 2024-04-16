@@ -141,6 +141,8 @@ class CLI(cmd.Cmd):
     _cmd_ui = None # set later; just doing this to make pycharm less wrong
 
     def do_debug(self, _):
+        ui = self._cmd_ui
+        simulation = self._cmd_ui.simulation
         import pdb
         pdb.set_trace()
 
