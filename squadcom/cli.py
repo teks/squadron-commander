@@ -175,7 +175,8 @@ class CLI(cmd.Cmd):
     _cmd_ui = None # set later; just doing this to make pycharm less wrong
 
     intro = (
-        "PYTREK: A 2D interstellar wargame like the trek games of the 70s and 80s\n"
+        "Squadron Commander: A 2D interstellar wargame.\n"
+        "   Inspired by the 'trek' games of the 70s and 80s\n"
         "   'help' or '?' to get started; try 'sm' to view the field of play."
     )
 

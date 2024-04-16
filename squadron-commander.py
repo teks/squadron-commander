@@ -8,7 +8,7 @@ from squadcom import cli
 raise Exception("This isn't ready; try waves-of-raiders.py")
 
 parser = argparse.ArgumentParser(
-    description="PYTREK, a lo-fi turn based strategy game.",
+    description="Squadron Commander, a lo-fi turn based strategy game.",
 )
 
 parser.add_argument(

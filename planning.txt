@@ -9,16 +9,16 @@ Iterations
     (it's a way of driving enemies away from a base or target)
 [v] issue: SpaceColonies have 0 max shields but still have a shields Component
     so rejigger so they have shields (easier than removoing the Component).
-[ ] mull renaming project to 'Squadron Commander' / SQUADCOM
+[v] rename project to 'Squadron Commander' / SQUADCOM
     [v] rename trek module to 'engine'
     [v] rename trek package
-    [ ] rename pytrek.py
-    [ ] rename test_trek.py
-    [ ] change README.md
-    [ ] change HOWTOPLAY.md
-    [ ] search for remaining textual uses of 'trek'
+    [v] rename pytrek.py
+    [v] rename test_trek.py
+    [v] change README.md
+    [x] change HOWTOPLAY.md (no changes needed)
+    [v] search for remaining textual uses of 'trek'
 [v] second-to-lastly go over docstrings to Cmd do_foo methods one more time
-[ ] lastly, add a license & push to github
+[ ] lastly, add a license & push to github (or gitlab? who's less-bad about model-training?)
 
 
 Roadmap

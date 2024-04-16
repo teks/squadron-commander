@@ -1,8 +1,9 @@
-PYTREK
-======
+Squadron Commander
+==================
 
 Command a squadron of starships to protect a region of space. This is yet
-another game in the tradition founded by Mike Mayfield in 1971:
+another game in the tradition of trek games, originally founded by Mike
+Mayfield in 1971:
 
 https://en.wikipedia.org/wiki/Star_Trek_(1971_video_game)
 
@@ -14,8 +15,7 @@ rather than remaining still, and instead of searching for them, one intercepts
 them as they raid vulnerable space stations. Run `waves-of-raiders.py` to play
 a demo scenario.
 
-This game is not user-friendly; there is no tutorial. You're just going to have
-to read documentation like an adult. See `HOWTOPLAY.md`.
+`HOWTOPLAY.md` is the game's manual.
 
 Development
 -----------
