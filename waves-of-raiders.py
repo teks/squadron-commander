@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!python
 import squadcom
 from squadcom import cli, scenarios
 
